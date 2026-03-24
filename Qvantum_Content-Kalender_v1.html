@@ -69,6 +69,11 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .view-toggle-btn { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 5px 14px; border: none; border-radius: 18px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
 .view-toggle-btn.active { background: var(--q-white); color: var(--q-off-black); }
 
+/* LANG TOGGLE */
+.lang-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
+.lang-btn { font-family: inherit; font-weight: 600; font-size: 0.65rem; padding: 4px 10px; border: none; border-radius: 16px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
+.lang-btn.active { background: var(--q-white); color: var(--q-off-black); }
+
 /* CONTROLS */
 .calendar-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
 .controls-right { display: flex; align-items: center; gap: 10px; }
@@ -220,9 +225,13 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <div class="header-subtitle">Content Kalender 2026 - 2027</div>
     </div>
     <div class="header-right">
-      <button class="btn btn-small btn-ghost" onclick="resetData()" title="Reset naar standaard data">Reset</button>
-      <button class="btn btn-small btn-ghost" onclick="exportJSON()" title="Exporteer planning als JSON">Export JSON</button>
-      <button class="btn btn-small btn-ghost" onclick="document.getElementById('importFile').click()" title="Importeer planning vanuit JSON">Import JSON</button>
+      <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="nl" onclick="switchLang('nl')">NL</button>
+        <button class="lang-btn" data-lang="en" onclick="switchLang('en')">EN</button>
+      </div>
+      <button class="btn btn-small btn-ghost" onclick="resetData()" id="btnReset">Reset</button>
+      <button class="btn btn-small btn-ghost" onclick="exportJSON()" id="btnExport">Export JSON</button>
+      <button class="btn btn-small btn-ghost" onclick="document.getElementById('importFile').click()" id="btnImport">Import JSON</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
     </div>
   </header>
@@ -321,6 +330,163 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 </div>
 
 <script>
+/* ============================================
+   i18n TRANSLATIONS
+   ============================================ */
+let lang = 'nl';
+const T = {
+  nl: {
+    subtitle: 'Content Kalender 2026 - 2027',
+    tabCalendar: 'Content Kalender', tabPlatforms: 'Mediaplatformen', tabEvents: 'Evenementen',
+    weekView: 'Weekweergave', cardView: 'Kaarten', newItem: '+ Nieuw item',
+    allChannels: 'Alle kanalen', allAuthors: 'Alle auteurs', allThemes: "Alle thema's",
+    allStatuses: 'Alle statussen', allTypes: 'Alle types',
+    total: 'Totaal', thisMonth: 'Deze maand',
+    statusIdee: 'Idee', statusGepland: 'Gepland', statusProductie: 'In productie', statusGepubliceerd: 'Gepubliceerd',
+    noItems: 'Geen items gevonden', noItemsDesc: 'Pas de filters aan of voeg een nieuw item toe.',
+    showText: 'Tekst tonen', writeText: 'Tekst schrijven', hideText: 'Tekst verbergen',
+    textPlaceholderShort: 'Schrijf hier de tekst...',
+    textPlaceholderLong: 'Schrijf hier de volledige post/artikel tekst...',
+    // Modal
+    modalNew: 'Nieuw content item', modalEdit: 'Item bewerken',
+    lblDate: 'Datum', lblWeek: 'Week (optioneel)', lblTheme: 'Thema / campagne',
+    lblType: 'Type activiteit', lblChannel: 'Kanaal', lblAuthor: 'Auteur / account',
+    lblStatus: 'Status', lblDesc: 'Korte omschrijving', lblContent: 'Content tekst (volledige post / artikel)',
+    phWeek: 'bijv. Week 14', phTheme: 'bijv. QG Launch, Energieplanologie',
+    phDesc: 'Waar gaat dit item over?',
+    phContent: 'Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc.',
+    btnDelete: 'Verwijderen', btnCancel: 'Annuleren', btnSave: 'Opslaan',
+    confirmDelete: 'Item verwijderen?', confirmReset: 'Alle wijzigingen resetten naar standaard data?',
+    validationMsg: 'Vul minimaal een datum en thema in.',
+    importSuccess: 'Import succesvol: {n} items geladen.', importError: 'Ongeldig bestandsformaat.',
+    // Platforms
+    platformsTitle: 'Mediaplatformen',
+    platformsDesc: 'Relevante vakbladen, online platforms en brancheorganisaties waar Qvantum (gratis of betaald) kan publiceren. Gesorteerd op relevantie.',
+    lblReach: 'Bereik', lblPublication: 'Publicatie', lblCost: 'Kosten', lblRelevance: 'Relevantie',
+    relevanceHoog: 'hoog', relevanceMidden: 'midden', relevanceLaag: 'laag',
+    // Events
+    eventsTitle: 'Evenementen 2026 - 2027',
+    eventsNote: 'VSK is tweejaarlijks — de volgende editie (VSK+E 2028) is pas op 1-4 februari 2028.',
+    moreInfo: 'Meer info',
+    // Footer
+    footerLeft: 'Qvantum Nederland — Content Planning Dashboard v1.0',
+    footerRight: 'Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.',
+    // Days
+    days: ['Ma','Di','Wo','Do','Vr'],
+  },
+  en: {
+    subtitle: 'Content Calendar 2026 - 2027',
+    tabCalendar: 'Content Calendar', tabPlatforms: 'Media Platforms', tabEvents: 'Events',
+    weekView: 'Week view', cardView: 'Cards', newItem: '+ New item',
+    allChannels: 'All channels', allAuthors: 'All authors', allThemes: 'All themes',
+    allStatuses: 'All statuses', allTypes: 'All types',
+    total: 'Total', thisMonth: 'This month',
+    statusIdee: 'Idea', statusGepland: 'Planned', statusProductie: 'In production', statusGepubliceerd: 'Published',
+    noItems: 'No items found', noItemsDesc: 'Adjust filters or add a new item.',
+    showText: 'Show text', writeText: 'Write text', hideText: 'Hide text',
+    textPlaceholderShort: 'Write content here...',
+    textPlaceholderLong: 'Write the full post/article text here...',
+    // Modal
+    modalNew: 'New content item', modalEdit: 'Edit item',
+    lblDate: 'Date', lblWeek: 'Week (optional)', lblTheme: 'Theme / campaign',
+    lblType: 'Activity type', lblChannel: 'Channel', lblAuthor: 'Author / account',
+    lblStatus: 'Status', lblDesc: 'Short description', lblContent: 'Content text (full post / article)',
+    phWeek: 'e.g. Week 14', phTheme: 'e.g. QG Launch, Energy Planning',
+    phDesc: 'What is this item about?',
+    phContent: 'Write the full text of the LinkedIn post, article, newsletter etc. here.',
+    btnDelete: 'Delete', btnCancel: 'Cancel', btnSave: 'Save',
+    confirmDelete: 'Delete this item?', confirmReset: 'Reset all changes to default data?',
+    validationMsg: 'Please enter at least a date and theme.',
+    importSuccess: 'Import successful: {n} items loaded.', importError: 'Invalid file format.',
+    // Platforms
+    platformsTitle: 'Media Platforms',
+    platformsDesc: 'Relevant trade publications, online platforms and industry associations where Qvantum can publish (free or paid). Sorted by relevance.',
+    lblReach: 'Reach', lblPublication: 'Publication', lblCost: 'Cost', lblRelevance: 'Relevance',
+    relevanceHoog: 'high', relevanceMidden: 'medium', relevanceLaag: 'low',
+    // Events
+    eventsTitle: 'Events 2026 - 2027',
+    eventsNote: 'VSK is biennial — the next edition (VSK+E 2028) is February 1-4, 2028.',
+    moreInfo: 'More info',
+    // Footer
+    footerLeft: 'Qvantum Netherlands — Content Planning Dashboard v1.0',
+    footerRight: 'Data in LocalStorage + JSON export. Share via GitHub Pages or Netlify Drop. Future migration to HubSpot Marketing Calendar.',
+    // Days
+    days: ['Mon','Tue','Wed','Thu','Fri'],
+  }
+};
+
+const STATUS_LABELS = {
+  nl: { 'Idee':'Idee', 'Gepland':'Gepland', 'In productie':'In productie', 'Gepubliceerd':'Gepubliceerd' },
+  en: { 'Idee':'Idea', 'Gepland':'Planned', 'In productie':'In production', 'Gepubliceerd':'Published' }
+};
+
+function t(key) { return T[lang][key] || T['nl'][key] || key; }
+function tStatus(s) { return (STATUS_LABELS[lang] && STATUS_LABELS[lang][s]) || s; }
+
+function switchLang(newLang) {
+  lang = newLang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  document.documentElement.lang = lang;
+  renderAllUI();
+}
+
+function renderAllUI() {
+  // Header
+  document.querySelector('.header-subtitle').textContent = t('subtitle');
+  // Tabs
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs[0].textContent = t('tabCalendar');
+  tabs[1].textContent = t('tabPlatforms');
+  tabs[2].textContent = t('tabEvents');
+  // View toggle
+  document.querySelectorAll('.view-toggle-btn').forEach(b => {
+    b.textContent = b.dataset.view === 'week' ? t('weekView') : t('cardView');
+  });
+  // New item button
+  document.querySelector('[onclick="openModal()"]').textContent = t('newItem');
+  // Filter placeholders
+  document.getElementById('filterKanaal').options[0].text = t('allChannels');
+  document.getElementById('filterAuteur').options[0].text = t('allAuthors');
+  document.getElementById('filterThema').options[0].text = t('allThemes');
+  document.getElementById('filterStatus').options[0].text = t('allStatuses');
+  document.getElementById('filterType').options[0].text = t('allTypes');
+  // Status options in filter
+  const fStat = document.getElementById('filterStatus');
+  for (let i = 1; i < fStat.options.length; i++) {
+    fStat.options[i].text = tStatus(fStat.options[i].value);
+  }
+  // Platforms
+  document.querySelector('#tab-platforms .section-header h2').textContent = t('platformsTitle');
+  document.querySelector('#tab-platforms .info-banner').innerHTML = `<strong>${lang === 'nl' ? 'Overzicht' : 'Overview'}:</strong> ${t('platformsDesc')}`;
+  // Events
+  document.querySelector('#tab-events .section-header h2').textContent = t('eventsTitle');
+  document.querySelector('#tab-events .info-banner').innerHTML = `<strong>${lang === 'nl' ? 'Let op' : 'Note'}:</strong> ${t('eventsNote')}`;
+  // Footer
+  document.querySelectorAll('.app-footer span')[0].textContent = t('footerLeft');
+  document.querySelectorAll('.app-footer span')[1].textContent = t('footerRight');
+  // Modal labels
+  document.querySelectorAll('.modal .form-group label').forEach(lbl => {
+    const map = { 'Datum':'lblDate','Date':'lblDate', 'Week (optioneel)':'lblWeek','Week (optional)':'lblWeek',
+      'Thema / campagne':'lblTheme','Theme / campaign':'lblTheme', 'Type activiteit':'lblType','Activity type':'lblType',
+      'Kanaal':'lblChannel','Channel':'lblChannel', 'Auteur / account':'lblAuthor','Author / account':'lblAuthor',
+      'Status':'lblStatus', 'Korte omschrijving':'lblDesc','Short description':'lblDesc',
+      'Content tekst (volledige post / artikel)':'lblContent','Content text (full post / article)':'lblContent' };
+    const key = map[lbl.textContent];
+    if (key) lbl.textContent = t(key);
+  });
+  document.getElementById('fieldWeek').placeholder = t('phWeek');
+  document.getElementById('fieldThema').placeholder = t('phTheme');
+  document.getElementById('fieldOmschrijving').placeholder = t('phDesc');
+  document.getElementById('fieldContent').placeholder = t('phContent');
+  document.getElementById('btnDelete').textContent = t('btnDelete');
+  document.querySelectorAll('.modal-actions-right .btn-ghost')[0].textContent = t('btnCancel');
+  document.querySelectorAll('.modal-actions-right .btn-primary')[0].textContent = t('btnSave');
+  // Re-render dynamic content
+  renderCalendar();
+  renderPlatforms();
+  renderEvents();
+}
+
 const MONTHS = [
   { key: '2026-04', label: 'Apr 2026' }, { key: '2026-05', label: 'Mei 2026' },
   { key: '2026-06', label: 'Jun 2026' }, { key: '2026-07', label: 'Jul 2026' },
@@ -455,7 +621,7 @@ function seedItems() {
   saveToStorage();
 }
 
-function resetData() { if(confirm('Alle wijzigingen resetten naar standaard data?')) { localStorage.removeItem('qvantum-content-kalender-v2'); seedItems(); refreshThemaFilter(); renderCalendar(); } }
+function resetData() { if(confirm(t('confirmReset'))) { localStorage.removeItem('qvantum-content-kalender-v2'); seedItems(); refreshThemaFilter(); renderCalendar(); } }
 function saveToStorage() { localStorage.setItem('qvantum-content-kalender-v2', JSON.stringify({ items, nextId })); }
 
 /* TABS */
@@ -525,7 +691,7 @@ function renderCalendar() {
   const container = document.getElementById('calendarContainer');
   const filtered = getFilteredItems();
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state"><h3>Geen items gevonden</h3><p>Pas de filters aan of voeg een nieuw item toe.</p><button class="btn btn-primary" onclick="openModal()">+ Nieuw item</button></div>`;
+    container.innerHTML = `<div class="empty-state"><h3>${t('noItems')}</h3><p>${t('noItemsDesc')}</p><button class="btn btn-primary" onclick="openModal()">${t('newItem')}</button></div>`;
     return;
   }
   if (currentView === 'week') renderWeekView(container, filtered);
@@ -535,11 +701,11 @@ function renderCalendar() {
 function renderStats() {
   const mi = items.filter(i => i.datum.startsWith(selectedMonth));
   const stats = [
-    { v: items.length, l: 'Totaal' }, { v: mi.length, l: 'Deze maand' },
-    { v: mi.filter(i => i.status === 'Idee').length, l: 'Idee' },
-    { v: mi.filter(i => i.status === 'Gepland').length, l: 'Gepland' },
-    { v: mi.filter(i => i.status === 'In productie').length, l: 'In productie' },
-    { v: mi.filter(i => i.status === 'Gepubliceerd').length, l: 'Gepubliceerd' },
+    { v: items.length, l: t('total') }, { v: mi.length, l: t('thisMonth') },
+    { v: mi.filter(i => i.status === 'Idee').length, l: tStatus('Idee') },
+    { v: mi.filter(i => i.status === 'Gepland').length, l: tStatus('Gepland') },
+    { v: mi.filter(i => i.status === 'In productie').length, l: tStatus('In productie') },
+    { v: mi.filter(i => i.status === 'Gepubliceerd').length, l: tStatus('Gepubliceerd') },
   ];
   document.getElementById('statsRow').innerHTML = stats.map(s => `<div class="stat-card"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('');
 }
@@ -556,16 +722,16 @@ function renderWeekView(container, filtered) {
     const firstDay = week.find(d => d !== null);
     const weekNum = getISOWeek(firstDay);
     html += `<div class="week-block"><div class="week-label">Week ${weekNum}</div><div class="week-grid">`;
-    // ma(1) to vr(5)
     for (let d = 0; d < 5; d++) {
       const date = week[d];
+      const dayNames = t('days');
       if (!date) {
-        html += `<div class="day-column"><div class="day-header">${['Ma','Di','Wo','Do','Vr'][d]}</div></div>`;
+        html += `<div class="day-column"><div class="day-header">${dayNames[d]}</div></div>`;
         continue;
       }
       const ds = fmt(date);
       const dayItems = itemsByDate[ds] || [];
-      const dayName = ['Ma','Di','Wo','Do','Vr'][d];
+      const dayName = dayNames[d];
       const dayNum = date.getDate();
       html += `<div class="day-column"><div class="day-header">${dayName} <span class="day-num">${dayNum}</span></div>`;
       if (dayItems.length === 0) {
@@ -578,10 +744,10 @@ function renderWeekView(container, filtered) {
           html += `<div class="day-item" style="border-left-color:${tc}">
             <div class="di-title" onclick="openModal(${item.id})">${esc(item.thema)}</div>
             <div class="di-meta"><span class="di-auteur">${esc(item.auteur.split(' ')[0])}</span> &middot; ${esc(item.type)}</div>
-            <div class="di-status ${sc}">${esc(item.status)}</div>
-            <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? 'Tekst tonen' : 'Tekst schrijven'} &#9662;</div>
+            <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
+            <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
             <div class="di-content" id="dc-${item.id}">
-              <textarea class="di-content-text" placeholder="Schrijf hier de tekst..." onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
+              <textarea class="di-content-text" placeholder="${t('textPlaceholderShort')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
             </div>
           </div>`;
         });
@@ -599,12 +765,13 @@ function renderCardView(container, filtered) {
     const tc = TYPE_COLORS[item.type] || '#91877A';
     const sc = statusClass(item.status);
     const d = new Date(item.datum);
-    const ds = d.toLocaleDateString('nl-NL', { weekday:'short', day:'numeric', month:'short' });
+    const loc = lang === 'nl' ? 'nl-NL' : 'en-GB';
+    const ds = d.toLocaleDateString(loc, { weekday:'short', day:'numeric', month:'short' });
     const hasContent = item.content && item.content.trim();
     return `<div class="calendar-item" style="border-left-color:${tc}">
       <div class="item-header" onclick="openModal(${item.id})">
         <span class="item-date">${ds}${item.week ? ' &middot; ' + item.week : ''}</span>
-        <span class="item-status ${sc}">${item.status}</span>
+        <span class="item-status ${sc}">${tStatus(item.status)}</span>
       </div>
       <div class="item-title" onclick="openModal(${item.id})"><span class="type-badge" style="background:${tc}"></span> ${esc(item.thema)}</div>
       <div class="item-meta">
@@ -613,9 +780,9 @@ function renderCardView(container, filtered) {
         <span class="tag">${esc(item.kanaal.split(' — ')[0])}</span>
       </div>
       ${item.omschrijving ? `<div class="item-desc">${esc(item.omschrijving)}</div>` : ''}
-      <div class="item-content-toggle" onclick="toggleCardContent(event, ${item.id})">${hasContent ? 'Tekst tonen' : 'Tekst schrijven'} &#9662;</div>
+      <div class="item-content-toggle" onclick="toggleCardContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
       <div class="item-content-area" id="cc-${item.id}">
-        <textarea class="item-content-textarea" placeholder="Schrijf hier de volledige post/artikel tekst..." onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
+        <textarea class="item-content-textarea" placeholder="${t('textPlaceholderLong')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
       </div>
     </div>`;
   }).join('')}</div>`;
@@ -627,8 +794,8 @@ function toggleDayContent(e, id) {
   const el = document.getElementById('dc-' + id);
   el.classList.toggle('open');
   const toggle = e.target;
-  if (el.classList.contains('open')) { toggle.innerHTML = 'Tekst verbergen &#9652;'; el.querySelector('textarea').focus(); }
-  else toggle.innerHTML = (items.find(i=>i.id===id)?.content?.trim() ? 'Tekst tonen' : 'Tekst schrijven') + ' &#9662;';
+  if (el.classList.contains('open')) { toggle.innerHTML = t('hideText') + ' &#9652;'; el.querySelector('textarea').focus(); }
+  else toggle.innerHTML = (items.find(i=>i.id===id)?.content?.trim() ? t('showText') : t('writeText')) + ' &#9662;';
 }
 
 function toggleCardContent(e, id) {
@@ -636,8 +803,8 @@ function toggleCardContent(e, id) {
   const el = document.getElementById('cc-' + id);
   el.classList.toggle('open');
   const toggle = e.target;
-  if (el.classList.contains('open')) { toggle.innerHTML = 'Tekst verbergen &#9652;'; el.querySelector('textarea').focus(); }
-  else toggle.innerHTML = (items.find(i=>i.id===id)?.content?.trim() ? 'Tekst tonen' : 'Tekst schrijven') + ' &#9662;';
+  if (el.classList.contains('open')) { toggle.innerHTML = t('hideText') + ' &#9652;'; el.querySelector('textarea').focus(); }
+  else toggle.innerHTML = (items.find(i=>i.id===id)?.content?.trim() ? t('showText') : t('writeText')) + ' &#9662;';
 }
 
 function saveContentInline(id, value) {
@@ -692,7 +859,7 @@ function openModal(id) {
   if (id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
-    document.getElementById('modalTitle').textContent = 'Item bewerken';
+    document.getElementById('modalTitle').textContent = t('modalEdit');
     document.getElementById('editId').value = id;
     document.getElementById('fieldDatum').value = item.datum;
     document.getElementById('fieldWeek').value = item.week || '';
@@ -705,7 +872,7 @@ function openModal(id) {
     document.getElementById('fieldContent').value = item.content || '';
     btnDel.style.display = 'inline-block';
   } else {
-    document.getElementById('modalTitle').textContent = 'Nieuw content item';
+    document.getElementById('modalTitle').textContent = t('modalNew');
     document.getElementById('editId').value = '';
     document.getElementById('fieldDatum').value = selectedMonth + '-01';
     document.getElementById('fieldWeek').value = '';
@@ -736,7 +903,7 @@ function saveItem() {
     omschrijving: document.getElementById('fieldOmschrijving').value,
     content: document.getElementById('fieldContent').value,
   };
-  if (!data.datum || !data.thema) { alert('Vul minimaal een datum en thema in.'); return; }
+  if (!data.datum || !data.thema) { alert(t('validationMsg')); return; }
   if (editId) { const idx = items.findIndex(i => i.id === parseInt(editId)); if (idx !== -1) items[idx] = { ...items[idx], ...data }; }
   else items.push({ id: nextId++, ...data });
   saveToStorage(); closeModal(); refreshThemaFilter(); renderCalendar();
@@ -744,7 +911,7 @@ function saveItem() {
 
 function deleteItem() {
   const id = parseInt(document.getElementById('editId').value);
-  if (!id || !confirm('Item verwijderen?')) return;
+  if (!id || !confirm(t('confirmDelete'))) return;
   items = items.filter(i => i.id !== id);
   saveToStorage(); closeModal(); renderCalendar();
 }
@@ -757,10 +924,10 @@ function renderPlatforms() {
     <div class="platform-card relevance-${p.relevantie}">
       <h3><a href="${p.url}" target="_blank" rel="noopener">${esc(p.naam)}</a></h3>
       <div class="platform-type">${esc(p.type)}</div>
-      <div class="platform-detail"><strong>Bereik:</strong> ${esc(p.bereik)}</div>
-      <div class="platform-detail"><strong>Publicatie:</strong> ${esc(p.publicatie)}</div>
-      <div class="platform-detail"><strong>Kosten:</strong> ${esc(p.kosten)}</div>
-      <span class="relevance-badge">Relevantie: ${p.relevantie}</span>
+      <div class="platform-detail"><strong>${t('lblReach')}:</strong> ${esc(p.bereik)}</div>
+      <div class="platform-detail"><strong>${t('lblPublication')}:</strong> ${esc(p.publicatie)}</div>
+      <div class="platform-detail"><strong>${t('lblCost')}:</strong> ${esc(p.kosten)}</div>
+      <span class="relevance-badge">${t('lblRelevance')}: ${t('relevance' + p.relevantie.charAt(0).toUpperCase() + p.relevantie.slice(1))}</span>
     </div>`).join('');
 }
 
@@ -769,9 +936,10 @@ function renderEvents() {
   const sorted = [...EVENTS].sort((a,b) => a.datum.localeCompare(b.datum));
   document.getElementById('eventsTimeline').innerHTML = sorted.map(ev => {
     const d = new Date(ev.datum);
+    const loc = lang === 'nl' ? 'nl-NL' : 'en-GB';
     return `<div class="event-card">
       <div class="event-date-block">
-        <div class="event-month">${d.toLocaleDateString('nl-NL',{month:'short'}).toUpperCase()}</div>
+        <div class="event-month">${d.toLocaleDateString(loc,{month:'short'}).toUpperCase()}</div>
         <div class="event-day">${d.getDate()}</div>
         <div class="event-year">${d.getFullYear()}</div>
       </div>
@@ -779,7 +947,7 @@ function renderEvents() {
         <h3>${esc(ev.naam)}</h3>
         <p>${esc(ev.locatie)}</p>
         <p>${esc(ev.beschrijving)}</p>
-        ${ev.url ? `<a href="${ev.url}" target="_blank" rel="noopener">Meer info &rarr;</a>` : ''}
+        ${ev.url ? `<a href="${ev.url}" target="_blank" rel="noopener">${t('moreInfo')} &rarr;</a>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -802,8 +970,8 @@ function importJSON(event) {
       if (data.items && Array.isArray(data.items)) {
         items = data.items; nextId = data.nextId || items.length + 1;
         saveToStorage(); refreshThemaFilter(); renderCalendar();
-        alert('Import succesvol: ' + items.length + ' items geladen.');
-      } else alert('Ongeldig bestandsformaat.');
+        alert(t('importSuccess').replace('{n}', items.length));
+      } else alert(t('importError'));
     } catch(err) { alert('Fout: ' + err.message); }
   };
   reader.readAsText(file); event.target.value = '';
