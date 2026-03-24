@@ -69,6 +69,11 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .view-toggle-btn { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 5px 14px; border: none; border-radius: 18px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
 .view-toggle-btn.active { background: var(--q-white); color: var(--q-off-black); }
 
+/* CASE STUDY */
+#caseStudyPanel .form-group { margin-bottom: 10px; }
+#caseStudyPanel .form-group label { font-size: 0.65rem; margin-bottom: 4px; }
+#caseStudyPanel input, #caseStudyPanel textarea { font-size: 0.8rem; padding: 8px 12px; }
+
 /* LANG TOGGLE */
 .lang-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
 .lang-btn { font-family: inherit; font-weight: 600; font-size: 0.65rem; padding: 4px 10px; border: none; border-radius: 16px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
@@ -264,7 +269,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
           <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option>
         </select>
         <select class="filter-select" id="filterType" onchange="renderCalendar()">
-          <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
+          <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
         </select>
       </div>
       <div id="calendarContainer"></div>
@@ -303,7 +308,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     <div class="form-group"><label>Thema / campagne</label><input type="text" id="fieldThema" placeholder="bijv. QG Launch, Energieplanologie"></div>
     <div class="form-row">
       <div class="form-group"><label>Type activiteit</label>
-        <select id="fieldType"><option value="LinkedIn post">LinkedIn post</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option></select>
+        <select id="fieldType" onchange="toggleCaseStudy()"><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option></select>
       </div>
       <div class="form-group"><label>Kanaal</label>
         <select id="fieldKanaal"><option value="LinkedIn — Viktor de Haan">LinkedIn — Viktor de Haan</option><option value="LinkedIn — Qvantum Nederland">LinkedIn — Qvantum Nederland</option><option value="LinkedIn — Mark Vellinga">LinkedIn — Mark Vellinga</option><option value="LinkedIn — Koen Pape">LinkedIn — Koen Pape</option><option value="LinkedIn — Pascal Boy">LinkedIn — Pascal Boy</option><option value="LinkedIn — Sebastiaan Rietveld">LinkedIn — Sebastiaan Rietveld</option><option value="HubSpot — Nieuwsbrief / email">HubSpot — Nieuwsbrief / email</option><option value="HubSpot — Blog">HubSpot — Blog</option><option value="Vakpublicaties (extern)">Vakpublicaties (extern)</option><option value="Beurzen & events">Beurzen & events</option><option value="Website qvantum.com">Website qvantum.com</option></select>
@@ -318,6 +323,26 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       </div>
     </div>
     <div class="form-group"><label>Korte omschrijving</label><textarea id="fieldOmschrijving" rows="2" placeholder="Waar gaat dit item over?"></textarea></div>
+
+    <!-- CASE STUDY TEMPLATE -->
+    <div id="caseStudyPanel" style="display:none; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+        <h3 style="font-weight:600; font-size:0.85rem; color:var(--q-off-black); margin:0;" id="csTitle">Case study template</h3>
+        <button class="btn btn-small btn-primary" type="button" onclick="generateCasePost()" id="csGenerateBtn">Genereer post</button>
+      </div>
+      <div class="form-group"><label id="csLblProject">Projectnaam</label><input type="text" id="csProject" placeholder="bijv. Gebouw Mathilda, Woonpark De Linde"></div>
+      <div class="form-group"><label id="csLblLocation">Locatie</label><input type="text" id="csLocation" placeholder="bijv. Oosterhout, Noord-Brabant"></div>
+      <div class="form-group"><label id="csLblProjectDesc">Projectomschrijving</label><textarea id="csProjectDesc" rows="2" placeholder="bijv. Transformatie tot 12 hoogwaardige appartementen"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label id="csLblProduct">Qvantum product</label><input type="text" id="csProduct" placeholder="bijv. QE6, QG12, QAir"></div>
+        <div class="form-group"><label id="csLblUnits">Aantal eenheden</label><input type="text" id="csUnits" placeholder="bijv. 12 woningen"></div>
+      </div>
+      <div class="form-group"><label id="csLblSpecs">Specificaties</label><textarea id="csSpecs" rows="2" placeholder="bijv. Buffervat 175L, ventilatiesysteem C, 4-in-1 oplossing"></textarea></div>
+      <div class="form-group"><label id="csLblBenefits">Voordelen / resultaat</label><textarea id="csBenefits" rows="2" placeholder="bijv. Stil, compact, energiezuinig, hoog wooncomfort"></textarea></div>
+      <div class="form-group"><label id="csLblPartners">Samenwerkingspartners</label><textarea id="csPartners" rows="2" placeholder="Ontwikkelaar: ...\nAannemer: ...\nInstallateur: ..."></textarea></div>
+      <div class="form-group"><label id="csLblHashtags">Hashtags</label><input type="text" id="csHashtags" value="#Qvantum #Warmtepomp #Energietransitie" placeholder="#Qvantum #Warmtepomp ..."></div>
+    </div>
+
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
     <div class="modal-actions">
       <div><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button></div>
@@ -368,6 +393,11 @@ const T = {
     eventsTitle: 'Evenementen 2026 - 2027',
     eventsNote: 'VSK is tweejaarlijks — de volgende editie (VSK+E 2028) is pas op 1-4 februari 2028.',
     moreInfo: 'Meer info',
+    // Case study
+    csTitle: 'Case study template', csGenerate: 'Genereer post',
+    csProject: 'Projectnaam', csLocation: 'Locatie', csProjectDesc: 'Projectomschrijving',
+    csProduct: 'Qvantum product', csUnits: 'Aantal eenheden', csSpecs: 'Specificaties',
+    csBenefits: 'Voordelen / resultaat', csPartners: 'Samenwerkingspartners', csHashtags: 'Hashtags',
     // Footer
     footerLeft: 'Qvantum Nederland — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.',
@@ -407,6 +437,11 @@ const T = {
     eventsTitle: 'Events 2026 - 2027',
     eventsNote: 'VSK is biennial — the next edition (VSK+E 2028) is February 1-4, 2028.',
     moreInfo: 'More info',
+    // Case study
+    csTitle: 'Case study template', csGenerate: 'Generate post',
+    csProject: 'Project name', csLocation: 'Location', csProjectDesc: 'Project description',
+    csProduct: 'Qvantum product', csUnits: 'Number of units', csSpecs: 'Specifications',
+    csBenefits: 'Benefits / results', csPartners: 'Collaboration partners', csHashtags: 'Hashtags',
     // Footer
     footerLeft: 'Qvantum Netherlands — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Share via GitHub Pages or Netlify Drop. Future migration to HubSpot Marketing Calendar.',
@@ -481,6 +516,16 @@ function renderAllUI() {
   document.getElementById('btnDelete').textContent = t('btnDelete');
   document.querySelectorAll('.modal-actions-right .btn-ghost')[0].textContent = t('btnCancel');
   document.querySelectorAll('.modal-actions-right .btn-primary')[0].textContent = t('btnSave');
+  // Case study panel labels
+  const csLabels = { csTitle:'csTitle', csLblProject:'csProject', csLblLocation:'csLocation',
+    csLblProjectDesc:'csProjectDesc', csLblProduct:'csProduct', csLblUnits:'csUnits',
+    csLblSpecs:'csSpecs', csLblBenefits:'csBenefits', csLblPartners:'csPartners', csLblHashtags:'csHashtags' };
+  Object.entries(csLabels).forEach(([elId, tKey]) => {
+    const el = document.getElementById(elId);
+    if (el) el.textContent = t(tKey);
+  });
+  const csBtn = document.getElementById('csGenerateBtn');
+  if (csBtn) csBtn.textContent = t('csGenerate');
   // Re-render dynamic content
   renderCalendar();
   renderPlatforms();
@@ -498,78 +543,16 @@ const MONTHS = [
 const KANALEN = ['LinkedIn — Viktor de Haan','LinkedIn — Qvantum Nederland','LinkedIn — Mark Vellinga','LinkedIn — Koen Pape','LinkedIn — Pascal Boy','LinkedIn — Sebastiaan Rietveld','HubSpot — Nieuwsbrief / email','HubSpot — Blog','Vakpublicaties (extern)','Beurzen & events','Website qvantum.com'];
 const DAY_NAMES = ['Zo','Ma','Di','Wo','Do','Vr','Za'];
 const DAY_NAMES_FULL = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
-const TYPE_COLORS = { 'LinkedIn post':'#91877A', 'Artikel':'#002656', 'Nieuwsbrief':'#3164FD', 'Beurs / event':'#FF8D5A', 'Webinar':'#4AA1FF', 'Vakpublicatie':'#C41230', 'Website':'#BBA84F' };
+const TYPE_COLORS = { 'LinkedIn post':'#91877A', 'Case study':'#5A9E6F', 'Rondetafel':'#6B5B95', 'Artikel':'#002656', 'Nieuwsbrief':'#3164FD', 'Beurs / event':'#FF8D5A', 'Webinar':'#4AA1FF', 'Vakpublicatie':'#C41230', 'Website':'#BBA84F' };
 
 let selectedMonth = MONTHS[0].key;
 let currentView = 'week';
 let items = [];
 let nextId = 1;
 
-/* SEED DATA */
+/* SEED DATA — empty: user fills calendar from scratch */
 function getSeedData() {
-  return [
-    { datum:'2026-04-07', week:'Week 15', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Projecthighlight: eerste opgeleverde project in beeld. Resultaten en bewonersreactie.', content:'' },
-    { datum:'2026-04-10', week:'Week 15', thema:'Energieplanologie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Introductiepost energieplanologie: het snijvlak van ruimtelijke ordening en energiesystemen.', content:'' },
-    { datum:'2026-04-15', week:'Week 16', thema:'Congres Doorbraak vd Warmtepomp', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Congres Doorbraak van de Warmtepomp — Louwman Museum, Den Haag.', content:'' },
-    { datum:'2026-04-17', week:'Week 16', thema:'Congres Doorbraak reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik op Congres Doorbraak: 3 inzichten die opvielen.', content:'' },
-    { datum:'2026-04-22', week:'Week 17', thema:'Projecten & referentiecases', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q2 nieuwsbrief: projectupdates, congresverslag, aankomende events.', content:'' },
-    { datum:'2026-04-28', week:'Week 18', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Mark Vellinga', auteur:'Mark Vellinga', status:'Idee', omschrijving:'Technische deep-dive: hoe een recent project is opgelost.', content:'' },
-    { datum:'2026-05-05', week:'Week 19', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Smart Control uitgelicht: slim energiemanagement in de praktijk.', content:'' },
-    { datum:'2026-05-08', week:'Week 19', thema:'Netcongestie & woningbouw', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Netcongestie als rem op woningbouw — regionale energiekeuzes.', content:'' },
-    { datum:'2026-05-13', week:'Week 20', thema:'Energiemanagement', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Blogartikel: FlexReady en de toekomst van netbewust verwarmen.', content:'' },
-    { datum:'2026-05-19', week:'Week 21', thema:'Netcongestie & woningbouw', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wat als 200 woningen tegelijk een warmtepomp krijgen?', content:'' },
-    { datum:'2026-05-26', week:'Week 22', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Koen Pape', auteur:'Koen Pape', status:'Idee', omschrijving:'eCOP vs COP: economisch vs technisch rendement.', content:'' },
-    { datum:'2026-06-02', week:'Week 23', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG teaser: er komt iets nieuws aan.', content:'' },
-    { datum:'2026-06-09', week:'Week 24', thema:'Koeling van steden', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Koeling: het vergeten hoofdstuk van de energietransitie.', content:'' },
-    { datum:'2026-06-15', week:'Week 25', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Water-water warmtepompen: waarom grondgebonden de toekomst is.', content:'' },
-    { datum:'2026-06-22', week:'Week 26', thema:'Koeling van steden', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Urban heat islands: koelen met dezelfde systemen die je verwarmt.', content:'' },
-    { datum:'2026-06-28', week:'Week 26', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Persbericht QG pre-launch voor vakbladen.', content:'' },
-    { datum:'2026-07-06', week:'Week 28', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Modbus-integratie uitgelegd.', content:'' },
-    { datum:'2026-07-09', week:'Week 28', thema:'TCO vs aanschafprijsdenken', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'De goedkoopste warmtepomp kan de duurste keuze zijn.', content:'' },
-    { datum:'2026-07-14', week:'Week 29', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Pascal Boy', auteur:'Pascal Boy', status:'Idee', omschrijving:'Homeowner Scheduler in de praktijk.', content:'' },
-    { datum:'2026-07-21', week:'Week 30', thema:'TCO vs aanschafprijsdenken', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'TCO-rekenen voor woningcorporaties in 5 stappen.', content:'' },
-    { datum:'2026-08-04', week:'Week 32', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Zomerreflectie: waar staan we na H1 2026?', content:'' },
-    { datum:'2026-08-11', week:'Week 33', thema:'Installateurstekort', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Installateurstekort als bottleneck van de transitie.', content:'' },
-    { datum:'2026-08-18', week:'Week 34', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Sebastiaan Rietveld', auteur:'Sebastiaan Rietveld', status:'Idee', omschrijving:'Behind the scenes: design-assist traject van A tot Z.', content:'' },
-    { datum:'2026-08-25', week:'Week 35', thema:'Installateurstekort', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wie nu investeert in kennis, heeft straks werk.', content:'' },
-    { datum:'2026-09-01', week:'Week 36', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Nieuwe referentiecase met bewonerstestimonial.', content:'' },
-    { datum:'2026-09-08', week:'Week 37', thema:'Installatie Vakdagen', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Installatie Vakdagen 8-10 sep — Hardenberg.', content:'' },
-    { datum:'2026-09-10', week:'Week 37', thema:'Hybride warmtepomp 2026', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Hybride warmtepomp verplichting: impact op corporaties.', content:'' },
-    { datum:'2026-09-15', week:'Week 38', thema:'Installatie Vakdagen reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Mark Vellinga', auteur:'Mark Vellinga', status:'Idee', omschrijving:'Terugblik Installatie Vakdagen: trends en gesprekken.', content:'' },
-    { datum:'2026-09-22', week:'Week 39', thema:'Projecten & referentiecases', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q3 nieuwsbrief: beursverslag, cases, productnieuws.', content:'' },
-    { datum:'2026-10-01', week:'Week 40', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG officieel gelanceerd. Productnieuws.', content:'' },
-    { datum:'2026-10-02', week:'Week 40', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Persbericht QG launch naar vakbladen.', content:'' },
-    { datum:'2026-10-06', week:'Week 41', thema:'Vakbeurs Energie', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Vakbeurs Energie 6-8 okt — Brabanthallen, Den Bosch.', content:'' },
-    { datum:'2026-10-09', week:'Week 41', thema:'Vakbeurs Energie reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Vakbeurs Energie: fear of regret bij corporaties.', content:'' },
-    { datum:'2026-10-15', week:'Week 42', thema:'Fear of regret', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Fear of regret: beslissingen voor 50 jaar.', content:'' },
-    { datum:'2026-10-20', week:'Week 43', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG deep-dive: specificaties en toepassingen.', content:'' },
-    { datum:'2026-11-02', week:'Week 44', thema:'QG referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG referentiecase: De Efteling.', content:'' },
-    { datum:'2026-11-04', week:'Week 45', thema:'Klimaattop GO', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Klimaattop GO 4-5 nov — Jaarbeurs Utrecht.', content:'' },
-    { datum:'2026-11-09', week:'Week 46', thema:'Wcw en corporaties', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wet collectieve warmte: impact op corporaties.', content:'' },
-    { datum:'2026-11-16', week:'Week 47', thema:'QG referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG referentiecase: Warm Vreeswijk.', content:'' },
-    { datum:'2026-11-19', week:'Week 47', thema:'Warmte Congrestival', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Warmte Congrestival november 2026.', content:'' },
-    { datum:'2026-11-23', week:'Week 48', thema:'Wcw en corporaties', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'De Wcw in 5 punten voor corporatiebestuurders.', content:'' },
-    { datum:'2026-12-01', week:'Week 49', thema:'Jaaroverzicht', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Jaaroverzicht 2026: projecten, milestones, teamgroei.', content:'' },
-    { datum:'2026-12-04', week:'Week 49', thema:'1-fase vs 3-fase', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'1-fase vs 3-fase problematiek bij warmtepompen.', content:'' },
-    { datum:'2026-12-10', week:'Week 50', thema:'Jaaroverzicht', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Eindejaarsnieuwsbrief: hoogtepunten en vooruitblik.', content:'' },
-    { datum:'2026-12-15', week:'Week 51', thema:'1-fase vs 3-fase', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Enkelfase warmtepompen: waarom Qvantum kiest voor 230V.', content:'' },
-    { datum:'2027-01-05', week:'Week 1', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Configurable I/O uitgelicht.', content:'' },
-    { datum:'2027-01-08', week:'Week 2', thema:'PV-leveranciers als kanaal', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'PV-leveranciers als nieuw verkoopkanaal voor warmtepompen.', content:'' },
-    { datum:'2027-01-15', week:'Week 3', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Koen Pape', auteur:'Koen Pape', status:'Idee', omschrijving:'HomeOwner Scheduler: bewoners in controle.', content:'' },
-    { datum:'2027-01-20', week:'Week 3', thema:'PV-leveranciers als kanaal', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Van zonnepanelen naar warmtepompen.', content:'' },
-    { datum:'2027-01-26', week:'Week 4', thema:'Energiemanagement', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Modbus-integratie in collectieve warmtesystemen.', content:'' },
-    { datum:'2027-02-02', week:'Week 5', thema:'Projecten pipeline', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Pipeline 2027: projecten die dit jaar starten.', content:'' },
-    { datum:'2027-02-05', week:'Week 6', thema:'Energieplanologie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Energyboards: regionale keuzes sturen.', content:'' },
-    { datum:'2027-02-10', week:'Week 6', thema:'Projecten pipeline', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q1 2027 nieuwsbrief: pipeline, updates, beurzen.', content:'' },
-    { datum:'2027-02-16', week:'Week 7', thema:'Energieplanologie', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Integraal programmeren: energiekeuzes bij bestemmingsplan.', content:'' },
-    { datum:'2027-02-23', week:'Week 8', thema:'Projecten pipeline', type:'LinkedIn post', kanaal:'LinkedIn — Pascal Boy', auteur:'Pascal Boy', status:'Idee', omschrijving:'Wat we leren van elk project.', content:'' },
-    { datum:'2027-03-02', week:'Week 9', thema:'Green Heating Solutions beurs', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Qvantum op Green Heating Solutions.', content:'' },
-    { datum:'2027-03-05', week:'Week 10', thema:'Transitie vooruitblik', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik op een jaar content en gesprekken.', content:'' },
-    { datum:'2027-03-16', week:'Week 12', thema:'Green Heating Solutions', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Green Heating Solutions 16-18 maart — Vijfhuizen.', content:'' },
-    { datum:'2027-03-19', week:'Week 12', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG USPs: 6-12 kW, R290, enkelfase, 36 dB(A).', content:'' },
-    { datum:'2027-03-24', week:'Week 13', thema:'Green Heating Solutions reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Green Heating Solutions: 3 trends.', content:'' },
-    { datum:'2027-03-29', week:'Week 13', thema:'Transitie vooruitblik', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wat ik in een jaar warmtetransitie heb geleerd.', content:'' },
-  ];
+  return [];
 }
 
 /* PLATFORMS + EVENTS DATA */
@@ -621,7 +604,18 @@ function seedItems() {
   saveToStorage();
 }
 
-function resetData() { if(confirm(t('confirmReset'))) { localStorage.removeItem('qvantum-content-kalender-v2'); seedItems(); refreshThemaFilter(); renderCalendar(); } }
+function resetData() {
+  if (items.length > 0) {
+    const exportFirst = confirm(lang === 'nl'
+      ? 'Je hebt ' + items.length + ' items. Wil je eerst een JSON export maken voordat je reset?'
+      : 'You have ' + items.length + ' items. Export as JSON before resetting?');
+    if (exportFirst) exportJSON();
+  }
+  if (confirm(t('confirmReset'))) {
+    localStorage.removeItem('qvantum-content-kalender-v2');
+    seedItems(); refreshThemaFilter(); renderCalendar();
+  }
+}
 function saveToStorage() { localStorage.setItem('qvantum-content-kalender-v2', JSON.stringify({ items, nextId })); }
 
 /* TABS */
@@ -852,6 +846,91 @@ function fmt(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart
 function statusClass(s) { return 'status-' + s.toLowerCase().replace(/ /g, ''); }
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 
+/* CASE STUDY TEMPLATE */
+function toggleCaseStudy() {
+  const panel = document.getElementById('caseStudyPanel');
+  const type = document.getElementById('fieldType').value;
+  panel.style.display = type === 'Case study' ? 'block' : 'none';
+}
+
+function generateCasePost() {
+  const project = document.getElementById('csProject').value.trim();
+  const location = document.getElementById('csLocation').value.trim();
+  const desc = document.getElementById('csProjectDesc').value.trim();
+  const product = document.getElementById('csProduct').value.trim();
+  const units = document.getElementById('csUnits').value.trim();
+  const specs = document.getElementById('csSpecs').value.trim();
+  const benefits = document.getElementById('csBenefits').value.trim();
+  const partners = document.getElementById('csPartners').value.trim();
+  const hashtags = document.getElementById('csHashtags').value.trim();
+
+  let post = '';
+
+  // Intro
+  if (project && location) {
+    post += `${location} -- ${project}`;
+    if (desc) post += `: ${desc}.`;
+    post += '\n\n';
+    if (lang === 'nl') {
+      post += `Bij dit project heeft Qvantum bijgedragen aan de verduurzaming en het wooncomfort`;
+      if (product) post += ` met de ${product}`;
+      if (units) post += ` voor ${units}`;
+      post += '.\n\n';
+    } else {
+      post += `For this project, Qvantum contributed to sustainability and living comfort`;
+      if (product) post += ` with the ${product}`;
+      if (units) post += ` for ${units}`;
+      post += '.\n\n';
+    }
+  }
+
+  // Specs
+  if (specs) {
+    const specLines = specs.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+    if (specLines.length > 0) {
+      post += specLines.map(s => `- ${s}`).join('\n');
+      post += '\n\n';
+    }
+  }
+
+  // Benefits
+  if (benefits) {
+    post += lang === 'nl'
+      ? `Met deze oplossing kunnen bewoners rekenen op ${benefits.toLowerCase()} -- precies waar Qvantum voor staat.\n\n`
+      : `This solution delivers ${benefits.toLowerCase()} -- exactly what Qvantum stands for.\n\n`;
+  }
+
+  // Partners
+  if (partners) {
+    post += lang === 'nl' ? 'Samenwerking:\n' : 'Collaboration:\n';
+    const partnerLines = partners.split('\n').map(s => s.trim()).filter(Boolean);
+    post += partnerLines.map(p => p.startsWith('-') || p.startsWith('*') ? p : `- ${p}`).join('\n');
+    post += '\n\n';
+  }
+
+  // Hashtags
+  if (hashtags) {
+    post += hashtags;
+  }
+
+  document.getElementById('fieldContent').value = post;
+  // Auto-fill description if empty
+  if (!document.getElementById('fieldOmschrijving').value.trim() && project) {
+    document.getElementById('fieldOmschrijving').value = `Case study: ${project}` + (location ? `, ${location}` : '');
+  }
+  // Auto-fill thema if empty
+  if (!document.getElementById('fieldThema').value.trim()) {
+    document.getElementById('fieldThema').value = 'Projecten & referentiecases';
+  }
+}
+
+function clearCaseStudyFields() {
+  ['csProject','csLocation','csProjectDesc','csProduct','csUnits','csSpecs','csBenefits','csPartners'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('csHashtags').value = '#Qvantum #Warmtepomp #Energietransitie';
+}
+
 /* MODAL */
 function openModal(id) {
   const modal = document.getElementById('modalOverlay');
@@ -870,6 +949,19 @@ function openModal(id) {
     document.getElementById('fieldStatus').value = item.status;
     document.getElementById('fieldOmschrijving').value = item.omschrijving;
     document.getElementById('fieldContent').value = item.content || '';
+    // Load case study data if present
+    if (item.caseStudy) {
+      const cs = item.caseStudy;
+      document.getElementById('csProject').value = cs.project || '';
+      document.getElementById('csLocation').value = cs.location || '';
+      document.getElementById('csProjectDesc').value = cs.projectDesc || '';
+      document.getElementById('csProduct').value = cs.product || '';
+      document.getElementById('csUnits').value = cs.units || '';
+      document.getElementById('csSpecs').value = cs.specs || '';
+      document.getElementById('csBenefits').value = cs.benefits || '';
+      document.getElementById('csPartners').value = cs.partners || '';
+      document.getElementById('csHashtags').value = cs.hashtags || '#Qvantum #Warmtepomp #Energietransitie';
+    } else { clearCaseStudyFields(); }
     btnDel.style.display = 'inline-block';
   } else {
     document.getElementById('modalTitle').textContent = t('modalNew');
@@ -883,8 +975,10 @@ function openModal(id) {
     document.getElementById('fieldStatus').value = 'Idee';
     document.getElementById('fieldOmschrijving').value = '';
     document.getElementById('fieldContent').value = '';
+    clearCaseStudyFields();
     btnDel.style.display = 'none';
   }
+  toggleCaseStudy();
   modal.classList.add('active');
 }
 
@@ -903,6 +997,20 @@ function saveItem() {
     omschrijving: document.getElementById('fieldOmschrijving').value,
     content: document.getElementById('fieldContent').value,
   };
+  // Save case study fields if type is Case study
+  if (data.type === 'Case study') {
+    data.caseStudy = {
+      project: document.getElementById('csProject').value,
+      location: document.getElementById('csLocation').value,
+      projectDesc: document.getElementById('csProjectDesc').value,
+      product: document.getElementById('csProduct').value,
+      units: document.getElementById('csUnits').value,
+      specs: document.getElementById('csSpecs').value,
+      benefits: document.getElementById('csBenefits').value,
+      partners: document.getElementById('csPartners').value,
+      hashtags: document.getElementById('csHashtags').value,
+    };
+  }
   if (!data.datum || !data.thema) { alert(t('validationMsg')); return; }
   if (editId) { const idx = items.findIndex(i => i.id === parseInt(editId)); if (idx !== -1) items[idx] = { ...items[idx], ...data }; }
   else items.push({ id: nextId++, ...data });
