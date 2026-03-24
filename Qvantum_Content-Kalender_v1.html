@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qvantum Content Kalender 2026-2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --q-brown: #91877A;
+  --q-off-black: #232222;
+  --q-off-white: #F4F4F4;
+  --q-beige: #E5E6DF;
+  --q-white: #FFFFFF;
+  --q-navy: #002656;
+  --q-blue: #3164FD;
+  --q-blue-light: #4AA1FF;
+  --q-red: #C41230;
+  --q-orange: #FF8D5A;
+  --q-yellow: #F7E36E;
+  --status-idee: #D4CFC8;
+  --status-gepland: var(--q-blue-light);
+  --status-productie: var(--q-orange);
+  --status-gepubliceerd: #5A9E6F;
+  --header-height: 64px;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; -webkit-font-smoothing: antialiased; }
+body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 400; color: var(--q-off-black); background: var(--q-off-white); min-height: 100vh; line-height: 1.5; }
+
+.app { display: flex; flex-direction: column; height: 100vh; max-height: 100vh; overflow: hidden; }
+
+/* HEADER */
+.header { display: flex; align-items: center; justify-content: space-between; height: var(--header-height); padding: 0 32px; background: var(--q-white); border-bottom: 1px solid var(--q-beige); flex-shrink: 0; }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.logo-text { font-weight: 700; font-size: 1.2rem; color: var(--q-off-black); letter-spacing: 2px; text-transform: uppercase; }
+.logo-text span { color: var(--q-brown); }
+.header-subtitle { font-weight: 400; font-size: 0.85rem; color: var(--q-brown); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+/* TABS */
+.tab-bar { display: flex; gap: 0; background: var(--q-white); border-bottom: 1px solid var(--q-beige); padding: 0 32px; flex-shrink: 0; }
+.tab-btn { padding: 12px 24px; font-family: inherit; font-weight: 600; font-size: 0.75rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab-btn:hover { color: var(--q-off-black); }
+.tab-btn.active { color: var(--q-off-black); border-bottom-color: var(--q-brown); }
+
+.main { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* BUTTONS */
+.btn { font-family: inherit; font-weight: 600; font-size: 0.8rem; padding: 10px 20px; border: none; border-radius: 24px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; }
+.btn-primary { background: var(--q-beige); color: var(--q-off-black); }
+.btn-primary:hover { background: #D5D6CF; }
+.btn-accent { background: var(--q-blue); color: var(--q-white); }
+.btn-accent:hover { background: #2854D9; }
+.btn-small { padding: 6px 14px; font-size: 0.7rem; }
+.btn-ghost { background: none; color: var(--q-brown); padding: 6px 12px; }
+.btn-ghost:hover { background: var(--q-beige); }
+.btn-danger { background: none; color: var(--q-red); }
+.btn-danger:hover { background: #FEE; }
+
+/* VIEW TOGGLE */
+.view-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
+.view-toggle-btn { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 5px 14px; border: none; border-radius: 18px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
+.view-toggle-btn.active { background: var(--q-white); color: var(--q-off-black); }
+
+/* CONTROLS */
+.calendar-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.controls-right { display: flex; align-items: center; gap: 10px; }
+.month-nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.month-btn { font-family: inherit; font-weight: 500; font-size: 0.7rem; padding: 6px 12px; border: 1px solid var(--q-beige); border-radius: 20px; background: var(--q-white); color: var(--q-off-black); cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px; text-transform: uppercase; }
+.month-btn:hover { background: var(--q-beige); }
+.month-btn.active { background: var(--q-brown); color: var(--q-white); border-color: var(--q-brown); }
+
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-select { font-family: inherit; font-size: 0.8rem; padding: 8px 14px; border: 1px solid var(--q-beige); border-radius: var(--radius); background: var(--q-white); color: var(--q-off-black); cursor: pointer; min-width: 130px; }
+.filter-select:focus { outline: none; border-color: var(--q-brown); }
+
+/* STATS */
+.stats-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.stat-card { background: var(--q-white); border-radius: var(--radius-lg); padding: 12px 20px; min-width: 100px; }
+.stat-card .stat-value { font-weight: 700; font-size: 1.4rem; color: var(--q-off-black); }
+.stat-card .stat-label { font-weight: 600; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); }
+
+/* ============================================
+   WEEK VIEW
+   ============================================ */
+.week-view { }
+.week-block { margin-bottom: 20px; }
+.week-label { font-weight: 600; font-size: 0.7rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 8px; padding-left: 4px; }
+.week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.day-column { background: var(--q-white); border-radius: var(--radius-lg); padding: 10px; min-height: 80px; }
+.day-header { font-weight: 600; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--q-beige); }
+.day-header .day-num { font-weight: 700; font-size: 0.9rem; color: var(--q-off-black); display: block; }
+.day-item { padding: 8px 10px; border-radius: var(--radius); margin-bottom: 6px; cursor: pointer; border-left: 3px solid var(--q-beige); transition: all 0.15s; background: var(--q-off-white); }
+.day-item:hover { background: var(--q-beige); }
+.day-item .di-title { font-weight: 600; font-size: 0.75rem; line-height: 1.3; margin-bottom: 3px; }
+.day-item .di-meta { font-size: 0.65rem; color: var(--q-brown); line-height: 1.3; }
+.day-item .di-auteur { font-weight: 600; }
+.day-item .di-status { display: inline-block; font-weight: 600; font-size: 0.55rem; letter-spacing: 0.5px; text-transform: uppercase; padding: 1px 6px; border-radius: 8px; color: var(--q-white); margin-top: 3px; }
+.day-empty { font-size: 0.7rem; color: #C0B9B0; font-style: normal; padding: 4px 0; }
+
+/* Content toggle in day items */
+.day-item .di-content-toggle { font-size: 0.6rem; color: var(--q-blue); cursor: pointer; margin-top: 4px; font-weight: 500; }
+.day-item .di-content-toggle:hover { text-decoration: underline; }
+.day-item .di-content { display: none; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--q-beige); font-size: 0.7rem; color: #555; line-height: 1.4; white-space: pre-wrap; }
+.day-item .di-content.open { display: block; }
+.day-item .di-content-text { min-height: 40px; padding: 6px 8px; background: var(--q-white); border: 1px solid var(--q-beige); border-radius: 4px; font-family: inherit; font-size: 0.7rem; width: 100%; resize: vertical; color: var(--q-off-black); outline: none; }
+.day-item .di-content-text:focus { border-color: var(--q-brown); }
+
+/* ============================================
+   CARD VIEW
+   ============================================ */
+.calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.calendar-item { background: var(--q-white); border-radius: var(--radius-lg); padding: 16px 20px; cursor: pointer; transition: all 0.15s; border-left: 4px solid var(--q-beige); position: relative; }
+.calendar-item:hover { transform: translateY(-1px); background: #FAFAFA; }
+.calendar-item .item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.calendar-item .item-date { font-weight: 600; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); }
+.calendar-item .item-status { font-weight: 600; font-size: 0.65rem; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 10px; border-radius: 12px; color: var(--q-white); }
+.status-idee { background: var(--status-idee); color: var(--q-off-black) !important; }
+.status-gepland { background: var(--status-gepland); }
+.status-productie { background: var(--status-productie); }
+.status-gepubliceerd { background: var(--status-gepubliceerd); }
+.calendar-item .item-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; line-height: 1.3; }
+.calendar-item .item-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--q-brown); }
+.calendar-item .item-meta .tag { padding: 2px 8px; border-radius: 10px; background: var(--q-off-white); font-weight: 500; }
+.calendar-item .item-desc { font-size: 0.8rem; color: #666; margin-top: 8px; line-height: 1.4; }
+.type-badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+/* Content expand in card view */
+.calendar-item .item-content-toggle { font-size: 0.75rem; color: var(--q-blue); cursor: pointer; margin-top: 8px; font-weight: 500; display: inline-block; }
+.calendar-item .item-content-toggle:hover { text-decoration: underline; }
+.calendar-item .item-content-area { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--q-beige); }
+.calendar-item .item-content-area.open { display: block; }
+.calendar-item .item-content-textarea { min-height: 80px; padding: 10px; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: var(--radius); font-family: inherit; font-size: 0.8rem; width: 100%; resize: vertical; color: var(--q-off-black); outline: none; line-height: 1.5; }
+.calendar-item .item-content-textarea:focus { border-color: var(--q-brown); background: var(--q-white); }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--q-brown); }
+.empty-state h3 { font-weight: 600; font-size: 1.1rem; margin-bottom: 8px; }
+.empty-state p { font-size: 0.85rem; margin-bottom: 20px; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(35, 34, 34, 0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--q-white); border-radius: var(--radius-lg); width: 620px; max-width: 95vw; max-height: 90vh; overflow-y: auto; padding: 32px; }
+.modal h2 { font-weight: 600; font-size: 1.2rem; margin-bottom: 24px; color: var(--q-off-black); }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 600; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 6px; }
+.form-group input, .form-group select, .form-group textarea { font-family: inherit; font-size: 0.85rem; width: 100%; padding: 10px 14px; border: 1px solid var(--q-beige); border-radius: var(--radius); background: var(--q-off-white); color: var(--q-off-black); }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--q-brown); background: var(--q-white); }
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--q-beige); }
+.modal-actions-right { display: flex; gap: 8px; }
+
+/* PLATFORMS */
+.platforms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
+.platform-card { background: var(--q-white); border-radius: var(--radius-lg); padding: 20px 24px; border-left: 4px solid var(--q-beige); }
+.platform-card.relevance-hoog { border-left-color: var(--q-brown); }
+.platform-card.relevance-midden { border-left-color: var(--q-blue-light); }
+.platform-card.relevance-laag { border-left-color: var(--q-beige); }
+.platform-card h3 { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.platform-card h3 a { color: var(--q-off-black); text-decoration: none; }
+.platform-card h3 a:hover { color: var(--q-blue); }
+.platform-card .platform-type { font-weight: 600; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 10px; }
+.platform-card .platform-detail { font-size: 0.8rem; color: #555; margin-bottom: 6px; line-height: 1.4; }
+.platform-card .platform-detail strong { color: var(--q-off-black); font-weight: 600; }
+.relevance-badge { display: inline-block; font-weight: 600; font-size: 0.65rem; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 10px; border-radius: 12px; margin-top: 8px; }
+.relevance-hoog .relevance-badge { background: var(--q-brown); color: var(--q-white); }
+.relevance-midden .relevance-badge { background: var(--q-beige); color: var(--q-off-black); }
+.relevance-laag .relevance-badge { background: var(--q-off-white); color: var(--q-brown); }
+
+/* EVENTS */
+.events-timeline { max-width: 800px; }
+.event-card { background: var(--q-white); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 12px; display: flex; gap: 20px; align-items: flex-start; border-left: 4px solid var(--q-orange); }
+.event-date-block { min-width: 80px; text-align: center; flex-shrink: 0; }
+.event-date-block .event-month { font-weight: 600; font-size: 0.65rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); }
+.event-date-block .event-day { font-weight: 700; font-size: 1.8rem; line-height: 1; color: var(--q-off-black); }
+.event-date-block .event-year { font-size: 0.75rem; color: var(--q-brown); }
+.event-info h3 { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+.event-info p { font-size: 0.8rem; color: #666; line-height: 1.4; }
+.event-info a { color: var(--q-blue); text-decoration: none; font-size: 0.8rem; }
+.event-info a:hover { text-decoration: underline; }
+
+.info-banner { background: var(--q-beige); border-radius: var(--radius-lg); padding: 16px 24px; margin-bottom: 24px; font-size: 0.8rem; color: var(--q-off-black); line-height: 1.5; }
+.info-banner strong { font-weight: 600; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-header h2 { font-weight: 400; font-size: 1.8rem; color: var(--q-off-black); }
+
+.app-footer { background: var(--q-beige); padding: 12px 32px; font-size: 0.75rem; color: var(--q-brown); flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+
+@media (max-width: 1024px) {
+  .header { padding: 0 20px; }
+  .tab-bar { padding: 0 20px; }
+  .main { padding: 20px; }
+  .calendar-grid { grid-template-columns: 1fr; }
+  .platforms-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .stats-row { flex-wrap: wrap; }
+  .month-nav { gap: 2px; }
+  .month-btn { padding: 5px 8px; font-size: 0.65rem; }
+  .week-grid { grid-template-columns: repeat(5, 1fr); font-size: 0.85rem; }
+}
+.main::-webkit-scrollbar { width: 6px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: var(--q-beige); border-radius: 3px; }
+.main::-webkit-scrollbar-thumb:hover { background: var(--q-brown); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-text"><span>Q</span>VANTUM</div>
+      <div class="header-subtitle">Content Kalender 2026 - 2027</div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-small btn-ghost" onclick="resetData()" title="Reset naar standaard data">Reset</button>
+      <button class="btn btn-small btn-ghost" onclick="exportJSON()" title="Exporteer planning als JSON">Export JSON</button>
+      <button class="btn btn-small btn-ghost" onclick="document.getElementById('importFile').click()" title="Importeer planning vanuit JSON">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+  </header>
+
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-tab="calendar">Content Kalender</button>
+    <button class="tab-btn" data-tab="platforms">Mediaplatformen</button>
+    <button class="tab-btn" data-tab="events">Evenementen</button>
+  </nav>
+
+  <main class="main">
+    <!-- CALENDAR TAB -->
+    <div id="tab-calendar" class="tab-content active">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="calendar-controls">
+        <div class="month-nav" id="monthNav"></div>
+        <div class="controls-right">
+          <div class="view-toggle">
+            <button class="view-toggle-btn active" data-view="week" onclick="setView('week')">Weekweergave</button>
+            <button class="view-toggle-btn" data-view="card" onclick="setView('card')">Kaarten</button>
+          </div>
+          <button class="btn btn-primary btn-small" onclick="openModal()">+ Nieuw item</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select class="filter-select" id="filterKanaal" onchange="renderCalendar()"><option value="">Alle kanalen</option></select>
+        <select class="filter-select" id="filterAuteur" onchange="renderCalendar()"><option value="">Alle auteurs</option></select>
+        <select class="filter-select" id="filterThema" onchange="renderCalendar()"><option value="">Alle thema's</option></select>
+        <select class="filter-select" id="filterStatus" onchange="renderCalendar()">
+          <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option>
+        </select>
+        <select class="filter-select" id="filterType" onchange="renderCalendar()">
+          <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
+        </select>
+      </div>
+      <div id="calendarContainer"></div>
+    </div>
+
+    <!-- PLATFORMS TAB -->
+    <div id="tab-platforms" class="tab-content">
+      <div class="section-header"><h2>Mediaplatformen</h2></div>
+      <div class="info-banner"><strong>Overzicht:</strong> Relevante vakbladen, online platforms en brancheorganisaties waar Qvantum (gratis of betaald) kan publiceren. Gesorteerd op relevantie.</div>
+      <div class="platforms-grid" id="platformsGrid"></div>
+    </div>
+
+    <!-- EVENTS TAB -->
+    <div id="tab-events" class="tab-content">
+      <div class="section-header"><h2>Evenementen 2026 - 2027</h2></div>
+      <div class="info-banner"><strong>Let op:</strong> VSK is tweejaarlijks — de volgende editie (VSK+E 2028) is pas op 1-4 februari 2028.</div>
+      <div class="events-timeline" id="eventsTimeline"></div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <span>Qvantum Nederland — Content Planning Dashboard v1.0</span>
+    <span>Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.</span>
+  </footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="modalTitle">Nieuw content item</h2>
+    <input type="hidden" id="editId">
+    <div class="form-row">
+      <div class="form-group"><label>Datum</label><input type="date" id="fieldDatum"></div>
+      <div class="form-group"><label>Week (optioneel)</label><input type="text" id="fieldWeek" placeholder="bijv. Week 14"></div>
+    </div>
+    <div class="form-group"><label>Thema / campagne</label><input type="text" id="fieldThema" placeholder="bijv. QG Launch, Energieplanologie"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Type activiteit</label>
+        <select id="fieldType"><option value="LinkedIn post">LinkedIn post</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option></select>
+      </div>
+      <div class="form-group"><label>Kanaal</label>
+        <select id="fieldKanaal"><option value="LinkedIn — Viktor de Haan">LinkedIn — Viktor de Haan</option><option value="LinkedIn — Qvantum Nederland">LinkedIn — Qvantum Nederland</option><option value="LinkedIn — Mark Vellinga">LinkedIn — Mark Vellinga</option><option value="LinkedIn — Koen Pape">LinkedIn — Koen Pape</option><option value="LinkedIn — Pascal Boy">LinkedIn — Pascal Boy</option><option value="LinkedIn — Sebastiaan Rietveld">LinkedIn — Sebastiaan Rietveld</option><option value="HubSpot — Nieuwsbrief / email">HubSpot — Nieuwsbrief / email</option><option value="HubSpot — Blog">HubSpot — Blog</option><option value="Vakpublicaties (extern)">Vakpublicaties (extern)</option><option value="Beurzen & events">Beurzen & events</option><option value="Website qvantum.com">Website qvantum.com</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Auteur / account</label>
+        <select id="fieldAuteur"><option value="Viktor de Haan">Viktor de Haan</option><option value="Mark Vellinga">Mark Vellinga</option><option value="Koen Pape">Koen Pape</option><option value="Pascal Boy">Pascal Boy</option><option value="Sebastiaan Rietveld">Sebastiaan Rietveld</option><option value="Qvantum NL bedrijfspagina">Qvantum NL bedrijfspagina</option></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="fieldStatus"><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Korte omschrijving</label><textarea id="fieldOmschrijving" rows="2" placeholder="Waar gaat dit item over?"></textarea></div>
+    <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
+    <div class="modal-actions">
+      <div><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button></div>
+      <div class="modal-actions-right">
+        <button class="btn btn-small btn-ghost" onclick="closeModal()">Annuleren</button>
+        <button class="btn btn-primary" onclick="saveItem()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS = [
+  { key: '2026-04', label: 'Apr 2026' }, { key: '2026-05', label: 'Mei 2026' },
+  { key: '2026-06', label: 'Jun 2026' }, { key: '2026-07', label: 'Jul 2026' },
+  { key: '2026-08', label: 'Aug 2026' }, { key: '2026-09', label: 'Sep 2026' },
+  { key: '2026-10', label: 'Okt 2026' }, { key: '2026-11', label: 'Nov 2026' },
+  { key: '2026-12', label: 'Dec 2026' }, { key: '2027-01', label: 'Jan 2027' },
+  { key: '2027-02', label: 'Feb 2027' }, { key: '2027-03', label: 'Mar 2027' },
+];
+const KANALEN = ['LinkedIn — Viktor de Haan','LinkedIn — Qvantum Nederland','LinkedIn — Mark Vellinga','LinkedIn — Koen Pape','LinkedIn — Pascal Boy','LinkedIn — Sebastiaan Rietveld','HubSpot — Nieuwsbrief / email','HubSpot — Blog','Vakpublicaties (extern)','Beurzen & events','Website qvantum.com'];
+const DAY_NAMES = ['Zo','Ma','Di','Wo','Do','Vr','Za'];
+const DAY_NAMES_FULL = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+const TYPE_COLORS = { 'LinkedIn post':'#91877A', 'Artikel':'#002656', 'Nieuwsbrief':'#3164FD', 'Beurs / event':'#FF8D5A', 'Webinar':'#4AA1FF', 'Vakpublicatie':'#C41230', 'Website':'#BBA84F' };
+
+let selectedMonth = MONTHS[0].key;
+let currentView = 'week';
+let items = [];
+let nextId = 1;
+
+/* SEED DATA */
+function getSeedData() {
+  return [
+    { datum:'2026-04-07', week:'Week 15', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Projecthighlight: eerste opgeleverde project in beeld. Resultaten en bewonersreactie.', content:'' },
+    { datum:'2026-04-10', week:'Week 15', thema:'Energieplanologie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Introductiepost energieplanologie: het snijvlak van ruimtelijke ordening en energiesystemen.', content:'' },
+    { datum:'2026-04-15', week:'Week 16', thema:'Congres Doorbraak vd Warmtepomp', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Congres Doorbraak van de Warmtepomp — Louwman Museum, Den Haag.', content:'' },
+    { datum:'2026-04-17', week:'Week 16', thema:'Congres Doorbraak reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik op Congres Doorbraak: 3 inzichten die opvielen.', content:'' },
+    { datum:'2026-04-22', week:'Week 17', thema:'Projecten & referentiecases', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q2 nieuwsbrief: projectupdates, congresverslag, aankomende events.', content:'' },
+    { datum:'2026-04-28', week:'Week 18', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Mark Vellinga', auteur:'Mark Vellinga', status:'Idee', omschrijving:'Technische deep-dive: hoe een recent project is opgelost.', content:'' },
+    { datum:'2026-05-05', week:'Week 19', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Smart Control uitgelicht: slim energiemanagement in de praktijk.', content:'' },
+    { datum:'2026-05-08', week:'Week 19', thema:'Netcongestie & woningbouw', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Netcongestie als rem op woningbouw — regionale energiekeuzes.', content:'' },
+    { datum:'2026-05-13', week:'Week 20', thema:'Energiemanagement', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Blogartikel: FlexReady en de toekomst van netbewust verwarmen.', content:'' },
+    { datum:'2026-05-19', week:'Week 21', thema:'Netcongestie & woningbouw', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wat als 200 woningen tegelijk een warmtepomp krijgen?', content:'' },
+    { datum:'2026-05-26', week:'Week 22', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Koen Pape', auteur:'Koen Pape', status:'Idee', omschrijving:'eCOP vs COP: economisch vs technisch rendement.', content:'' },
+    { datum:'2026-06-02', week:'Week 23', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG teaser: er komt iets nieuws aan.', content:'' },
+    { datum:'2026-06-09', week:'Week 24', thema:'Koeling van steden', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Koeling: het vergeten hoofdstuk van de energietransitie.', content:'' },
+    { datum:'2026-06-15', week:'Week 25', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Water-water warmtepompen: waarom grondgebonden de toekomst is.', content:'' },
+    { datum:'2026-06-22', week:'Week 26', thema:'Koeling van steden', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Urban heat islands: koelen met dezelfde systemen die je verwarmt.', content:'' },
+    { datum:'2026-06-28', week:'Week 26', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Persbericht QG pre-launch voor vakbladen.', content:'' },
+    { datum:'2026-07-06', week:'Week 28', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Modbus-integratie uitgelegd.', content:'' },
+    { datum:'2026-07-09', week:'Week 28', thema:'TCO vs aanschafprijsdenken', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'De goedkoopste warmtepomp kan de duurste keuze zijn.', content:'' },
+    { datum:'2026-07-14', week:'Week 29', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Pascal Boy', auteur:'Pascal Boy', status:'Idee', omschrijving:'Homeowner Scheduler in de praktijk.', content:'' },
+    { datum:'2026-07-21', week:'Week 30', thema:'TCO vs aanschafprijsdenken', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'TCO-rekenen voor woningcorporaties in 5 stappen.', content:'' },
+    { datum:'2026-08-04', week:'Week 32', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Zomerreflectie: waar staan we na H1 2026?', content:'' },
+    { datum:'2026-08-11', week:'Week 33', thema:'Installateurstekort', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Installateurstekort als bottleneck van de transitie.', content:'' },
+    { datum:'2026-08-18', week:'Week 34', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Sebastiaan Rietveld', auteur:'Sebastiaan Rietveld', status:'Idee', omschrijving:'Behind the scenes: design-assist traject van A tot Z.', content:'' },
+    { datum:'2026-08-25', week:'Week 35', thema:'Installateurstekort', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wie nu investeert in kennis, heeft straks werk.', content:'' },
+    { datum:'2026-09-01', week:'Week 36', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Nieuwe referentiecase met bewonerstestimonial.', content:'' },
+    { datum:'2026-09-08', week:'Week 37', thema:'Installatie Vakdagen', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Installatie Vakdagen 8-10 sep — Hardenberg.', content:'' },
+    { datum:'2026-09-10', week:'Week 37', thema:'Hybride warmtepomp 2026', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Hybride warmtepomp verplichting: impact op corporaties.', content:'' },
+    { datum:'2026-09-15', week:'Week 38', thema:'Installatie Vakdagen reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Mark Vellinga', auteur:'Mark Vellinga', status:'Idee', omschrijving:'Terugblik Installatie Vakdagen: trends en gesprekken.', content:'' },
+    { datum:'2026-09-22', week:'Week 39', thema:'Projecten & referentiecases', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q3 nieuwsbrief: beursverslag, cases, productnieuws.', content:'' },
+    { datum:'2026-10-01', week:'Week 40', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG officieel gelanceerd. Productnieuws.', content:'' },
+    { datum:'2026-10-02', week:'Week 40', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Persbericht QG launch naar vakbladen.', content:'' },
+    { datum:'2026-10-06', week:'Week 41', thema:'Vakbeurs Energie', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Vakbeurs Energie 6-8 okt — Brabanthallen, Den Bosch.', content:'' },
+    { datum:'2026-10-09', week:'Week 41', thema:'Vakbeurs Energie reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Vakbeurs Energie: fear of regret bij corporaties.', content:'' },
+    { datum:'2026-10-15', week:'Week 42', thema:'Fear of regret', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Fear of regret: beslissingen voor 50 jaar.', content:'' },
+    { datum:'2026-10-20', week:'Week 43', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG deep-dive: specificaties en toepassingen.', content:'' },
+    { datum:'2026-11-02', week:'Week 44', thema:'QG referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG referentiecase: De Efteling.', content:'' },
+    { datum:'2026-11-04', week:'Week 45', thema:'Klimaattop GO', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Klimaattop GO 4-5 nov — Jaarbeurs Utrecht.', content:'' },
+    { datum:'2026-11-09', week:'Week 46', thema:'Wcw en corporaties', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wet collectieve warmte: impact op corporaties.', content:'' },
+    { datum:'2026-11-16', week:'Week 47', thema:'QG referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG referentiecase: Warm Vreeswijk.', content:'' },
+    { datum:'2026-11-19', week:'Week 47', thema:'Warmte Congrestival', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Warmte Congrestival november 2026.', content:'' },
+    { datum:'2026-11-23', week:'Week 48', thema:'Wcw en corporaties', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'De Wcw in 5 punten voor corporatiebestuurders.', content:'' },
+    { datum:'2026-12-01', week:'Week 49', thema:'Jaaroverzicht', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Jaaroverzicht 2026: projecten, milestones, teamgroei.', content:'' },
+    { datum:'2026-12-04', week:'Week 49', thema:'1-fase vs 3-fase', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'1-fase vs 3-fase problematiek bij warmtepompen.', content:'' },
+    { datum:'2026-12-10', week:'Week 50', thema:'Jaaroverzicht', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Eindejaarsnieuwsbrief: hoogtepunten en vooruitblik.', content:'' },
+    { datum:'2026-12-15', week:'Week 51', thema:'1-fase vs 3-fase', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Enkelfase warmtepompen: waarom Qvantum kiest voor 230V.', content:'' },
+    { datum:'2027-01-05', week:'Week 1', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Configurable I/O uitgelicht.', content:'' },
+    { datum:'2027-01-08', week:'Week 2', thema:'PV-leveranciers als kanaal', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'PV-leveranciers als nieuw verkoopkanaal voor warmtepompen.', content:'' },
+    { datum:'2027-01-15', week:'Week 3', thema:'Energiemanagement', type:'LinkedIn post', kanaal:'LinkedIn — Koen Pape', auteur:'Koen Pape', status:'Idee', omschrijving:'HomeOwner Scheduler: bewoners in controle.', content:'' },
+    { datum:'2027-01-20', week:'Week 3', thema:'PV-leveranciers als kanaal', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Van zonnepanelen naar warmtepompen.', content:'' },
+    { datum:'2027-01-26', week:'Week 4', thema:'Energiemanagement', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Modbus-integratie in collectieve warmtesystemen.', content:'' },
+    { datum:'2027-02-02', week:'Week 5', thema:'Projecten pipeline', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Pipeline 2027: projecten die dit jaar starten.', content:'' },
+    { datum:'2027-02-05', week:'Week 6', thema:'Energieplanologie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Energyboards: regionale keuzes sturen.', content:'' },
+    { datum:'2027-02-10', week:'Week 6', thema:'Projecten pipeline', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q1 2027 nieuwsbrief: pipeline, updates, beurzen.', content:'' },
+    { datum:'2027-02-16', week:'Week 7', thema:'Energieplanologie', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Integraal programmeren: energiekeuzes bij bestemmingsplan.', content:'' },
+    { datum:'2027-02-23', week:'Week 8', thema:'Projecten pipeline', type:'LinkedIn post', kanaal:'LinkedIn — Pascal Boy', auteur:'Pascal Boy', status:'Idee', omschrijving:'Wat we leren van elk project.', content:'' },
+    { datum:'2027-03-02', week:'Week 9', thema:'Green Heating Solutions beurs', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Qvantum op Green Heating Solutions.', content:'' },
+    { datum:'2027-03-05', week:'Week 10', thema:'Transitie vooruitblik', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik op een jaar content en gesprekken.', content:'' },
+    { datum:'2027-03-16', week:'Week 12', thema:'Green Heating Solutions', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Green Heating Solutions 16-18 maart — Vijfhuizen.', content:'' },
+    { datum:'2027-03-19', week:'Week 12', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG USPs: 6-12 kW, R290, enkelfase, 36 dB(A).', content:'' },
+    { datum:'2027-03-24', week:'Week 13', thema:'Green Heating Solutions reflectie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Green Heating Solutions: 3 trends.', content:'' },
+    { datum:'2027-03-29', week:'Week 13', thema:'Transitie vooruitblik', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wat ik in een jaar warmtetransitie heb geleerd.', content:'' },
+  ];
+}
+
+/* PLATFORMS + EVENTS DATA */
+const PLATFORMS = [
+  { naam:'Warmte365', url:'https://www.warmte365.nl/', type:'Online platform', bereik:'Duurzame HVAC-professionals, installateurs, adviseurs', publicatie:'Basispakket EUR 750 excl. BTW. Plus/Premium: banners, nieuwsbrief, redactioneel.', kosten:'Vanaf EUR 750', relevantie:'hoog' },
+  { naam:'Vakblad Warmtepompen', url:'https://www.vakbladwarmtepompen.nl/', type:'Vakblad', bereik:'Installatieprofessionals, adviseurs, corporaties, gemeenten', publicatie:'Nieuwsbrief 2x/week, vakblad 6x/jaar. Adverteren via VMN Media.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Gawalo', url:'https://www.gawalo.nl/', type:'Vakblad', bereik:'Installatieprofessionals, beslissers bij installatiebedrijven', publicatie:'Hoofdmediapartner VSK. Adverteren via VMN Media.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Installatie & Bouw', url:'https://www.installatieenbouw.nl/', type:'Vakblad', bereik:'11.000+ professionals, 111.000+ online bezoekers', publicatie:'Advertorials, content marketing. Magazine 6x/jaar.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Installatie.nl', url:'https://www.installatie.nl/', type:'Vakblad', bereik:'MKB installatiebedrijven, online marktleider. 58 jaar.', publicatie:'Contentmarketing, webinars, podcast, video.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Cobouw', url:'https://www.cobouw.nl/', type:'Vakblad / nieuwsplatform', bereik:'Aannemers, ontwikkelaars, installateurs, beleidsmakers. Sinds 1857.', publicatie:'Thought leadership, advertorials, lead generation, Cobouw Pro.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Duurzaam Gebouwd', url:'https://www.duurzaamgebouwd.nl/', type:'Kennisplatform', bereik:'Beslissers bouw/vastgoed. 39.000 bezoeken/maand, 120 topexperts.', publicatie:'Expertposts, rondetafels, themadossiers. Organiseert Klimaattop GO.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Energie+ / Renda', url:'https://www.energieplus.nl/', type:'Kennisnetwerk', bereik:'Woningcorporaties, aannemers, adviesbureaus sociale woningbouw.', publicatie:'Vakblad, events, kennistafels, projectendatabase.', kosten:'Op aanvraag', relevantie:'hoog' },
+  { naam:'Aedes', url:'https://aedes.nl/', type:'Branchevereniging', bereik:'261 woningcorporaties (2,4 mln huurwoningen).', publicatie:'Geen extern publicatiemodel. Wel bijeenkomsten en community.', kosten:'N.v.t.', relevantie:'hoog' },
+  { naam:'Vereniging Warmtepompen', url:'https://warmte-pompen.nl/', type:'Branchevereniging', bereik:'Warmtepompsector. Organiseert Congres Doorbraak, publiceert Trendrapport.', publicatie:'Congressen, publicaties, leden spotlight.', kosten:'Lidmaatschap', relevantie:'hoog' },
+  { naam:'LinkedIn Groepen', url:'https://www.linkedin.com/', type:'Social media', bereik:'Sectorgroepen: Warmtetransitie NL, Duurzaam Bouwen, Energietransitie.', publicatie:'Gratis posts in groepen. Vergroot organisch bereik.', kosten:'Gratis', relevantie:'hoog' },
+  { naam:'PONT Klimaat', url:'https://klimaatweb.nl/', type:'Online platform', bereik:'Beleidsbepalers, duurzaamheidsadviseurs. 10.000 prof/maand.', publicatie:'Partnerschap, adverteren, PONT Academy.', kosten:'Op aanvraag', relevantie:'midden' },
+  { naam:'de Architect', url:'https://www.dearchitect.nl/', type:'Vakblad', bereik:'Architecten, stedenbouwkundigen. 50+ jaar.', publicatie:'Adverteren via VMN Media.', kosten:'Op aanvraag', relevantie:'midden' },
+  { naam:'Bouwwereld', url:'https://www.bouwwereld.nl/', type:'Vakblad', bereik:'Ingenieurs, architecten, aannemers. Sinds 1905.', publicatie:'Adverteren via Eisma Media. Magazine 8x/jaar.', kosten:'Op aanvraag', relevantie:'midden' },
+  { naam:'DuurzaamNieuws', url:'https://www.duurzaamnieuws.nl/', type:'Nieuwsplatform', bereik:'Groene consumenten en professionals. 15+ jaar.', publicatie:'Blogposts, advertorials, banners.', kosten:'Betaald', relevantie:'midden' },
+  { naam:'Installatie Totaal', url:'https://www.installatietotaal.nl/', type:'Vakblad', bereik:'B2B installatiebedrijven. 25+ jaar. Mediapartner Vakbeurs Energie.', publicatie:'Magazine, online, advertorials.', kosten:'Op aanvraag', relevantie:'midden' },
+  { naam:'Stadszaken.nl', url:'https://stadszaken.nl/', type:'Online platform', bereik:'Stedelijke ontwikkeling, warmtenetten, energietransitie.', publicatie:'Redactioneel, opiniebijdragen.', kosten:'Gratis / op aanvraag', relevantie:'midden' },
+  { naam:'Techniek Nederland', url:'https://www.technieknederland.nl/', type:'Branchevereniging', bereik:'Branchevereniging installatietechniek.', publicatie:'Ledennieuwsbrief, events.', kosten:'Lidmaatschap', relevantie:'midden' },
+  { naam:'Stichting Warmtenetwerk', url:'https://warmtenetwerk.nl/', type:'Kennisplatform', bereik:'Warmtenetwerkprofessionals. Organiseert Warmte Congrestival.', publicatie:'Kennisbank, events, nieuwsbrief.', kosten:'Lidmaatschap', relevantie:'midden' },
+  { naam:'Bodemenergie.nl', url:'https://bodemenergie.nl/', type:'Kennisplatform', bereik:'Bodemenergie, WKO, geothermie. Niche, relevant voor QG.', publicatie:'Kennisbank, nieuws, events.', kosten:'Gratis', relevantie:'midden' },
+];
+
+const EVENTS = [
+  { datum:'2026-04-15', naam:'Congres Doorbraak van de Warmtepomp', locatie:'Louwman Museum, Den Haag', beschrijving:'15 april. Warmte365 + Vereniging Warmtepompen + Techniek Nederland.', url:'https://www.congreswarmtepomp.nl/' },
+  { datum:'2026-09-08', naam:'Installatie Vakdagen', locatie:'Evenementenhal Hardenberg', beschrijving:'8-10 september. 25 jaar bestaand evenement.', url:'' },
+  { datum:'2026-10-06', naam:'Vakbeurs Energie 2026', locatie:'Brabanthallen, Den Bosch', beschrijving:'6-8 oktober. Grootste zakelijke netwerkevenement duurzame energie.', url:'https://www.vakbeursenergie.nl/' },
+  { datum:'2026-10-15', naam:'Nationaal Warmte Congres (verwacht)', locatie:'Locatie tbd', beschrijving:'Verwacht Q4 2026 (Euroforum).', url:'https://warmtecongres.nl/' },
+  { datum:'2026-11-04', naam:'Klimaattop GO', locatie:'Jaarbeurs Utrecht', beschrijving:'4-5 november. 1.000+ deelnemers. Voorzitter: Diederik Samsom.', url:'https://www.klimaattopgo.nl' },
+  { datum:'2026-11-19', naam:'Warmte Congrestival (verwacht)', locatie:'Locatie tbd', beschrijving:'November 2026, exacte datum tbd. Stichting Warmtenetwerk.', url:'https://warmtenetwerk.nl/' },
+  { datum:'2027-03-16', naam:'Sustainable Solutions + Green Heating Solutions', locatie:'Expo Greater Amsterdam, Vijfhuizen', beschrijving:'16-18 maart 2027. 500+ innovaties, 13.000+ bezoekers.', url:'https://www.greenheatingsolutions.nl/' },
+];
+
+/* INIT */
+function init() {
+  const stored = localStorage.getItem('qvantum-content-kalender-v2');
+  if (stored) {
+    try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
+  } else { seedItems(); }
+  buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs();
+}
+
+function seedItems() {
+  items = []; nextId = 1;
+  getSeedData().forEach(s => { items.push({ id: nextId++, ...s }); });
+  saveToStorage();
+}
+
+function resetData() { if(confirm('Alle wijzigingen resetten naar standaard data?')) { localStorage.removeItem('qvantum-content-kalender-v2'); seedItems(); refreshThemaFilter(); renderCalendar(); } }
+function saveToStorage() { localStorage.setItem('qvantum-content-kalender-v2', JSON.stringify({ items, nextId })); }
+
+/* TABS */
+function setupTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+/* VIEW TOGGLE */
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  renderCalendar();
+}
+
+/* MONTH NAV */
+function buildMonthNav() {
+  document.getElementById('monthNav').innerHTML = MONTHS.map(m =>
+    `<button class="month-btn ${m.key === selectedMonth ? 'active' : ''}" onclick="selectMonth('${m.key}')">${m.label}</button>`
+  ).join('');
+}
+function selectMonth(key) { selectedMonth = key; buildMonthNav(); renderCalendar(); }
+
+/* FILTERS */
+function buildFilterOptions() {
+  const kSel = document.getElementById('filterKanaal');
+  KANALEN.forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = k; kSel.appendChild(o); });
+  const aSel = document.getElementById('filterAuteur');
+  ['Viktor de Haan','Mark Vellinga','Koen Pape','Pascal Boy','Sebastiaan Rietveld','Qvantum NL bedrijfspagina'].forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; aSel.appendChild(o); });
+  refreshThemaFilter();
+}
+
+function refreshThemaFilter() {
+  const tSel = document.getElementById('filterThema');
+  const cv = tSel.value;
+  tSel.innerHTML = '<option value="">Alle thema\'s</option>';
+  [...new Set(items.map(i => i.thema))].sort().forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tSel.appendChild(o); });
+  tSel.value = cv;
+}
+
+function getFilteredItems() {
+  const fK = document.getElementById('filterKanaal').value;
+  const fA = document.getElementById('filterAuteur').value;
+  const fT = document.getElementById('filterThema').value;
+  const fS = document.getElementById('filterStatus').value;
+  const fTy = document.getElementById('filterType').value;
+  return items.filter(item => {
+    if (!item.datum.startsWith(selectedMonth)) return false;
+    if (fK && item.kanaal !== fK) return false;
+    if (fA && item.auteur !== fA) return false;
+    if (fT && item.thema !== fT) return false;
+    if (fS && item.status !== fS) return false;
+    if (fTy && item.type !== fTy) return false;
+    return true;
+  }).sort((a, b) => a.datum.localeCompare(b.datum));
+}
+
+/* RENDER */
+function renderCalendar() {
+  renderStats();
+  const container = document.getElementById('calendarContainer');
+  const filtered = getFilteredItems();
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>Geen items gevonden</h3><p>Pas de filters aan of voeg een nieuw item toe.</p><button class="btn btn-primary" onclick="openModal()">+ Nieuw item</button></div>`;
+    return;
+  }
+  if (currentView === 'week') renderWeekView(container, filtered);
+  else renderCardView(container, filtered);
+}
+
+function renderStats() {
+  const mi = items.filter(i => i.datum.startsWith(selectedMonth));
+  const stats = [
+    { v: items.length, l: 'Totaal' }, { v: mi.length, l: 'Deze maand' },
+    { v: mi.filter(i => i.status === 'Idee').length, l: 'Idee' },
+    { v: mi.filter(i => i.status === 'Gepland').length, l: 'Gepland' },
+    { v: mi.filter(i => i.status === 'In productie').length, l: 'In productie' },
+    { v: mi.filter(i => i.status === 'Gepubliceerd').length, l: 'Gepubliceerd' },
+  ];
+  document.getElementById('statsRow').innerHTML = stats.map(s => `<div class="stat-card"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('');
+}
+
+/* WEEK VIEW */
+function renderWeekView(container, filtered) {
+  const [year, month] = selectedMonth.split('-').map(Number);
+  const weeks = getWeeksInMonth(year, month);
+  const itemsByDate = {};
+  filtered.forEach(item => { if (!itemsByDate[item.datum]) itemsByDate[item.datum] = []; itemsByDate[item.datum].push(item); });
+
+  let html = '';
+  weeks.forEach((week, wi) => {
+    const firstDay = week.find(d => d !== null);
+    const weekNum = getISOWeek(firstDay);
+    html += `<div class="week-block"><div class="week-label">Week ${weekNum}</div><div class="week-grid">`;
+    // ma(1) to vr(5)
+    for (let d = 0; d < 5; d++) {
+      const date = week[d];
+      if (!date) {
+        html += `<div class="day-column"><div class="day-header">${['Ma','Di','Wo','Do','Vr'][d]}</div></div>`;
+        continue;
+      }
+      const ds = fmt(date);
+      const dayItems = itemsByDate[ds] || [];
+      const dayName = ['Ma','Di','Wo','Do','Vr'][d];
+      const dayNum = date.getDate();
+      html += `<div class="day-column"><div class="day-header">${dayName} <span class="day-num">${dayNum}</span></div>`;
+      if (dayItems.length === 0) {
+        html += `<div class="day-empty">—</div>`;
+      } else {
+        dayItems.forEach(item => {
+          const tc = TYPE_COLORS[item.type] || '#91877A';
+          const sc = statusClass(item.status);
+          const hasContent = item.content && item.content.trim();
+          html += `<div class="day-item" style="border-left-color:${tc}">
+            <div class="di-title" onclick="openModal(${item.id})">${esc(item.thema)}</div>
+            <div class="di-meta"><span class="di-auteur">${esc(item.auteur.split(' ')[0])}</span> &middot; ${esc(item.type)}</div>
+            <div class="di-status ${sc}">${esc(item.status)}</div>
+            <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? 'Tekst tonen' : 'Tekst schrijven'} &#9662;</div>
+            <div class="di-content" id="dc-${item.id}">
+              <textarea class="di-content-text" placeholder="Schrijf hier de tekst..." onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
+            </div>
+          </div>`;
+        });
+      }
+      html += `</div>`;
+    }
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+/* CARD VIEW */
+function renderCardView(container, filtered) {
+  container.innerHTML = `<div class="calendar-grid">${filtered.map(item => {
+    const tc = TYPE_COLORS[item.type] || '#91877A';
+    const sc = statusClass(item.status);
+    const d = new Date(item.datum);
+    const ds = d.toLocaleDateString('nl-NL', { weekday:'short', day:'numeric', month:'short' });
+    const hasContent = item.content && item.content.trim();
+    return `<div class="calendar-item" style="border-left-color:${tc}">
+      <div class="item-header" onclick="openModal(${item.id})">
+        <span class="item-date">${ds}${item.week ? ' &middot; ' + item.week : ''}</span>
+        <span class="item-status ${sc}">${item.status}</span>
+      </div>
+      <div class="item-title" onclick="openModal(${item.id})"><span class="type-badge" style="background:${tc}"></span> ${esc(item.thema)}</div>
+      <div class="item-meta">
+        <span class="tag">${esc(item.type)}</span>
+        <span class="tag">${esc(item.auteur)}</span>
+        <span class="tag">${esc(item.kanaal.split(' — ')[0])}</span>
+      </div>
+      ${item.omschrijving ? `<div class="item-desc">${esc(item.omschrijving)}</div>` : ''}
+      <div class="item-content-toggle" onclick="toggleCardContent(event, ${item.id})">${hasContent ? 'Tekst tonen' : 'Tekst schrijven'} &#9662;</div>
+      <div class="item-content-area" id="cc-${item.id}">
+        <textarea class="item-content-textarea" placeholder="Schrijf hier de volledige post/artikel tekst..." onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* CONTENT TOGGLE */
+function toggleDayContent(e, id) {
+  e.stopPropagation();
+  const el = document.getElementById('dc-' + id);
+  el.classList.toggle('open');
+  const toggle = e.target;
+  if (el.classList.contains('open')) { toggle.innerHTML = 'Tekst verbergen &#9652;'; el.querySelector('textarea').focus(); }
+  else toggle.innerHTML = (items.find(i=>i.id===id)?.content?.trim() ? 'Tekst tonen' : 'Tekst schrijven') + ' &#9662;';
+}
+
+function toggleCardContent(e, id) {
+  e.stopPropagation();
+  const el = document.getElementById('cc-' + id);
+  el.classList.toggle('open');
+  const toggle = e.target;
+  if (el.classList.contains('open')) { toggle.innerHTML = 'Tekst verbergen &#9652;'; el.querySelector('textarea').focus(); }
+  else toggle.innerHTML = (items.find(i=>i.id===id)?.content?.trim() ? 'Tekst tonen' : 'Tekst schrijven') + ' &#9662;';
+}
+
+function saveContentInline(id, value) {
+  const item = items.find(i => i.id === id);
+  if (item) { item.content = value; saveToStorage(); }
+}
+
+/* WEEK HELPERS */
+function getWeeksInMonth(year, month) {
+  const weeks = [];
+  const first = new Date(year, month - 1, 1);
+  const last = new Date(year, month, 0);
+  // Find first Monday on or before first day of month
+  let start = new Date(first);
+  let dow = start.getDay(); // 0=Sun
+  if (dow === 0) start.setDate(start.getDate() - 6);
+  else if (dow > 1) start.setDate(start.getDate() - (dow - 1));
+  // If start is after first, go back a week
+  if (start > first) start.setDate(start.getDate() - 7);
+
+  while (start <= last || weeks.length === 0) {
+    const week = [];
+    for (let d = 0; d < 5; d++) { // Mon-Fri
+      const date = new Date(start);
+      date.setDate(date.getDate() + d);
+      // Only include if in the target month
+      if (date.getMonth() === month - 1) week.push(new Date(date));
+      else week.push(null);
+    }
+    if (week.some(d => d !== null)) weeks.push(week);
+    start.setDate(start.getDate() + 7);
+  }
+  return weeks;
+}
+
+function getISOWeek(date) {
+  if (!date) return '?';
+  const d = new Date(date); d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+function fmt(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function statusClass(s) { return 'status-' + s.toLowerCase().replace(/ /g, ''); }
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+
+/* MODAL */
+function openModal(id) {
+  const modal = document.getElementById('modalOverlay');
+  const btnDel = document.getElementById('btnDelete');
+  if (id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    document.getElementById('modalTitle').textContent = 'Item bewerken';
+    document.getElementById('editId').value = id;
+    document.getElementById('fieldDatum').value = item.datum;
+    document.getElementById('fieldWeek').value = item.week || '';
+    document.getElementById('fieldThema').value = item.thema;
+    document.getElementById('fieldType').value = item.type;
+    document.getElementById('fieldKanaal').value = item.kanaal;
+    document.getElementById('fieldAuteur').value = item.auteur;
+    document.getElementById('fieldStatus').value = item.status;
+    document.getElementById('fieldOmschrijving').value = item.omschrijving;
+    document.getElementById('fieldContent').value = item.content || '';
+    btnDel.style.display = 'inline-block';
+  } else {
+    document.getElementById('modalTitle').textContent = 'Nieuw content item';
+    document.getElementById('editId').value = '';
+    document.getElementById('fieldDatum').value = selectedMonth + '-01';
+    document.getElementById('fieldWeek').value = '';
+    document.getElementById('fieldThema').value = '';
+    document.getElementById('fieldType').value = 'LinkedIn post';
+    document.getElementById('fieldKanaal').value = 'LinkedIn — Viktor de Haan';
+    document.getElementById('fieldAuteur').value = 'Viktor de Haan';
+    document.getElementById('fieldStatus').value = 'Idee';
+    document.getElementById('fieldOmschrijving').value = '';
+    document.getElementById('fieldContent').value = '';
+    btnDel.style.display = 'none';
+  }
+  modal.classList.add('active');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+
+function saveItem() {
+  const editId = document.getElementById('editId').value;
+  const data = {
+    datum: document.getElementById('fieldDatum').value,
+    week: document.getElementById('fieldWeek').value,
+    thema: document.getElementById('fieldThema').value,
+    type: document.getElementById('fieldType').value,
+    kanaal: document.getElementById('fieldKanaal').value,
+    auteur: document.getElementById('fieldAuteur').value,
+    status: document.getElementById('fieldStatus').value,
+    omschrijving: document.getElementById('fieldOmschrijving').value,
+    content: document.getElementById('fieldContent').value,
+  };
+  if (!data.datum || !data.thema) { alert('Vul minimaal een datum en thema in.'); return; }
+  if (editId) { const idx = items.findIndex(i => i.id === parseInt(editId)); if (idx !== -1) items[idx] = { ...items[idx], ...data }; }
+  else items.push({ id: nextId++, ...data });
+  saveToStorage(); closeModal(); refreshThemaFilter(); renderCalendar();
+}
+
+function deleteItem() {
+  const id = parseInt(document.getElementById('editId').value);
+  if (!id || !confirm('Item verwijderen?')) return;
+  items = items.filter(i => i.id !== id);
+  saveToStorage(); closeModal(); renderCalendar();
+}
+
+/* PLATFORMS */
+function renderPlatforms() {
+  const order = { hoog:0, midden:1, laag:2 };
+  const sorted = [...PLATFORMS].sort((a,b) => (order[a.relevantie]||2) - (order[b.relevantie]||2));
+  document.getElementById('platformsGrid').innerHTML = sorted.map(p => `
+    <div class="platform-card relevance-${p.relevantie}">
+      <h3><a href="${p.url}" target="_blank" rel="noopener">${esc(p.naam)}</a></h3>
+      <div class="platform-type">${esc(p.type)}</div>
+      <div class="platform-detail"><strong>Bereik:</strong> ${esc(p.bereik)}</div>
+      <div class="platform-detail"><strong>Publicatie:</strong> ${esc(p.publicatie)}</div>
+      <div class="platform-detail"><strong>Kosten:</strong> ${esc(p.kosten)}</div>
+      <span class="relevance-badge">Relevantie: ${p.relevantie}</span>
+    </div>`).join('');
+}
+
+/* EVENTS */
+function renderEvents() {
+  const sorted = [...EVENTS].sort((a,b) => a.datum.localeCompare(b.datum));
+  document.getElementById('eventsTimeline').innerHTML = sorted.map(ev => {
+    const d = new Date(ev.datum);
+    return `<div class="event-card">
+      <div class="event-date-block">
+        <div class="event-month">${d.toLocaleDateString('nl-NL',{month:'short'}).toUpperCase()}</div>
+        <div class="event-day">${d.getDate()}</div>
+        <div class="event-year">${d.getFullYear()}</div>
+      </div>
+      <div class="event-info">
+        <h3>${esc(ev.naam)}</h3>
+        <p>${esc(ev.locatie)}</p>
+        <p>${esc(ev.beschrijving)}</p>
+        ${ev.url ? `<a href="${ev.url}" target="_blank" rel="noopener">Meer info &rarr;</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* EXPORT / IMPORT */
+function exportJSON() {
+  const blob = new Blob([JSON.stringify({ items, nextId, exportDate: new Date().toISOString(), version:'2.0' }, null, 2)], { type:'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'Qvantum_Content-Kalender_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function importJSON(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.items && Array.isArray(data.items)) {
+        items = data.items; nextId = data.nextId || items.length + 1;
+        saveToStorage(); refreshThemaFilter(); renderCalendar();
+        alert('Import succesvol: ' + items.length + ' items geladen.');
+      } else alert('Ongeldig bestandsformaat.');
+    } catch(err) { alert('Fout: ' + err.message); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+
+/* KEYBOARD */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
+});
+
+init();
+</script>
+</body>
+</html>
