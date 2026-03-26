@@ -102,7 +102,9 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
    ============================================ */
 .week-view { }
 .week-block { margin-bottom: 20px; }
-.week-label { font-weight: 600; font-size: 0.7rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 8px; padding-left: 4px; }
+.week-label { font-weight: 600; font-size: 0.7rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 8px; padding-left: 4px; display: flex; align-items: center; gap: 12px; }
+.vacation-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+.vacation-badge { font-weight: 500; font-size: 0.6rem; letter-spacing: 0.3px; text-transform: none; padding: 2px 8px; border-radius: 10px; background: #F0EDE8; color: #A09889; }
 .week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .day-column { background: var(--q-white); border-radius: var(--radius-lg); padding: 10px; min-height: 80px; }
 .day-column.holiday { background: #EEEDEA; opacity: 0.6; }
@@ -720,7 +722,11 @@ function renderWeekView(container, filtered) {
   weeks.forEach((week, wi) => {
     const firstDay = week.find(d => d !== null);
     const weekNum = getISOWeek(firstDay);
-    html += `<div class="week-block"><div class="week-label">Week ${weekNum}</div><div class="week-grid">`;
+    const vacations = getVacationsForWeek(week);
+    const vacBadges = vacations.length > 0
+      ? `<span class="vacation-badges">${vacations.map(v => `<span class="vacation-badge">${esc(v.label)}</span>`).join('')}</span>`
+      : '';
+    html += `<div class="week-block"><div class="week-label">Week ${weekNum}${vacBadges}</div><div class="week-grid">`;
     for (let d = 0; d < 5; d++) {
       const date = week[d];
       const dayNames = t('days');
@@ -859,6 +865,47 @@ function getDutchHolidays(year) {
 // Build holiday lookup for the calendar range
 const HOLIDAYS = { ...getDutchHolidays(2026), ...getDutchHolidays(2027) };
 function getHoliday(dateStr) { return HOLIDAYS[dateStr] || null; }
+
+/* DUTCH SCHOOL VACATIONS */
+const VACATIONS = [
+  // Meivakantie 2026
+  { start:'2026-04-25', end:'2026-05-03', nl:'Meivakantie', en:'May break', regions:'NL' },
+  // Zomervakantie 2026
+  { start:'2026-07-04', end:'2026-08-16', nl:'Zomervakantie Noord', en:'Summer break North', regions:'N' },
+  { start:'2026-07-11', end:'2026-08-23', nl:'Zomervakantie Zuid', en:'Summer break South', regions:'Z' },
+  { start:'2026-07-18', end:'2026-08-30', nl:'Zomervakantie Midden', en:'Summer break Central', regions:'M' },
+  // Herfstvakantie 2026
+  { start:'2026-10-10', end:'2026-10-18', nl:'Herfstvakantie Noord', en:'Autumn break North', regions:'N' },
+  { start:'2026-10-17', end:'2026-10-25', nl:'Herfstvakantie Midden+Zuid', en:'Autumn break Central+South', regions:'M+Z' },
+  // Kerstvakantie 2026-2027
+  { start:'2026-12-19', end:'2027-01-03', nl:'Kerstvakantie', en:'Christmas break', regions:'NL' },
+  // Voorjaarsvakantie 2027
+  { start:'2027-02-13', end:'2027-02-21', nl:'Voorjaarsvakantie Zuid', en:'Spring break South', regions:'Z' },
+  { start:'2027-02-20', end:'2027-02-28', nl:'Voorjaarsvakantie Noord+Midden', en:'Spring break North+Central', regions:'N+M' },
+  // Meivakantie 2027
+  { start:'2027-05-01', end:'2027-05-09', nl:'Meivakantie', en:'May break', regions:'NL' },
+  // Zomervakantie 2027
+  { start:'2027-07-10', end:'2027-08-22', nl:'Zomervakantie Noord', en:'Summer break North', regions:'N' },
+  { start:'2027-07-17', end:'2027-08-29', nl:'Zomervakantie Midden', en:'Summer break Central', regions:'M' },
+  { start:'2027-07-24', end:'2027-09-05', nl:'Zomervakantie Zuid', en:'Summer break South', regions:'Z' },
+];
+
+function getVacationsForWeek(weekDates) {
+  // weekDates: array of 5 Date|null (Mon-Fri)
+  const validDates = weekDates.filter(d => d !== null);
+  if (validDates.length === 0) return [];
+  const weekStart = fmt(validDates[0]);
+  const weekEnd = fmt(validDates[validDates.length - 1]);
+  const matches = [];
+  VACATIONS.forEach(v => {
+    // Check if any part of this vacation overlaps with this week
+    if (v.start <= weekEnd && v.end >= weekStart) {
+      matches.push({ label: v[lang], regions: v.regions });
+    }
+  });
+  // Merge labels with same vacation type but different regions
+  return matches;
+}
 
 /* WEEK HELPERS */
 function getWeeksInMonth(year, month) {
