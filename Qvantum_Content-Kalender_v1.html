@@ -156,6 +156,16 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .calendar-item .item-content-textarea { min-height: 80px; padding: 10px; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: var(--radius); font-family: inherit; font-size: 0.8rem; width: 100%; resize: vertical; color: var(--q-off-black); outline: none; line-height: 1.5; }
 .calendar-item .item-content-textarea:focus { border-color: var(--q-brown); background: var(--q-white); }
 
+/* FILTER CHECKBOX */
+.filter-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--q-brown); cursor: pointer; padding: 6px 14px; background: var(--q-white); border: 1px solid var(--q-beige); border-radius: 20px; white-space: nowrap; }
+.filter-checkbox input[type="checkbox"] { accent-color: var(--q-brown); cursor: pointer; }
+
+/* HOLIDAY & VACATION */
+.day-column.is-holiday { background: #F0EEEB; opacity: 0.55; }
+.day-column.is-holiday .day-header { color: var(--q-brown); }
+.holiday-label { font-size: 0.55rem; color: var(--q-brown); font-style: italic; margin-top: 2px; line-height: 1.2; }
+.week-vacation-bar { font-size: 0.6rem; color: var(--q-blue-light); font-weight: 500; padding: 3px 10px; margin-bottom: 4px; background: rgba(74,161,255,0.08); border-radius: 4px; display: inline-block; }
+
 .empty-state { text-align: center; padding: 60px 20px; color: var(--q-brown); }
 .empty-state h3 { font-weight: 600; font-size: 1.1rem; margin-bottom: 8px; }
 .empty-state p { font-size: 0.85rem; margin-bottom: 20px; }
@@ -277,6 +287,9 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select class="filter-select" id="filterType" onchange="renderCalendar()">
           <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
         </select>
+        <label class="filter-checkbox" title="Toon alleen QG-gerelateerde items">
+          <input type="checkbox" id="filterQG" onchange="renderCalendar()"> <span id="filterQGLabel">Alleen QG</span>
+        </label>
       </div>
       <div id="calendarContainer"></div>
     </div>
@@ -350,6 +363,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
+    <div class="form-group"><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQG"> <span>QG-gerelateerd</span></label></div>
     <div class="modal-actions">
       <div><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button></div>
       <div class="modal-actions-right">
@@ -409,6 +423,7 @@ const T = {
     footerRight: 'Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.',
     // Days
     days: ['Ma','Di','Wo','Do','Vr'],
+    qgOnly: 'Alleen QG',
   },
   en: {
     subtitle: 'Content Calendar 2026 - 2027',
@@ -453,6 +468,7 @@ const T = {
     footerRight: 'Data in LocalStorage + JSON export. Share via GitHub Pages or Netlify Drop. Future migration to HubSpot Marketing Calendar.',
     // Days
     days: ['Mon','Tue','Wed','Thu','Fri'],
+    qgOnly: 'QG only',
   }
 };
 
@@ -532,6 +548,8 @@ function renderAllUI() {
   });
   const csBtn = document.getElementById('csGenerateBtn');
   if (csBtn) csBtn.textContent = t('csGenerate');
+  // QG filter label
+  document.getElementById('filterQGLabel').textContent = t('qgOnly');
   // Re-render dynamic content
   renderCalendar();
   renderPlatforms();
@@ -556,9 +574,68 @@ let currentView = 'week';
 let items = [];
 let nextId = 1;
 
-/* SEED DATA — empty: user fills calendar from scratch */
+/* SEED DATA */
 function getSeedData() {
-  return [];
+  return [
+    // === RONDETAFEL 25 maart (al geweest) ===
+    { datum:'2026-03-25', week:'Week 13', thema:'QG Launch', type:'Rondetafel', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepubliceerd', omschrijving:'Rondetafel prefab QE: woningbouwversnelling en conceptbouw, skid-oplossingen.', content:'', qg:false },
+    { datum:'2026-03-31', week:'Week 14', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'LinkedIn post met bevindingen rondetafel prefab QE: woningbouwversnelling, conceptbouw, skid.', content:'', qg:false },
+
+    // === MAILING INSTALLATEURS QE (maart-april) ===
+    { datum:'2026-04-01', week:'Week 14', thema:'QE Installer Campagne', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Mailing naar installateurs: QE USPs, voordelen, technische specs. Eerste stap voor LinkedIn benadering.', content:'', qg:false },
+    { datum:'2026-04-08', week:'Week 15', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'LinkedIn benadering installateurs na mailing: persoonlijke outreach + QE content.', content:'', qg:false },
+
+    // === OPENING WARM VREESWIJK 18 april ===
+    { datum:'2026-04-18', week:'Week 16', thema:'QG Launch', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Energiemarkt Nieuwegein + officiele opening pilotproject Warm Vreeswijk door burgemeester. 1ste QG-12 met energiedamwand.', content:'', qg:true },
+    { datum:'2026-04-20', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Post opening Warm Vreeswijk: burgemeester opent 1ste QG-12 installatie. Foto/video materiaal.', content:'', qg:true },
+    { datum:'2026-04-20', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Persoonlijke reflectie opening Warm Vreeswijk: energiedamwand, QG-12, wat dit betekent voor de transitie.', content:'', qg:true },
+
+    // === QG LAUNCH CAMPAIGN — LinkedIn (april-mei conform PDF) ===
+    { datum:'2026-04-22', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die koel blijft op warme dagen." Verwarmt, tapwater en koelt.', content:'', qg:true },
+    { datum:'2026-04-29', week:'Week 18', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die stilletjes zijn werk doet." Fluisterstil.', content:'', qg:true },
+    { datum:'2026-05-06', week:'Week 19', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die jou de tijd geeft." Op afstand bedienbaar.', content:'', qg:true },
+    { datum:'2026-05-13', week:'Week 20', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die jou eruit loopt." Razendsnel installeren.', content:'', qg:true },
+
+    // === QG OPINIESTUK + WHITEPAPER (mei conform PDF) ===
+    { datum:'2026-05-11', week:'Week 20', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Opiniestuk LinkedIn: "New energy era" — fossielvrije warmte en koeling vraagt om ander denken.', content:'', qg:true },
+    { datum:'2026-05-18', week:'Week 21', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Whitepaper/brochure QG online: technische specs, client value, key messages.', content:'', qg:true },
+
+    // === QG PR PITCH vakbladen (mei) ===
+    { datum:'2026-05-20', week:'Week 21', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'PR pitch QG naar vakbladen: Warmte365, Vakblad Warmtepompen, Installatie.nl. Perskit + Q&A.', content:'', qg:true },
+
+    // === WARMTEPOMPTRENDRAPPORT — A4 advertentie QG ===
+    { datum:'2026-05-01', week:'Week 18', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'A4 pagina advertentie QG in Warmtepomptrendrapport (Vereniging Warmtepompen).', content:'', qg:true },
+
+    // === PILOT EFTELING — eind april ===
+    { datum:'2026-04-27', week:'Week 18', thema:'Projecten & referentiecases', type:'Case study', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Case study Pilot Efteling: resultaten, foto/video materiaal. Plaatsen na gesprekken over vervolg.', content:'', qg:true },
+
+    // === HET BLOK — Net5 TV (maart-doorlopend) ===
+    { datum:'2026-04-06', week:'Week 15', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum QE in Het Blok op Net5. 8 appartementen Rotterdam, 40 primetime afleveringen. Bereik: 150-250k kijkers/aflevering.', content:'', qg:false },
+    { datum:'2026-05-04', week:'Week 19', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Behind the scenes: QE installatie in Het Blok. Bouwershof Rotterdam, 35 appartementen totaal.', content:'', qg:false },
+    { datum:'2026-06-01', week:'Week 23', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Het Blok update: bewoners ervaren de QE. Link naar aflevering op Kijk.nl.', content:'', qg:false },
+
+    // === COBOUW PROSPECTING AGENT ===
+    { datum:'2026-04-14', week:'Week 16', thema:'Prospecting', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Prospecting agent i.c.m. Cobouw berichten: automatisch nieuwe projecten signaleren.', content:'', qg:false },
+
+    // === QG FIELD TEST PILOTS ===
+    { datum:'2026-06-15', week:'Week 25', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 1: field test met PVT op openbare locatie. Verduurzamings-events.', content:'', qg:true },
+    { datum:'2026-07-06', week:'Week 28', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 2: field test resultaten eerste metingen.', content:'', qg:true },
+    { datum:'2026-08-03', week:'Week 32', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 3: field test data-analyse, prestaties vs verwachtingen.', content:'', qg:true },
+
+    // === QG POST LAUNCH (sep-okt conform PDF) ===
+    { datum:'2026-09-14', week:'Week 38', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Whitepaper post-launch: proofpoints, projectresultaten, technische validatie.', content:'', qg:true },
+    { datum:'2026-09-21', week:'Week 39', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Follow-up sectorstukken QG: resultaten, cases, technische validatie naar vakbladen.', content:'', qg:true },
+
+    // === VAKBEURS ENERGIE (6-8 okt) — Qvantum staat er ===
+    { datum:'2026-10-05', week:'Week 41', thema:'Vakbeurs Energie', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: bezoek Qvantum op Vakbeurs Energie. QG live demo, standnummer TBD.', content:'', qg:true },
+    { datum:'2026-10-06', week:'Week 41', thema:'Vakbeurs Energie', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Vakbeurs Energie 6-8 okt — Brabanthallen, Den Bosch. Qvantum met stand + QG keynote.', content:'', qg:true },
+    { datum:'2026-10-09', week:'Week 41', thema:'Vakbeurs Energie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Vakbeurs Energie: inzichten, gesprekken, QG reacties.', content:'', qg:true },
+
+    // === WARMTE CONGRESTIVAL (nov) — Qvantum staat er ===
+    { datum:'2026-11-16', week:'Week 47', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum op Warmte Congrestival. Keynote over missie, visie, QG.', content:'', qg:true },
+    { datum:'2026-11-19', week:'Week 47', thema:'Warmte Congrestival', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Warmte Congrestival november 2026. Keynote: missie, visie, producten, proofpoints.', content:'', qg:true },
+    { datum:'2026-11-23', week:'Week 48', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Warmte Congrestival: highlights en reacties op QG.', content:'', qg:true },
+  ];
 }
 
 /* PLATFORMS + EVENTS DATA */
@@ -674,6 +751,7 @@ function getFilteredItems() {
   const fT = document.getElementById('filterThema').value;
   const fS = document.getElementById('filterStatus').value;
   const fTy = document.getElementById('filterType').value;
+  const fQG = document.getElementById('filterQG').checked;
   return items.filter(item => {
     if (!item.datum.startsWith(selectedMonth)) return false;
     if (fK && item.kanaal !== fK) return false;
@@ -681,6 +759,7 @@ function getFilteredItems() {
     if (fT && item.thema !== fT) return false;
     if (fS && item.status !== fS) return false;
     if (fTy && item.type !== fTy) return false;
+    if (fQG && !item.qg) return false;
     return true;
   }).sort((a, b) => a.datum.localeCompare(b.datum));
 }
@@ -1050,6 +1129,7 @@ function openModal(id) {
     document.getElementById('fieldStatus').value = item.status;
     document.getElementById('fieldOmschrijving').value = item.omschrijving;
     document.getElementById('fieldContent').value = item.content || '';
+    document.getElementById('fieldQG').checked = !!item.qg;
     // Load case study data if present
     if (item.caseStudy) {
       const cs = item.caseStudy;
@@ -1076,6 +1156,7 @@ function openModal(id) {
     document.getElementById('fieldStatus').value = 'Idee';
     document.getElementById('fieldOmschrijving').value = '';
     document.getElementById('fieldContent').value = '';
+    document.getElementById('fieldQG').checked = false;
     clearCaseStudyFields();
     btnDel.style.display = 'none';
   }
@@ -1097,6 +1178,7 @@ function saveItem() {
     status: document.getElementById('fieldStatus').value,
     omschrijving: document.getElementById('fieldOmschrijving').value,
     content: document.getElementById('fieldContent').value,
+    qg: document.getElementById('fieldQG').checked,
   };
   // Save case study fields if type is Case study
   if (data.type === 'Case study') {
