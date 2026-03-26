@@ -37,8 +37,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 /* HEADER */
 .header { display: flex; align-items: center; justify-content: space-between; height: var(--header-height); padding: 0 32px; background: var(--q-white); border-bottom: 1px solid var(--q-beige); flex-shrink: 0; }
 .header-left { display: flex; align-items: center; gap: 16px; }
-.logo-text { font-weight: 700; font-size: 1.2rem; color: var(--q-off-black); letter-spacing: 2px; text-transform: uppercase; }
-.logo-text span { color: var(--q-brown); }
+.logo-img { height: 32px; width: auto; }
 .header-subtitle { font-weight: 400; font-size: 0.85rem; color: var(--q-brown); }
 .header-right { display: flex; align-items: center; gap: 12px; }
 
@@ -68,6 +67,12 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .view-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
 .view-toggle-btn { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 5px 14px; border: none; border-radius: 18px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
 .view-toggle-btn.active { background: var(--q-white); color: var(--q-off-black); }
+
+/* PLATFORM FILTER */
+.platform-filter { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+.platform-filter-btn { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 6px 16px; border: 1.5px solid var(--q-beige); border-radius: 18px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; }
+.platform-filter-btn:hover { border-color: var(--q-brown); }
+.platform-filter-btn.active { background: var(--q-brown); border-color: var(--q-brown); color: var(--q-white); }
 
 /* CASE STUDY */
 #caseStudyPanel .form-group { margin-bottom: 10px; }
@@ -253,7 +258,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 <div class="app">
   <header class="header">
     <div class="header-left">
-      <div class="logo-text"><span>Q</span>VANTUM</div>
+      <img src="data:image/png;base64,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" alt="Qvantum" class="logo-img">
       <div class="header-subtitle">Content Kalender 2026 - 2027</div>
     </div>
     <div class="header-right">
@@ -312,6 +317,12 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     <div id="tab-platforms" class="tab-content">
       <div class="section-header"><h2>Mediaplatformen</h2></div>
       <div class="info-banner"><strong>Overzicht:</strong> Relevante vakbladen, online platforms en brancheorganisaties waar Qvantum (gratis of betaald) kan publiceren. Gesorteerd op relevantie.</div>
+      <div class="platform-filter" id="platformFilter">
+        <button class="platform-filter-btn active" onclick="filterPlatforms('alle')">Alle</button>
+        <button class="platform-filter-btn" onclick="filterPlatforms('hoog')">Hoog</button>
+        <button class="platform-filter-btn" onclick="filterPlatforms('midden')">Midden</button>
+        <button class="platform-filter-btn" onclick="filterPlatforms('laag')">Laag</button>
+      </div>
       <div class="platforms-grid" id="platformsGrid"></div>
     </div>
 
@@ -1283,18 +1294,46 @@ function deleteItem() {
 }
 
 /* PLATFORMS */
+let platformFilter = 'alle';
+
+function filterPlatforms(level) {
+  platformFilter = level;
+  document.querySelectorAll('.platform-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.platform-filter-btn[onclick="filterPlatforms('${level}')"]`).classList.add('active');
+  renderPlatforms();
+}
+
 function renderPlatforms() {
   const order = { hoog:0, midden:1, laag:2 };
-  const sorted = [...PLATFORMS].sort((a,b) => (order[a.relevantie]||2) - (order[b.relevantie]||2));
-  document.getElementById('platformsGrid').innerHTML = sorted.map(p => `
-    <div class="platform-card relevance-${p.relevantie}">
+  let filtered = PLATFORMS.filter(p => platformFilter === 'alle' || p.relevantie === platformFilter);
+  const sorted = [...filtered].sort((a,b) => {
+    const diff = (order[a.relevantie] ?? 2) - (order[b.relevantie] ?? 2);
+    if (diff !== 0) return diff;
+    return a.naam.localeCompare(b.naam);
+  });
+  if (sorted.length === 0) {
+    document.getElementById('platformsGrid').innerHTML = `<div class="empty-state"><p>${lang === 'nl' ? 'Geen platforms gevonden voor dit filter.' : 'No platforms found for this filter.'}</p></div>`;
+    return;
+  }
+  // Group by relevance with section headers
+  let html = '';
+  let currentRelevance = '';
+  sorted.forEach(p => {
+    if (p.relevantie !== currentRelevance && platformFilter === 'alle') {
+      currentRelevance = p.relevantie;
+      const label = t('relevance' + currentRelevance.charAt(0).toUpperCase() + currentRelevance.slice(1));
+      html += `<div style="grid-column:1/-1;margin:${currentRelevance === 'hoog' ? '0' : '16px'} 0 8px 0;font-weight:700;font-size:0.75rem;letter-spacing:1.2px;text-transform:uppercase;color:var(--q-brown)">${t('lblRelevance')}: ${label}</div>`;
+    }
+    html += `<div class="platform-card relevance-${p.relevantie}">
       <h3><a href="${p.url}" target="_blank" rel="noopener">${esc(p.naam)}</a></h3>
       <div class="platform-type">${esc(p.type)}</div>
       <div class="platform-detail"><strong>${t('lblReach')}:</strong> ${esc(p.bereik)}</div>
       <div class="platform-detail"><strong>${t('lblPublication')}:</strong> ${esc(p.publicatie)}</div>
       <div class="platform-detail"><strong>${t('lblCost')}:</strong> ${esc(p.kosten)}</div>
       <span class="relevance-badge">${t('lblRelevance')}: ${t('relevance' + p.relevantie.charAt(0).toUpperCase() + p.relevantie.slice(1))}</span>
-    </div>`).join('');
+    </div>`;
+  });
+  document.getElementById('platformsGrid').innerHTML = html;
 }
 
 /* EVENTS */
