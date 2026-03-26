@@ -156,6 +156,13 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .calendar-item .item-content-textarea { min-height: 80px; padding: 10px; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: var(--radius); font-family: inherit; font-size: 0.8rem; width: 100%; resize: vertical; color: var(--q-off-black); outline: none; line-height: 1.5; }
 .calendar-item .item-content-textarea:focus { border-color: var(--q-brown); background: var(--q-white); }
 
+/* QUARTER NAV */
+.nav-rows { display: flex; flex-direction: column; gap: 6px; }
+.quarter-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.quarter-btn { font-family: inherit; font-weight: 700; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 16px; border: 2px solid var(--q-navy); background: none; color: var(--q-navy); cursor: pointer; transition: all 0.15s; }
+.quarter-btn:hover { background: var(--q-navy); color: var(--q-white); }
+.quarter-btn.active { background: var(--q-navy); color: var(--q-white); }
+
 /* FILTER CHECKBOX */
 .filter-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: var(--q-brown); cursor: pointer; padding: 6px 14px; background: var(--q-white); border: 1px solid var(--q-beige); border-radius: 20px; white-space: nowrap; }
 .filter-checkbox input[type="checkbox"] { accent-color: var(--q-brown); cursor: pointer; }
@@ -165,6 +172,10 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .day-column.is-holiday .day-header { color: var(--q-brown); }
 .holiday-label { font-size: 0.55rem; color: var(--q-brown); font-style: italic; margin-top: 2px; line-height: 1.2; }
 .week-vacation-bar { font-size: 0.6rem; color: var(--q-blue-light); font-weight: 500; padding: 3px 10px; margin-bottom: 4px; background: rgba(74,161,255,0.08); border-radius: 4px; display: inline-block; }
+
+/* QUARTER VIEW */
+.quarter-month-header { font-weight: 700; font-size: 1rem; color: var(--q-off-black); margin: 20px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid var(--q-beige); }
+.quarter-month-header:first-child { margin-top: 0; }
 
 .empty-state { text-align: center; padding: 60px 20px; color: var(--q-brown); }
 .empty-state h3 { font-weight: 600; font-size: 1.1rem; margin-bottom: 8px; }
@@ -268,7 +279,10 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     <div id="tab-calendar" class="tab-content active">
       <div class="stats-row" id="statsRow"></div>
       <div class="calendar-controls">
-        <div class="month-nav" id="monthNav"></div>
+        <div class="nav-rows">
+          <div class="quarter-nav" id="quarterNav"></div>
+          <div class="month-nav" id="monthNav"></div>
+        </div>
         <div class="controls-right">
           <div class="view-toggle">
             <button class="view-toggle-btn active" data-view="week" onclick="setView('week')">Weekweergave</button>
@@ -571,6 +585,14 @@ const TYPE_COLORS = { 'LinkedIn post':'#91877A', 'Case study':'#5A9E6F', 'Rondet
 
 let selectedMonth = MONTHS[0].key;
 let currentView = 'week';
+let quarterMode = null; // null = single month, or ['2026-04','2026-05','2026-06'] etc.
+
+const QUARTERS = [
+  { label: 'Q2 2026', labelEn: 'Q2 2026', months: ['2026-04','2026-05','2026-06'] },
+  { label: 'Q3 2026', labelEn: 'Q3 2026', months: ['2026-07','2026-08','2026-09'] },
+  { label: 'Q4 2026', labelEn: 'Q4 2026', months: ['2026-10','2026-11','2026-12'] },
+  { label: 'Q1 2027', labelEn: 'Q1 2027', months: ['2027-01','2027-02','2027-03'] },
+];
 let items = [];
 let nextId = 1;
 
@@ -723,10 +745,37 @@ function setView(view) {
 /* MONTH NAV */
 function buildMonthNav() {
   document.getElementById('monthNav').innerHTML = MONTHS.map(m =>
-    `<button class="month-btn ${m.key === selectedMonth ? 'active' : ''}" onclick="selectMonth('${m.key}')">${m.label}</button>`
+    `<button class="month-btn ${!quarterMode && m.key === selectedMonth ? 'active' : ''}" onclick="selectMonth('${m.key}')">${m.label}</button>`
+  ).join('');
+  buildQuarterNav();
+}
+function buildQuarterNav() {
+  document.getElementById('quarterNav').innerHTML = QUARTERS.map(q =>
+    `<button class="quarter-btn ${quarterMode && quarterMode === q.months ? 'active' : ''}" onclick="selectQuarter(${QUARTERS.indexOf(q)})">${q.label}</button>`
   ).join('');
 }
-function selectMonth(key) { selectedMonth = key; buildMonthNav(); renderCalendar(); }
+function selectMonth(key) {
+  quarterMode = null;
+  selectedMonth = key;
+  buildMonthNav();
+  renderCalendar();
+}
+function selectQuarter(idx) {
+  const q = QUARTERS[idx];
+  if (quarterMode === q.months) {
+    // Deselect quarter, go back to first month of that quarter
+    quarterMode = null;
+    selectedMonth = q.months[0];
+    buildMonthNav();
+    renderCalendar();
+    return;
+  }
+  quarterMode = q.months;
+  currentView = 'card';
+  document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'card'));
+  buildMonthNav();
+  renderCalendar();
+}
 
 /* FILTERS */
 function buildFilterOptions() {
@@ -753,7 +802,10 @@ function getFilteredItems() {
   const fTy = document.getElementById('filterType').value;
   const fQG = document.getElementById('filterQG').checked;
   return items.filter(item => {
-    if (!item.datum.startsWith(selectedMonth)) return false;
+    const monthMatch = quarterMode
+      ? quarterMode.some(m => item.datum.startsWith(m))
+      : item.datum.startsWith(selectedMonth);
+    if (!monthMatch) return false;
     if (fK && item.kanaal !== fK) return false;
     if (fA && item.auteur !== fA) return false;
     if (fT && item.thema !== fT) return false;
@@ -779,7 +831,9 @@ function renderCalendar() {
 }
 
 function renderStats() {
-  const mi = items.filter(i => i.datum.startsWith(selectedMonth));
+  const mi = quarterMode
+    ? items.filter(i => quarterMode.some(m => i.datum.startsWith(m)))
+    : items.filter(i => i.datum.startsWith(selectedMonth));
   const stats = [
     { v: items.length, l: t('total') }, { v: mi.length, l: t('thisMonth') },
     { v: mi.filter(i => i.status === 'Idee').length, l: tStatus('Idee') },
@@ -849,7 +903,29 @@ function renderWeekView(container, filtered) {
 
 /* CARD VIEW */
 function renderCardView(container, filtered) {
-  container.innerHTML = `<div class="calendar-grid">${filtered.map(item => {
+  let html = '';
+  if (quarterMode) {
+    // Group by month with headers
+    const grouped = {};
+    filtered.forEach(item => {
+      const m = item.datum.slice(0, 7);
+      if (!grouped[m]) grouped[m] = [];
+      grouped[m].push(item);
+    });
+    const loc = lang === 'nl' ? 'nl-NL' : 'en-GB';
+    Object.keys(grouped).sort().forEach(m => {
+      const monthDate = new Date(m + '-01');
+      const monthLabel = monthDate.toLocaleDateString(loc, { month: 'long', year: 'numeric' });
+      html += `<div class="quarter-month-header">${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}</div>`;
+      html += `<div class="calendar-grid">${grouped[m].map(item => renderCardItem(item)).join('')}</div>`;
+    });
+    container.innerHTML = html;
+    return;
+  }
+  container.innerHTML = `<div class="calendar-grid">${filtered.map(item => renderCardItem(item)).join('')}</div>`;
+}
+
+function renderCardItem(item) {
     const tc = TYPE_COLORS[item.type] || '#91877A';
     const sc = statusClass(item.status);
     const d = new Date(item.datum);
@@ -873,7 +949,6 @@ function renderCardView(container, filtered) {
         <textarea class="item-content-textarea" placeholder="${t('textPlaceholderLong')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
       </div>
     </div>`;
-  }).join('')}</div>`;
 }
 
 /* CONTENT TOGGLE */
