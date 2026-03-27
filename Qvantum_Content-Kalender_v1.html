@@ -206,9 +206,16 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .platform-card.relevance-hoog { border-left-color: var(--q-brown); }
 .platform-card.relevance-midden { border-left-color: var(--q-blue-light); }
 .platform-card.relevance-laag { border-left-color: var(--q-beige); }
+.platform-card { position: relative; }
 .platform-card h3 { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
 .platform-card h3 a { color: var(--q-off-black); text-decoration: none; }
 .platform-card h3 a:hover { color: var(--q-blue); }
+.partner-badge { position: absolute; top: 12px; right: 14px; color: var(--q-brown); display: flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.partner-badge svg { width: 20px; height: 20px; }
+.relevance-select { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 4px 8px; border: 1.5px solid var(--q-beige); border-radius: 12px; background: var(--q-off-white); color: var(--q-brown); cursor: pointer; appearance: auto; margin-top: 8px; }
+.relevance-select.relevance-hoog { border-color: var(--q-brown); color: var(--q-off-black); }
+.relevance-select.relevance-midden { border-color: var(--q-blue-light); color: var(--q-blue); }
+.relevance-select.relevance-laag { border-color: var(--q-beige); color: #999; }
 .platform-card .platform-type { font-weight: 600; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 10px; }
 .platform-card .platform-detail { font-size: 0.8rem; color: #555; margin-bottom: 6px; line-height: 1.4; }
 .platform-card .platform-detail strong { color: var(--q-off-black); font-weight: 600; }
@@ -306,9 +313,11 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select class="filter-select" id="filterType" onchange="renderCalendar()">
           <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
         </select>
-        <label class="filter-checkbox" title="Toon alleen QG-gerelateerde items">
-          <input type="checkbox" id="filterQG" onchange="renderCalendar()"> <span id="filterQGLabel">Alleen QG</span>
-        </label>
+        <select class="filter-select" id="filterProduct" onchange="renderCalendar()">
+          <option value="">Alle producten</option>
+          <option value="qg">Alleen QG</option>
+          <option value="qe">Alleen QE</option>
+        </select>
       </div>
       <div id="calendarContainer"></div>
     </div>
@@ -388,7 +397,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
-    <div class="form-group"><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQG"> <span>QG-gerelateerd</span></label></div>
+    <div class="form-group" style="display:flex;gap:16px"><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQG"> <span>QG-gerelateerd</span></label><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQE"> <span>QE-gerelateerd</span></label></div>
     <div class="modal-actions">
       <div><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button></div>
       <div class="modal-actions-right">
@@ -574,7 +583,7 @@ function renderAllUI() {
   const csBtn = document.getElementById('csGenerateBtn');
   if (csBtn) csBtn.textContent = t('csGenerate');
   // QG filter label
-  document.getElementById('filterQGLabel').textContent = t('qgOnly');
+  // product filter labels set via HTML
   // Re-render dynamic content
   renderCalendar();
   renderPlatforms();
@@ -611,69 +620,105 @@ let nextId = 1;
 function getSeedData() {
   return [
     // === RONDETAFEL 25 maart (al geweest) ===
-    { datum:'2026-03-25', week:'Week 13', thema:'QG Launch', type:'Rondetafel', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepubliceerd', omschrijving:'Rondetafel prefab QE: woningbouwversnelling en conceptbouw, skid-oplossingen.', content:'', qg:false },
-    { datum:'2026-03-31', week:'Week 14', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'LinkedIn post met bevindingen rondetafel prefab QE: woningbouwversnelling, conceptbouw, skid.', content:'', qg:false },
+    { datum:'2026-03-25', week:'Week 13', thema:'QG Launch', type:'Rondetafel', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepubliceerd', omschrijving:'Rondetafel prefab QE: woningbouwversnelling en conceptbouw, skid-oplossingen.', content:'', qg:false, qe:true },
+    { datum:'2026-03-31', week:'Week 14', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'LinkedIn post met bevindingen rondetafel prefab QE: woningbouwversnelling, conceptbouw, skid.', content:'', qg:false, qe:true },
+
+    // === VERSLAG RONDETAFEL QE-PREFAB ===
+    { datum:'2026-04-02', week:'Week 14', thema:'QE Installer Campagne', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Verslag rondetafel QE-prefab: woningbouwcrisis, conceptbouw, energiesystemen als schakel in de versnelling.', content:'', qg:false, qe:true },
 
     // === MAILING INSTALLATEURS QE (maart-april) ===
-    { datum:'2026-04-01', week:'Week 14', thema:'QE Installer Campagne', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Mailing naar installateurs: QE USPs, voordelen, technische specs. Eerste stap voor LinkedIn benadering.', content:'', qg:false },
-    { datum:'2026-04-08', week:'Week 15', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'LinkedIn benadering installateurs na mailing: persoonlijke outreach + QE content.', content:'', qg:false },
+    { datum:'2026-04-01', week:'Week 14', thema:'QE Installer Campagne', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Mailing naar installateurs: QE USPs, voordelen, technische specs. Eerste stap voor LinkedIn benadering.', content:'', qg:false, qe:true },
+
+    // === SMARTCONTROL (april) ===
+    { datum:'2026-04-07', week:'Week 15', thema:'QE Installer Campagne', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'SmartControl: slim verwarmen op dynamische stroomprijzen. Uitleg werking, 3 standen (Eco/Gebalanceerd/Comfort), besparing.', content:'', qg:false, qe:true },
+    { datum:'2026-04-08', week:'Week 15', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'LinkedIn benadering installateurs na mailing: persoonlijke outreach + QE content.', content:'', qg:false, qe:true },
+    { datum:'2026-04-09', week:'Week 15', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'SmartControl LinkedIn: persoonlijke invalshoek op slim verwarmen, dynamische prijzen en de toekomst van energiemanagement.', content:'', qg:false, qe:true },
+
+    // === CONNECTIVITEIT & EMS (april) ===
+    { datum:'2026-04-15', week:'Week 16', thema:'Connectiviteit & EMS', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Connectiviteit: Modbus RTU/TCP en API voor integratie in energiemanagementsystemen. Netcongestie-oplossingen.', content:'', qg:false, qe:true },
+    { datum:'2026-04-17', week:'Week 16', thema:'Connectiviteit & EMS', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Connectiviteit LinkedIn: Modbus en API integratie voor netcongestie. Vlak voor Energiemarkt Nieuwegein.', content:'', qg:false, qe:true },
 
     // === OPENING WARM VREESWIJK 18 april ===
-    { datum:'2026-04-18', week:'Week 16', thema:'QG Launch', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Energiemarkt Nieuwegein + officiele opening pilotproject Warm Vreeswijk door burgemeester. 1ste QG-12 met energiedamwand.', content:'', qg:true },
-    { datum:'2026-04-20', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Post opening Warm Vreeswijk: burgemeester opent 1ste QG-12 installatie. Foto/video materiaal.', content:'', qg:true },
-    { datum:'2026-04-20', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Persoonlijke reflectie opening Warm Vreeswijk: energiedamwand, QG-12, wat dit betekent voor de transitie.', content:'', qg:true },
+    { datum:'2026-04-18', week:'Week 16', thema:'QG Launch', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Energiemarkt Nieuwegein + officiele opening pilotproject Warm Vreeswijk door burgemeester. 1ste QG-12 met energiedamwand.', content:'', qg:true, qe:false },
+    { datum:'2026-04-20', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Post opening Warm Vreeswijk: burgemeester opent 1ste QG-12 installatie. Foto/video materiaal.', content:'', qg:true, qe:false },
+    { datum:'2026-04-20', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Persoonlijke reflectie opening Warm Vreeswijk: energiedamwand, QG-12, wat dit betekent voor de transitie.', content:'', qg:true, qe:false },
+
+    // === QE INSTALLER CAMPAGNE — Fase 4: Social proof (week 17) ===
+    { datum:'2026-04-22', week:'Week 17', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Installateur testimonial: DBI Techniek over QE6 bij Project Mathilda. Compacte unit, snel geïnstalleerd, tevreden bewoners.', content:'', qg:false, qe:true },
+
+    // === QE INSTALLER CAMPAGNE — Fase 5: Follow-up mailing (week 19) ===
+    { datum:'2026-05-07', week:'Week 19', thema:'QE Installer Campagne', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Follow-up mailing installateurs: referentiecases, SmartControl, connectiviteit. CTA: demo aanvragen of contact opnemen.', content:'', qg:false, qe:true },
 
     // === QG LAUNCH CAMPAIGN — LinkedIn (april-mei conform PDF) ===
-    { datum:'2026-04-22', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die koel blijft op warme dagen." Verwarmt, tapwater en koelt.', content:'', qg:true },
-    { datum:'2026-04-29', week:'Week 18', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die stilletjes zijn werk doet." Fluisterstil.', content:'', qg:true },
-    { datum:'2026-05-06', week:'Week 19', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die jou de tijd geeft." Op afstand bedienbaar.', content:'', qg:true },
-    { datum:'2026-05-13', week:'Week 20', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die jou eruit loopt." Razendsnel installeren.', content:'', qg:true },
+    { datum:'2026-04-22', week:'Week 17', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die koel blijft op warme dagen." Verwarmt, tapwater en koelt.', content:'', qg:true, qe:false },
+    { datum:'2026-04-29', week:'Week 18', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die stilletjes zijn werk doet." Fluisterstil.', content:'', qg:true, qe:false },
+    { datum:'2026-05-06', week:'Week 19', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die jou de tijd geeft." Op afstand bedienbaar.', content:'', qg:true, qe:false },
+    { datum:'2026-05-13', week:'Week 20', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG campagne: "De warmtepomp die jou eruit loopt." Razendsnel installeren.', content:'', qg:true, qe:false },
 
     // === QG OPINIESTUK + WHITEPAPER (mei conform PDF) ===
-    { datum:'2026-05-11', week:'Week 20', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Opiniestuk LinkedIn: "New energy era" — fossielvrije warmte en koeling vraagt om ander denken.', content:'', qg:true },
-    { datum:'2026-05-18', week:'Week 21', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Whitepaper/brochure QG online: technische specs, client value, key messages.', content:'', qg:true },
+    { datum:'2026-05-11', week:'Week 20', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Opiniestuk LinkedIn: "New energy era" — fossielvrije warmte en koeling vraagt om ander denken.', content:'', qg:true, qe:false },
+    { datum:'2026-05-18', week:'Week 21', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Whitepaper/brochure QG online: technische specs, client value, key messages.', content:'', qg:true, qe:false },
 
     // === QG PR PITCH vakbladen (mei) ===
-    { datum:'2026-05-20', week:'Week 21', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'PR pitch QG naar vakbladen: Warmte365, Vakblad Warmtepompen, Installatie.nl. Perskit + Q&A.', content:'', qg:true },
+    { datum:'2026-05-20', week:'Week 21', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'PR pitch QG naar vakbladen: Warmte365, Vakblad Warmtepompen, Installatie.nl. Perskit + Q&A.', content:'', qg:true, qe:false },
 
     // === WARMTEPOMPTRENDRAPPORT — A4 advertentie QG ===
-    { datum:'2026-05-01', week:'Week 18', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'A4 pagina advertentie QG in Warmtepomptrendrapport (Vereniging Warmtepompen).', content:'', qg:true },
+    { datum:'2026-05-01', week:'Week 18', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'A4 pagina advertentie QG in Warmtepomptrendrapport (Vereniging Warmtepompen).', content:'', qg:true, qe:false },
+
+    // === REFERENTIECASE DE TOL ZALTBOMMEL ===
+    { datum:'2026-04-28', week:'Week 18', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Referentiecase De Tol Zaltbommel: 140 appartementen, QE4/QS, Bazalt Wonen/Rabo Smart Builds. Grootste QE nieuwbouwproject.', content:'', qg:false, qe:true },
 
     // === PILOT EFTELING — eind april ===
-    { datum:'2026-04-27', week:'Week 18', thema:'Projecten & referentiecases', type:'Case study', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Case study Pilot Efteling: resultaten, foto/video materiaal. Plaatsen na gesprekken over vervolg.', content:'', qg:true },
+    { datum:'2026-04-27', week:'Week 18', thema:'Projecten & referentiecases', type:'Case study', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Case study Pilot Efteling: resultaten, foto/video materiaal. Plaatsen na gesprekken over vervolg.', content:'', qg:true, qe:false },
+
+    // === QE SKID FOTOSHOOT ===
+    { datum:'2026-05-05', week:'Week 19', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'QE Skid: fotoshoot en voordelen voor prefab bouwers. Plug-and-play energiesysteem voor geïndustrialiseerde bouw.', content:'', qg:false, qe:true },
+
+    // === REFERENTIECASE MATHILDA OOSTERHOUT (gepubliceerd 30 maart) ===
+    { datum:'2026-04-01', week:'Week 14', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Gepubliceerd', omschrijving:'Referentiecase Project Mathilda Oosterhout: 12 getransformeerde appartementen, QE6. Compacte warmtepompen in renovatie.', content:'In hartje Oosterhout wordt Gebouw Mathilda getransformeerd tot een wooncomplex met 12 hoogwaardige appartementen.\nInclusief Qvantum QE-6, onze ventilatieluchtwarmtepomp.\n\nVerwarmen, koelen, ventileren en warm tapwater. Vier functies, één systeem per appartement. Geen buitenunit, stil en volledig plug&play.\n\nMooi om te zien hoe dit soort projecten concreet maken wat de energietransitie in de praktijk betekent. En dat begint altijd met goede samenwerking.\n\nOntwikkelaar: ROQ Vastgoed\nAannemer: @Kwadraat-bouw\nInstallateur: @dbi-techniek\n\n#Qvantum #Warmtepomp #Energietransitie #Oosterhout', qg:false, qe:true },
+
+    // === CONFIGURATIE USE CASES ===
+    { datum:'2026-05-19', week:'Week 21', thema:'Connectiviteit & EMS', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Configuratie input/output use cases: warmtapwater, vloerverwarming, koeling, hybride opstellingen. Technische blog.', content:'', qg:false, qe:true },
+    { datum:'2026-05-21', week:'Week 21', thema:'Connectiviteit & EMS', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Configuratie use cases LinkedIn: hoe de QE zich aanpast aan verschillende woningtypes en installaties.', content:'', qg:false, qe:true },
+
+    // === REFERENTIECASE WARM VREESWIJK QG12 ===
+    { datum:'2026-06-01', week:'Week 23', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Referentiecase Warm Vreeswijk Nieuwegein: QG12 demo-project, energiedamwand, eerste resultaten na opening.', content:'', qg:true, qe:false },
+
+    // === REFERENTIECASE RECREATIEWONINGEN VORDEN ===
+    { datum:'2026-06-15', week:'Week 25', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Referentiecase 35 recreatiewoningen Vorden: QE4 met EMS-systeem, beperkte netaansluiting (3x25A). Netcongestie-proof.', content:'', qg:false, qe:true },
 
     // === HET BLOK — Net5 TV (maart-doorlopend) ===
-    { datum:'2026-04-06', week:'Week 15', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum QE in Het Blok op Net5. 8 appartementen Rotterdam, 40 primetime afleveringen. Bereik: 150-250k kijkers/aflevering.', content:'', qg:false },
-    { datum:'2026-05-04', week:'Week 19', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Behind the scenes: QE installatie in Het Blok. Bouwershof Rotterdam, 35 appartementen totaal.', content:'', qg:false },
-    { datum:'2026-06-01', week:'Week 23', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Het Blok update: bewoners ervaren de QE. Link naar aflevering op Kijk.nl.', content:'', qg:false },
+    { datum:'2026-04-06', week:'Week 15', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum QE in Het Blok op Net5. 8 appartementen Rotterdam, 40 primetime afleveringen. Bereik: 150-250k kijkers/aflevering.', content:'', qg:false, qe:true },
+    { datum:'2026-05-04', week:'Week 19', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Behind the scenes: QE installatie in Het Blok. Bouwershof Rotterdam, 35 appartementen totaal.', content:'', qg:false, qe:true },
+    { datum:'2026-06-01', week:'Week 23', thema:'Het Blok — Net5', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Het Blok update: bewoners ervaren de QE. Link naar aflevering op Kijk.nl.', content:'', qg:false, qe:true },
 
     // === COBOUW PROSPECTING AGENT ===
-    { datum:'2026-04-14', week:'Week 16', thema:'Prospecting', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Prospecting agent i.c.m. Cobouw berichten: automatisch nieuwe projecten signaleren.', content:'', qg:false },
+    { datum:'2026-04-14', week:'Week 16', thema:'Prospecting', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Prospecting agent i.c.m. Cobouw berichten: automatisch nieuwe projecten signaleren.', content:'', qg:false, qe:false },
 
     // === QG FIELD TEST PILOTS ===
-    { datum:'2026-06-15', week:'Week 25', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 1: field test met PVT op openbare locatie. Verduurzamings-events.', content:'', qg:true },
-    { datum:'2026-07-06', week:'Week 28', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 2: field test resultaten eerste metingen.', content:'', qg:true },
-    { datum:'2026-08-03', week:'Week 32', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 3: field test data-analyse, prestaties vs verwachtingen.', content:'', qg:true },
+    { datum:'2026-06-15', week:'Week 25', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 1: field test met PVT op openbare locatie. Verduurzamings-events.', content:'', qg:true, qe:false },
+    { datum:'2026-07-06', week:'Week 28', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 2: field test resultaten eerste metingen.', content:'', qg:true, qe:false },
+    { datum:'2026-08-03', week:'Week 32', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Pilot 3: field test data-analyse, prestaties vs verwachtingen.', content:'', qg:true, qe:false },
 
     // === QG POST LAUNCH (sep-okt conform PDF) ===
-    { datum:'2026-09-14', week:'Week 38', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Whitepaper post-launch: proofpoints, projectresultaten, technische validatie.', content:'', qg:true },
-    { datum:'2026-09-21', week:'Week 39', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Follow-up sectorstukken QG: resultaten, cases, technische validatie naar vakbladen.', content:'', qg:true },
+    { datum:'2026-09-14', week:'Week 38', thema:'QG Launch', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG Whitepaper post-launch: proofpoints, projectresultaten, technische validatie.', content:'', qg:true, qe:false },
+    { datum:'2026-09-21', week:'Week 39', thema:'QG Launch', type:'Vakpublicatie', kanaal:'Vakpublicaties (extern)', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Follow-up sectorstukken QG: resultaten, cases, technische validatie naar vakbladen.', content:'', qg:true, qe:false },
 
     // === VAKBEURS ENERGIE (6-8 okt) — Qvantum staat er ===
-    { datum:'2026-10-05', week:'Week 41', thema:'Vakbeurs Energie', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: bezoek Qvantum op Vakbeurs Energie. QG live demo, standnummer TBD.', content:'', qg:true },
-    { datum:'2026-10-06', week:'Week 41', thema:'Vakbeurs Energie', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Vakbeurs Energie 6-8 okt — Brabanthallen, Den Bosch. Qvantum met stand + QG keynote.', content:'', qg:true },
-    { datum:'2026-10-09', week:'Week 41', thema:'Vakbeurs Energie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Vakbeurs Energie: inzichten, gesprekken, QG reacties.', content:'', qg:true },
+    { datum:'2026-10-05', week:'Week 41', thema:'Vakbeurs Energie', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: bezoek Qvantum op Vakbeurs Energie. QG live demo, standnummer TBD.', content:'', qg:true, qe:false },
+    { datum:'2026-10-06', week:'Week 41', thema:'Vakbeurs Energie', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Qvantum NL bedrijfspagina', status:'Gepland', omschrijving:'Vakbeurs Energie 6-8 okt — Brabanthallen, Den Bosch. Qvantum met stand + QG keynote.', content:'', qg:true, qe:false },
+    { datum:'2026-10-09', week:'Week 41', thema:'Vakbeurs Energie', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Vakbeurs Energie: inzichten, gesprekken, QG reacties.', content:'', qg:true, qe:false },
 
     // === WARMTE CONGRESTIVAL (nov) — Qvantum staat er ===
-    { datum:'2026-11-16', week:'Week 47', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum op Warmte Congrestival. Keynote over missie, visie, QG.', content:'', qg:true },
-    { datum:'2026-11-19', week:'Week 47', thema:'Warmte Congrestival', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Warmte Congrestival november 2026. Keynote: missie, visie, producten, proofpoints.', content:'', qg:true },
-    { datum:'2026-11-23', week:'Week 48', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Warmte Congrestival: highlights en reacties op QG.', content:'', qg:true },
+    { datum:'2026-11-16', week:'Week 47', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum op Warmte Congrestival. Keynote over missie, visie, QG.', content:'', qg:true, qe:false },
+    { datum:'2026-11-19', week:'Week 47', thema:'Warmte Congrestival', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Warmte Congrestival november 2026. Keynote: missie, visie, producten, proofpoints.', content:'', qg:true, qe:false },
+    { datum:'2026-11-23', week:'Week 48', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Warmte Congrestival: highlights en reacties op QG.', content:'', qg:true, qe:false },
   ];
 }
 
 /* PLATFORMS + EVENTS DATA */
 const PLATFORMS = [
-  { naam:'Warmte365', url:'https://www.warmte365.nl/', type:'Online platform', bereik:'Duurzame HVAC-professionals, installateurs, adviseurs', publicatie:'Basispakket EUR 750 excl. BTW. Plus/Premium: banners, nieuwsbrief, redactioneel.', kosten:'Vanaf EUR 750', relevantie:'hoog' },
+  { naam:'Warmte365', url:'https://www.warmte365.nl/', type:'Online platform', bereik:'Duurzame HVAC-professionals, installateurs, adviseurs', publicatie:'Basispakket EUR 750 excl. BTW. Plus/Premium: banners, nieuwsbrief, redactioneel.', kosten:'Vanaf EUR 750', relevantie:'hoog', partner:true },
   { naam:'Vakblad Warmtepompen', url:'https://www.vakbladwarmtepompen.nl/', type:'Vakblad', bereik:'Installatieprofessionals, adviseurs, corporaties, gemeenten', publicatie:'Nieuwsbrief 2x/week, vakblad 6x/jaar. Adverteren via VMN Media.', kosten:'Op aanvraag', relevantie:'hoog' },
   { naam:'Gawalo', url:'https://www.gawalo.nl/', type:'Vakblad', bereik:'Installatieprofessionals, beslissers bij installatiebedrijven', publicatie:'Hoofdmediapartner VSK. Adverteren via VMN Media.', kosten:'Op aanvraag', relevantie:'hoog' },
   { naam:'Installatie & Bouw', url:'https://www.installatieenbouw.nl/', type:'Vakblad', bereik:'11.000+ professionals, 111.000+ online bezoekers', publicatie:'Advertorials, content marketing. Magazine 6x/jaar.', kosten:'Op aanvraag', relevantie:'hoog' },
@@ -682,7 +727,7 @@ const PLATFORMS = [
   { naam:'Duurzaam Gebouwd', url:'https://www.duurzaamgebouwd.nl/', type:'Kennisplatform', bereik:'Beslissers bouw/vastgoed. 39.000 bezoeken/maand, 120 topexperts.', publicatie:'Expertposts, rondetafels, themadossiers. Organiseert Klimaattop GO.', kosten:'Op aanvraag', relevantie:'hoog' },
   { naam:'Energie+ / Renda', url:'https://www.energieplus.nl/', type:'Kennisnetwerk', bereik:'Woningcorporaties, aannemers, adviesbureaus sociale woningbouw.', publicatie:'Vakblad, events, kennistafels, projectendatabase.', kosten:'Op aanvraag', relevantie:'hoog' },
   { naam:'Aedes', url:'https://aedes.nl/', type:'Branchevereniging', bereik:'261 woningcorporaties (2,4 mln huurwoningen).', publicatie:'Geen extern publicatiemodel. Wel bijeenkomsten en community.', kosten:'N.v.t.', relevantie:'hoog' },
-  { naam:'Vereniging Warmtepompen', url:'https://warmte-pompen.nl/', type:'Branchevereniging', bereik:'Warmtepompsector. Organiseert Congres Doorbraak, publiceert Trendrapport.', publicatie:'Congressen, publicaties, leden spotlight.', kosten:'Lidmaatschap', relevantie:'hoog' },
+  { naam:'Vereniging Warmtepompen', url:'https://warmte-pompen.nl/', type:'Branchevereniging', bereik:'Warmtepompsector. Organiseert Congres Doorbraak, publiceert Trendrapport.', publicatie:'Congressen, publicaties, leden spotlight.', kosten:'Lidmaatschap', relevantie:'hoog', partner:true },
   { naam:'LinkedIn Groepen', url:'https://www.linkedin.com/', type:'Social media', bereik:'Sectorgroepen: Warmtetransitie NL, Duurzaam Bouwen, Energietransitie.', publicatie:'Gratis posts in groepen. Vergroot organisch bereik.', kosten:'Gratis', relevantie:'hoog' },
   { naam:'PONT Klimaat', url:'https://klimaatweb.nl/', type:'Online platform', bereik:'Beleidsbepalers, duurzaamheidsadviseurs. 10.000 prof/maand.', publicatie:'Partnerschap, adverteren, PONT Academy.', kosten:'Op aanvraag', relevantie:'midden' },
   { naam:'de Architect', url:'https://www.dearchitect.nl/', type:'Vakblad', bereik:'Architecten, stedenbouwkundigen. 50+ jaar.', publicatie:'Adverteren via VMN Media.', kosten:'Op aanvraag', relevantie:'midden' },
@@ -691,7 +736,7 @@ const PLATFORMS = [
   { naam:'Installatie Totaal', url:'https://www.installatietotaal.nl/', type:'Vakblad', bereik:'B2B installatiebedrijven. 25+ jaar. Mediapartner Vakbeurs Energie.', publicatie:'Magazine, online, advertorials.', kosten:'Op aanvraag', relevantie:'midden' },
   { naam:'Stadszaken.nl', url:'https://stadszaken.nl/', type:'Online platform', bereik:'Stedelijke ontwikkeling, warmtenetten, energietransitie.', publicatie:'Redactioneel, opiniebijdragen.', kosten:'Gratis / op aanvraag', relevantie:'midden' },
   { naam:'Techniek Nederland', url:'https://www.technieknederland.nl/', type:'Branchevereniging', bereik:'Branchevereniging installatietechniek.', publicatie:'Ledennieuwsbrief, events.', kosten:'Lidmaatschap', relevantie:'midden' },
-  { naam:'Stichting Warmtenetwerk', url:'https://warmtenetwerk.nl/', type:'Kennisplatform', bereik:'Warmtenetwerkprofessionals. Organiseert Warmte Congrestival.', publicatie:'Kennisbank, events, nieuwsbrief.', kosten:'Lidmaatschap', relevantie:'midden' },
+  { naam:'Stichting Warmtenetwerk', url:'https://warmtenetwerk.nl/', type:'Kennisplatform', bereik:'Warmtenetwerkprofessionals. Organiseert Warmte Congrestival.', publicatie:'Kennisbank, events, nieuwsbrief.', kosten:'Lidmaatschap', relevantie:'hoog', partner:true },
   { naam:'Bodemenergie.nl', url:'https://bodemenergie.nl/', type:'Kennisplatform', bereik:'Bodemenergie, WKO, geothermie. Niche, relevant voor QG.', publicatie:'Kennisbank, nieuws, events.', kosten:'Gratis', relevantie:'midden' },
 ];
 
@@ -711,7 +756,7 @@ function init() {
   if (stored) {
     try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
   } else { seedItems(); }
-  buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs();
+  loadPlatformOverrides(); buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs();
 }
 
 function seedItems() {
@@ -811,7 +856,7 @@ function getFilteredItems() {
   const fT = document.getElementById('filterThema').value;
   const fS = document.getElementById('filterStatus').value;
   const fTy = document.getElementById('filterType').value;
-  const fQG = document.getElementById('filterQG').checked;
+  const fProduct = document.getElementById('filterProduct').value;
   return items.filter(item => {
     const monthMatch = quarterMode
       ? quarterMode.some(m => item.datum.startsWith(m))
@@ -822,7 +867,8 @@ function getFilteredItems() {
     if (fT && item.thema !== fT) return false;
     if (fS && item.status !== fS) return false;
     if (fTy && item.type !== fTy) return false;
-    if (fQG && !item.qg) return false;
+    if (fProduct === 'qg' && !item.qg) return false;
+    if (fProduct === 'qe' && !item.qe) return false;
     return true;
   }).sort((a, b) => a.datum.localeCompare(b.datum));
 }
@@ -1216,6 +1262,7 @@ function openModal(id) {
     document.getElementById('fieldOmschrijving').value = item.omschrijving;
     document.getElementById('fieldContent').value = item.content || '';
     document.getElementById('fieldQG').checked = !!item.qg;
+    document.getElementById('fieldQE').checked = !!item.qe;
     // Load case study data if present
     if (item.caseStudy) {
       const cs = item.caseStudy;
@@ -1243,6 +1290,7 @@ function openModal(id) {
     document.getElementById('fieldOmschrijving').value = '';
     document.getElementById('fieldContent').value = '';
     document.getElementById('fieldQG').checked = false;
+    document.getElementById('fieldQE').checked = false;
     clearCaseStudyFields();
     btnDel.style.display = 'none';
   }
@@ -1265,6 +1313,7 @@ function saveItem() {
     omschrijving: document.getElementById('fieldOmschrijving').value,
     content: document.getElementById('fieldContent').value,
     qg: document.getElementById('fieldQG').checked,
+    qe: document.getElementById('fieldQE').checked,
   };
   // Save case study fields if type is Case study
   if (data.type === 'Case study') {
@@ -1324,16 +1373,42 @@ function renderPlatforms() {
       const label = t('relevance' + currentRelevance.charAt(0).toUpperCase() + currentRelevance.slice(1));
       html += `<div style="grid-column:1/-1;margin:${currentRelevance === 'hoog' ? '0' : '16px'} 0 8px 0;font-weight:700;font-size:0.75rem;letter-spacing:1.2px;text-transform:uppercase;color:var(--q-brown)">${t('lblRelevance')}: ${label}</div>`;
     }
+    const partnerHtml = p.partner ? `<div class="partner-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="M119.76,217.94A8,8,0,0,1,112,224a8.13,8.13,0,0,1-2-.24l-32-8a8,8,0,0,1-5.28-4.46L60,183.8,47.31,196.49a8,8,0,0,1-11.32-11.32l18.34-18.35a8,8,0,0,1,9.57-1.42L90.42,180l20.78,8.31a8,8,0,0,1,4.56,10.31,7.66,7.66,0,0,1-.68,1.2ZM237.66,18.34a8,8,0,0,0-11.32,0l-49.24,49.24-21-8.43a8,8,0,0,0-6.58.31L128,70.24,99.34,82.92a8,8,0,0,0-4.46,5.28l-8,32a8,8,0,0,0,9.48,9.86l32-8a8,8,0,0,0,4.14-2.54l14.64-17.58,23.3-11.65,26.22,10.49-8.84,8.84a8,8,0,0,0,11.32,11.32l14.14-14.14a8,8,0,0,0,1.42-9.57l-15.36-30.72,38.3-38.3A8,8,0,0,0,237.66,18.34Z"/></svg>Partner</div>` : '';
     html += `<div class="platform-card relevance-${p.relevantie}">
+      ${partnerHtml}
       <h3><a href="${p.url}" target="_blank" rel="noopener">${esc(p.naam)}</a></h3>
       <div class="platform-type">${esc(p.type)}</div>
       <div class="platform-detail"><strong>${t('lblReach')}:</strong> ${esc(p.bereik)}</div>
       <div class="platform-detail"><strong>${t('lblPublication')}:</strong> ${esc(p.publicatie)}</div>
       <div class="platform-detail"><strong>${t('lblCost')}:</strong> ${esc(p.kosten)}</div>
-      <span class="relevance-badge">${t('lblRelevance')}: ${t('relevance' + p.relevantie.charAt(0).toUpperCase() + p.relevantie.slice(1))}</span>
+      <select class="relevance-select relevance-${p.relevantie}" data-platform="${esc(p.naam)}" onchange="updatePlatformRelevance('${esc(p.naam)}', this.value)">
+        <option value="hoog" ${p.relevantie==='hoog'?'selected':''}>Hoog</option>
+        <option value="midden" ${p.relevantie==='midden'?'selected':''}>Midden</option>
+        <option value="laag" ${p.relevantie==='laag'?'selected':''}>Laag</option>
+      </select>
     </div>`;
   });
   document.getElementById('platformsGrid').innerHTML = html;
+}
+
+function updatePlatformRelevance(naam, value) {
+  const p = PLATFORMS.find(p => p.naam === naam);
+  if (p) {
+    p.relevantie = value;
+    // Save to localStorage
+    const overrides = JSON.parse(localStorage.getItem('qvantum-platform-overrides') || '{}');
+    overrides[naam] = { relevantie: value };
+    localStorage.setItem('qvantum-platform-overrides', JSON.stringify(overrides));
+    renderPlatforms();
+  }
+}
+
+function loadPlatformOverrides() {
+  const overrides = JSON.parse(localStorage.getItem('qvantum-platform-overrides') || '{}');
+  for (const [naam, vals] of Object.entries(overrides)) {
+    const p = PLATFORMS.find(p => p.naam === naam);
+    if (p && vals.relevantie) p.relevantie = vals.relevantie;
+  }
 }
 
 /* EVENTS */
