@@ -1039,8 +1039,8 @@ function renderWeekView(container, filtered) {
           const sc = statusClass(item.status);
           const hasContent = item.content && item.content.trim();
           html += `<div class="day-item" style="border-left-color:${tc}">
-            <div class="di-title" onclick="openModal(${item.id})">${esc(item.thema)}</div>
-            <div class="di-meta"><span class="di-auteur">${esc(item.auteur.split(' ')[0])}</span> &middot; ${esc(item.type)}</div>
+            <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 60))}</div>
+            <div class="di-meta"><span class="di-auteur">${esc(item.thema)}</span> &middot; ${esc(item.type)}</div>
             <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
             ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,3).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 3 ? `<span class="media-tag">+${item.media.length - 3}</span>` : ''}</div>` : ''}
             <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
@@ -1093,13 +1093,12 @@ function renderCardItem(item) {
         <span class="item-date">${ds}${item.week ? ' &middot; ' + item.week : ''}</span>
         <span class="item-status ${sc}">${tStatus(item.status)}</span>
       </div>
-      <div class="item-title" onclick="openModal(${item.id})"><span class="type-badge" style="background:${tc}"></span> ${esc(item.thema)}</div>
+      <div class="item-title" onclick="openModal(${item.id})"><span class="type-badge" style="background:${tc}"></span> ${esc(item.omschrijving || item.thema)}</div>
       <div class="item-meta">
+        <span class="tag">${esc(item.thema)}</span>
         <span class="tag">${esc(item.type)}</span>
         <span class="tag">${esc(item.auteur)}</span>
-        <span class="tag">${esc(item.kanaal.split(' — ')[0])}</span>
       </div>
-      ${item.omschrijving ? `<div class="item-desc">${esc(item.omschrijving)}</div>` : ''}
       ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,4).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 4 ? `<span class="media-tag">+${item.media.length - 4}</span>` : ''}</div>` : ''}
       <div class="item-content-toggle" onclick="toggleCardContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
       <div class="item-content-area" id="cc-${item.id}">
@@ -1257,6 +1256,7 @@ function getISOWeek(date) {
 function fmt(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function statusClass(s) { return 'status-' + s.toLowerCase().replace(/ /g, ''); }
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function truncate(s, max) { return s && s.length > max ? s.slice(0, max) + '...' : (s || ''); }
 
 /* CASE STUDY TEMPLATE */
 function toggleCaseStudy() {
