@@ -79,6 +79,24 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 #caseStudyPanel .form-group label { font-size: 0.65rem; margin-bottom: 4px; }
 #caseStudyPanel input, #caseStudyPanel textarea { font-size: 0.8rem; padding: 8px 12px; }
 
+/* MEDIA CHECKLIST in modal */
+#mediaChecklistPanel { margin-top: 12px; border: 1px solid var(--q-beige); border-radius: var(--radius-lg); padding: 14px 16px; background: var(--q-off-white); }
+#mediaChecklistPanel .media-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer; }
+#mediaChecklistPanel .media-panel-title { font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; color: var(--q-off-black); }
+#mediaChecklistPanel .media-panel-toggle { font-size: 0.65rem; color: var(--q-brown); }
+#mediaChecklistPanel .media-panel-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+#mediaChecklistPanel .media-panel-actions button { font-family: inherit; font-size: 0.65rem; font-weight: 600; padding: 3px 10px; border: 1px solid var(--q-beige); border-radius: 12px; background: var(--q-white); color: var(--q-brown); cursor: pointer; transition: all 0.15s; }
+#mediaChecklistPanel .media-panel-actions button:hover { border-color: var(--q-brown); color: var(--q-off-black); }
+#mediaChecklistPanel .media-group-label { font-weight: 600; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); margin: 8px 0 4px; }
+#mediaChecklistPanel .media-group-label:first-of-type { margin-top: 0; }
+#mediaChecklistPanel .media-checks { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+#mediaChecklistPanel .media-check { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--q-off-black); cursor: pointer; padding: 2px 0; }
+#mediaChecklistPanel .media-check input { margin: 0; cursor: pointer; }
+#mediaChecklistPanel .media-check.suggested { font-weight: 600; color: var(--q-blue); }
+.media-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.media-tag { font-size: 0.55rem; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: var(--q-beige); color: var(--q-brown); letter-spacing: 0.3px; }
+.media-tag.hoog { background: #E8F0E8; color: #3A6B3A; }
+
 /* LANG TOGGLE */
 .lang-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
 .lang-btn { font-family: inherit; font-weight: 600; font-size: 0.65rem; padding: 4px 10px; border: none; border-radius: 16px; cursor: pointer; background: none; color: var(--q-brown); transition: all 0.15s; letter-spacing: 0.5px; }
@@ -402,6 +420,23 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
     <div class="form-group" style="display:flex;gap:16px;flex-wrap:wrap"><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQG"> <span>QG-gerelateerd</span></label><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQE"> <span>QE-gerelateerd</span></label><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldCAB"> <span>CAB-relevant</span></label></div>
+
+    <!-- Media Checklist -->
+    <div id="mediaChecklistPanel">
+      <div class="media-panel-header" onclick="toggleMediaPanel()">
+        <span class="media-panel-title" id="mediaPanelTitle">Media distributie</span>
+        <span class="media-panel-toggle" id="mediaPanelToggle">&#9660;</span>
+      </div>
+      <div id="mediaPanelBody" style="display:none">
+        <div class="media-panel-actions">
+          <button onclick="autoSuggestMedia()" id="btnAutoSuggest">Auto-suggestie</button>
+          <button onclick="selectAllMedia('hoog')" id="btnSelectHoog">Alle hoog</button>
+          <button onclick="clearAllMedia()">Wis selectie</button>
+        </div>
+        <div id="mediaChecklistItems"></div>
+      </div>
+    </div>
+
     <div class="modal-actions">
       <div><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button></div>
       <div class="modal-actions-right">
@@ -456,6 +491,10 @@ const T = {
     csProject: 'Projectnaam', csLocation: 'Locatie', csProjectDesc: 'Projectomschrijving',
     csProduct: 'Qvantum product', csUnits: 'Aantal eenheden', csSpecs: 'Specificaties',
     csBenefits: 'Voordelen / resultaat', csPartners: 'Samenwerkingspartners', csHashtags: 'Hashtags',
+    // Media checklist
+    mediaTitle: 'Media distributie', mediaAutoSuggest: 'Auto-suggestie', mediaSelectHoog: 'Alle hoog',
+    mediaClear: 'Wis selectie', mediaGroupHoog: 'Hoog', mediaGroupMidden: 'Midden', mediaGroupLaag: 'Laag',
+    mediaDistLabel: 'Media',
     // Footer
     footerLeft: 'Qvantum Nederland — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.',
@@ -501,6 +540,10 @@ const T = {
     csProject: 'Project name', csLocation: 'Location', csProjectDesc: 'Project description',
     csProduct: 'Qvantum product', csUnits: 'Number of units', csSpecs: 'Specifications',
     csBenefits: 'Benefits / results', csPartners: 'Collaboration partners', csHashtags: 'Hashtags',
+    // Media checklist
+    mediaTitle: 'Media distribution', mediaAutoSuggest: 'Auto-suggest', mediaSelectHoog: 'All high',
+    mediaClear: 'Clear selection', mediaGroupHoog: 'High', mediaGroupMidden: 'Medium', mediaGroupLaag: 'Low',
+    mediaDistLabel: 'Media',
     // Footer
     footerLeft: 'Qvantum Netherlands — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Share via GitHub Pages or Netlify Drop. Future migration to HubSpot Marketing Calendar.',
@@ -586,6 +629,11 @@ function renderAllUI() {
   });
   const csBtn = document.getElementById('csGenerateBtn');
   if (csBtn) csBtn.textContent = t('csGenerate');
+  // Media checklist labels
+  document.getElementById('mediaPanelTitle').textContent = t('mediaTitle');
+  document.getElementById('btnAutoSuggest').textContent = t('mediaAutoSuggest');
+  document.getElementById('btnSelectHoog').textContent = t('mediaSelectHoog');
+  buildMediaChecklist();
   // QG filter label
   // product filter labels set via HTML
   // Re-render dynamic content
@@ -994,6 +1042,7 @@ function renderWeekView(container, filtered) {
             <div class="di-title" onclick="openModal(${item.id})">${esc(item.thema)}</div>
             <div class="di-meta"><span class="di-auteur">${esc(item.auteur.split(' ')[0])}</span> &middot; ${esc(item.type)}</div>
             <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
+            ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,3).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 3 ? `<span class="media-tag">+${item.media.length - 3}</span>` : ''}</div>` : ''}
             <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
             <div class="di-content" id="dc-${item.id}">
               <textarea class="di-content-text" placeholder="${t('textPlaceholderShort')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
@@ -1051,6 +1100,7 @@ function renderCardItem(item) {
         <span class="tag">${esc(item.kanaal.split(' — ')[0])}</span>
       </div>
       ${item.omschrijving ? `<div class="item-desc">${esc(item.omschrijving)}</div>` : ''}
+      ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,4).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 4 ? `<span class="media-tag">+${item.media.length - 4}</span>` : ''}</div>` : ''}
       <div class="item-content-toggle" onclick="toggleCardContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
       <div class="item-content-area" id="cc-${item.id}">
         <textarea class="item-content-textarea" placeholder="${t('textPlaceholderLong')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
@@ -1327,6 +1377,12 @@ function openModal(id) {
       document.getElementById('csPartners').value = cs.partners || '';
       document.getElementById('csHashtags').value = cs.hashtags || '#Qvantum #Warmtepomp #Energietransitie';
     } else { clearCaseStudyFields(); }
+    // Load media selections
+    buildMediaChecklist();
+    setSelectedMedia(item.media || []);
+    mediaPanelOpen = (item.media && item.media.length > 0);
+    document.getElementById('mediaPanelBody').style.display = mediaPanelOpen ? 'block' : 'none';
+    document.getElementById('mediaPanelToggle').innerHTML = mediaPanelOpen ? '&#9650;' : '&#9660;';
     btnDel.style.display = 'inline-block';
   } else {
     document.getElementById('modalTitle').textContent = t('modalNew');
@@ -1344,6 +1400,11 @@ function openModal(id) {
     document.getElementById('fieldQE').checked = false;
     document.getElementById('fieldCAB').checked = false;
     clearCaseStudyFields();
+    buildMediaChecklist();
+    setSelectedMedia([]);
+    mediaPanelOpen = false;
+    document.getElementById('mediaPanelBody').style.display = 'none';
+    document.getElementById('mediaPanelToggle').innerHTML = '&#9660;';
     btnDel.style.display = 'none';
   }
   toggleCaseStudy();
@@ -1367,6 +1428,7 @@ function saveItem() {
     qg: document.getElementById('fieldQG').checked,
     qe: document.getElementById('fieldQE').checked,
     cab: document.getElementById('fieldCAB').checked,
+    media: getSelectedMedia(),
   };
   // Save case study fields if type is Case study
   if (data.type === 'Case study') {
@@ -1393,6 +1455,140 @@ function deleteItem() {
   if (!id || !confirm(t('confirmDelete'))) return;
   items = items.filter(i => i.id !== id);
   saveToStorage(); closeModal(); renderCalendar();
+}
+
+/* MEDIA CHECKLIST */
+let mediaPanelOpen = false;
+
+function toggleMediaPanel() {
+  mediaPanelOpen = !mediaPanelOpen;
+  document.getElementById('mediaPanelBody').style.display = mediaPanelOpen ? 'block' : 'none';
+  document.getElementById('mediaPanelToggle').innerHTML = mediaPanelOpen ? '&#9650;' : '&#9660;';
+}
+
+function buildMediaChecklist() {
+  const container = document.getElementById('mediaChecklistItems');
+  const groups = { hoog: [], midden: [], laag: [] };
+  PLATFORMS.forEach(p => {
+    if (!p.relevantie) return;
+    (groups[p.relevantie] || groups.laag).push(p.naam);
+  });
+  let html = '';
+  ['hoog', 'midden', 'laag'].forEach(level => {
+    if (groups[level].length === 0) return;
+    const labelKey = 'mediaGroup' + level.charAt(0).toUpperCase() + level.slice(1);
+    html += `<div class="media-group-label">${t(labelKey)} (${groups[level].length})</div><div class="media-checks">`;
+    groups[level].forEach(name => {
+      const id = 'media_' + name.replace(/[^a-zA-Z0-9]/g, '_');
+      html += `<label class="media-check" id="lbl_${id}"><input type="checkbox" id="${id}" value="${name}"> ${name}</label>`;
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function getSelectedMedia() {
+  return PLATFORMS.map(p => p.naam).filter(name => {
+    const id = 'media_' + name.replace(/[^a-zA-Z0-9]/g, '_');
+    const el = document.getElementById(id);
+    return el && el.checked;
+  });
+}
+
+function setSelectedMedia(names) {
+  PLATFORMS.forEach(p => {
+    const id = 'media_' + p.naam.replace(/[^a-zA-Z0-9]/g, '_');
+    const el = document.getElementById(id);
+    if (el) el.checked = (names || []).includes(p.naam);
+    const lbl = document.getElementById('lbl_' + id);
+    if (lbl) lbl.classList.remove('suggested');
+  });
+}
+
+function selectAllMedia(level) {
+  PLATFORMS.forEach(p => {
+    const id = 'media_' + p.naam.replace(/[^a-zA-Z0-9]/g, '_');
+    const el = document.getElementById(id);
+    if (el && p.relevantie === level) el.checked = true;
+  });
+}
+
+function clearAllMedia() {
+  PLATFORMS.forEach(p => {
+    const id = 'media_' + p.naam.replace(/[^a-zA-Z0-9]/g, '_');
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+    const lbl = document.getElementById('lbl_' + id);
+    if (lbl) lbl.classList.remove('suggested');
+  });
+}
+
+function autoSuggestMedia() {
+  clearAllMedia();
+  const type = document.getElementById('fieldType').value;
+  const thema = document.getElementById('fieldThema').value.toLowerCase();
+  const isQG = document.getElementById('fieldQG').checked;
+  const isQE = document.getElementById('fieldQE').checked;
+
+  const suggested = [];
+
+  // Always suggest core platforms for high-value content
+  const highValueTypes = ['Vakpublicatie', 'Artikel', 'Case study', 'Blog', 'Whitepaper'];
+  const prTypes = ['Vakpublicatie', 'Case study'];
+  const socialTypes = ['LinkedIn post'];
+
+  // Core warmtepomp/installatie platforms — always relevant
+  const coreInstallatie = ['Warmte365', 'Vakblad Warmtepompen', 'Installatie.nl', 'Installatie Journaal', 'Gawalo'];
+  const coreBouw = ['Cobouw', 'Duurzaam Gebouwd', 'Bouwend Nederland', 'Bouw&Uitvoering'];
+  const coreEnergie = ['Energeia', 'Solar&Storage Magazine', 'BNR Duurzaam'];
+  const coreCorporatie = ['Aedes', 'Energie+ / Renda', 'Vereniging Eigen Huis'];
+  const coreVastgoed = ['Vastgoedmarkt', 'Vastgoed Actueel', 'PropertyNL'];
+
+  if (highValueTypes.includes(type) || prTypes.includes(type)) {
+    suggested.push(...coreInstallatie);
+    if (thema.includes('qg') || isQG) {
+      suggested.push('Vereniging Warmtepompen', 'Stichting Warmtenetwerk', 'Bodemenergie.nl');
+    }
+    if (thema.includes('project') || thema.includes('referentie') || type === 'Case study') {
+      suggested.push(...coreBouw, ...coreCorporatie);
+    }
+    if (thema.includes('launch') || thema.includes('campagne')) {
+      suggested.push(...coreEnergie, ...coreBouw);
+    }
+    if (thema.includes('corporat') || thema.includes('woningbouw') || thema.includes('renovatie')) {
+      suggested.push(...coreCorporatie, ...coreVastgoed);
+    }
+    if (thema.includes('ems') || thema.includes('connectiviteit') || thema.includes('netcongestie')) {
+      suggested.push(...coreEnergie, 'Techniek Nederland');
+    }
+  }
+
+  if (socialTypes.includes(type)) {
+    suggested.push('LinkedIn Groepen');
+  }
+
+  if (thema.includes('het blok') || thema.includes('tv')) {
+    suggested.push('De Telegraaf', 'NPO Radio 1', 'BNR Duurzaam', 'Duurzaam Ondernemen');
+  }
+
+  if (thema.includes('beurs') || thema.includes('congres') || thema.includes('vakbeurs')) {
+    suggested.push(...coreInstallatie, ...coreBouw, ...coreEnergie);
+  }
+
+  // Deduplicate and apply
+  const unique = [...new Set(suggested)];
+  unique.forEach(name => {
+    const id = 'media_' + name.replace(/[^a-zA-Z0-9]/g, '_');
+    const el = document.getElementById(id);
+    if (el) {
+      el.checked = true;
+      const lbl = document.getElementById('lbl_' + id);
+      if (lbl) lbl.classList.add('suggested');
+    }
+  });
+
+  // Open panel if closed
+  if (!mediaPanelOpen) toggleMediaPanel();
 }
 
 /* PLATFORMS */
