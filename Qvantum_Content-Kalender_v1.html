@@ -1810,7 +1810,7 @@ function renderPlatformTargeting(naam) {
   html += `<div class="targeting-row"><span>Thema's</span><div class="targeting-tags">`;
   allThemas.forEach(th => {
     const active = tgt.themas && tgt.themas.includes(th);
-    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','themas','${esc(th)}')">${esc(th)}</span>`;
+    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','themas','${esc(th)}',event)">${esc(th)}</span>`;
   });
   html += `</div></div>`;
 
@@ -1818,7 +1818,7 @@ function renderPlatformTargeting(naam) {
   html += `<div class="targeting-row"><span>Product</span><div class="targeting-tags">`;
   allProducten.forEach(pr => {
     const active = tgt.producten && tgt.producten.includes(pr);
-    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','producten','${pr}')">${pr}</span>`;
+    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','producten','${pr}',event)">${pr}</span>`;
   });
   html += `</div></div>`;
 
@@ -1826,7 +1826,7 @@ function renderPlatformTargeting(naam) {
   html += `<div class="targeting-row"><span>Types</span><div class="targeting-tags">`;
   allTypes.forEach(tp => {
     const active = tgt.types && tgt.types.includes(tp);
-    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','types','${esc(tp)}')">${esc(tp)}</span>`;
+    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','types','${esc(tp)}',event)">${esc(tp)}</span>`;
   });
   html += `</div></div>`;
 
@@ -1834,7 +1834,7 @@ function renderPlatformTargeting(naam) {
   return html;
 }
 
-function togglePlatformTarget(eName, field, value) {
+function togglePlatformTarget(eName, field, value, evt) {
   // Reverse the escaped name back to original
   const naam = PLATFORMS.find(p => p.naam.replace(/[^a-zA-Z0-9]/g, '_') === eName)?.naam;
   if (!naam) return;
@@ -1849,7 +1849,10 @@ function togglePlatformTarget(eName, field, value) {
   else arr.push(value);
   config[naam][field] = arr;
   savePlatformTargeting(config);
-  renderPlatforms();
+  // Toggle the clicked tag visually instead of re-rendering the whole page
+  if (evt && evt.target) {
+    evt.target.classList.toggle('active');
+  }
 }
 
 function renderPlatforms() {
