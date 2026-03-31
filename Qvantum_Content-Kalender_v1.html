@@ -1618,7 +1618,15 @@ function savePlatformTargeting(config) {
 }
 function getTargetingForPlatform(naam) {
   const config = getPlatformTargeting();
-  return config[naam] || getDefaultTargeting(naam);
+  if (!config[naam]) return getDefaultTargeting(naam);
+  // Merge: use user config but fall back to defaults for empty arrays
+  const def = getDefaultTargeting(naam);
+  const user = config[naam];
+  return {
+    themas: (user.themas && user.themas.length) ? user.themas : def.themas,
+    producten: (user.producten && user.producten.length) ? user.producten : def.producten,
+    types: (user.types && user.types.length) ? user.types : def.types,
+  };
 }
 function getDefaultTargeting(naam) {
   // Smart defaults per platform category
@@ -1665,19 +1673,16 @@ function autoSuggestMedia() {
   const config = getPlatformTargeting();
 
   PLATFORMS.forEach(p => {
-    const tgt = config[p.naam] || getDefaultTargeting(p.naam);
+    const tgt = getTargetingForPlatform(p.naam);
     if (!tgt.themas || !tgt.themas.length) return;
 
     // Match: platform's targeting must overlap with current item
     const themaMatch = tgt.themas.some(t => thema.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(thema.toLowerCase()));
     const productMatch = (!isQG && !isQE) || (isQG && tgt.producten.includes('QG')) || (isQE && tgt.producten.includes('QE'));
-    // Type matching: exact match OR if platform has no specific types configured
-    // For user-configured platforms (in localStorage), use strict matching
-    // For defaults, also match if thema+product match and type is related
-    const hasUserConfig = !!config[p.naam];
-    const typeMatch = !tgt.types.length || tgt.types.includes(type) || (!hasUserConfig && themaMatch && productMatch);
+    const typeMatch = !tgt.types.length || tgt.types.includes(type);
 
-    if (themaMatch && productMatch && typeMatch) {
+    // Suggest if thema + product match (type is used for targeting display, not as strict filter)
+    if (themaMatch && productMatch) {
       suggested.push(p.naam);
     }
   });
@@ -1698,6 +1703,17 @@ function autoSuggestMedia() {
       if (lbl) lbl.classList.add('suggested');
     }
   });
+
+  // Show feedback on auto-suggest button
+  const btn = document.getElementById('btnAutoSuggest');
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = unique.length > 0
+      ? `${unique.length} ${lang === 'nl' ? 'gesuggereerd' : 'suggested'}`
+      : (lang === 'nl' ? 'Geen match' : 'No match');
+    btn.style.fontWeight = '700';
+    setTimeout(() => { btn.textContent = orig; btn.style.fontWeight = ''; }, 2000);
+  }
 
   // Open panel if closed
   if (!mediaPanelOpen) toggleMediaPanel();
@@ -1823,8 +1839,11 @@ function togglePlatformTarget(eName, field, value) {
   const naam = PLATFORMS.find(p => p.naam.replace(/[^a-zA-Z0-9]/g, '_') === eName)?.naam;
   if (!naam) return;
   const config = getPlatformTargeting();
-  if (!config[naam]) config[naam] = { ...getDefaultTargeting(naam) };
-  const arr = config[naam][field] || [];
+  if (!config[naam]) {
+    const def = getDefaultTargeting(naam);
+    config[naam] = { themas: [...def.themas], producten: [...def.producten], types: [...def.types] };
+  }
+  const arr = [...(config[naam][field] || [])];
   const idx = arr.indexOf(value);
   if (idx >= 0) arr.splice(idx, 1);
   else arr.push(value);
