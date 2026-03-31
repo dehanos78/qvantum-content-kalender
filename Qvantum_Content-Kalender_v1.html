@@ -453,7 +453,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <div class="form-group"><label id="mpLblNieuws">Wat is het nieuws?</label><textarea id="mpNieuws" rows="2" placeholder="Wat maakt dit nieuwswaardig? Wat is uniek, onderbouwbaar en actueel?"></textarea></div>
       <div class="form-group"><label id="mpLblRelevantie">Waarom relevant voor dit platform?</label><textarea id="mpRelevantie" rows="2" placeholder="Waarom is dit interessant voor hun lezers/doelgroep?"></textarea></div>
       <div class="form-group"><label id="mpLblFeiten">Feiten / data / onderbouwing</label><textarea id="mpFeiten" rows="2" placeholder="Cijfers, projectresultaten, technische specs die het onderbouwen"></textarea></div>
-      <div class="form-group"><label id="mpLblContact">Contactpersoon</label><input type="text" id="mpContact" value="Viktor de Haan, Country Manager Qvantum Nederland"></div>
+      <div class="form-group"><label id="mpLblContact">Contactpersoon</label><input type="text" id="mpContact" value="Viktor de Haan, Business Developer Qvantum Nederland"></div>
       <div class="form-group"><label id="mpLblExtra">Extra (embargo, exclusiviteit, foto)</label><input type="text" id="mpExtra" placeholder="bijv. Embargo tot 18 april, foto bijgevoegd (rechtenvrij)"></div>
       <div id="mpPreview" class="pitch-preview" style="display:none"></div>
     </div>
@@ -1442,7 +1442,7 @@ function openModal(id) {
     document.getElementById('mpNieuws').value = mp.nieuws || '';
     document.getElementById('mpRelevantie').value = mp.relevantie || '';
     document.getElementById('mpFeiten').value = mp.feiten || '';
-    document.getElementById('mpContact').value = mp.contact || 'Viktor de Haan, Country Manager Qvantum Nederland';
+    document.getElementById('mpContact').value = mp.contact || 'Viktor de Haan, Business Developer Qvantum Nederland';
     document.getElementById('mpExtra').value = mp.extra || '';
     document.getElementById('mpPreview').textContent = '';
     document.getElementById('mpPreview').style.display = 'none';
@@ -1473,7 +1473,7 @@ function openModal(id) {
     document.getElementById('mpNieuws').value = '';
     document.getElementById('mpRelevantie').value = '';
     document.getElementById('mpFeiten').value = '';
-    document.getElementById('mpContact').value = 'Viktor de Haan, Country Manager Qvantum Nederland';
+    document.getElementById('mpContact').value = 'Viktor de Haan, Business Developer Qvantum Nederland';
     document.getElementById('mpExtra').value = '';
     document.getElementById('mpPreview').textContent = '';
     document.getElementById('mpPreview').style.display = 'none';
@@ -1671,7 +1671,11 @@ function autoSuggestMedia() {
     // Match: platform's targeting must overlap with current item
     const themaMatch = tgt.themas.some(t => thema.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(thema.toLowerCase()));
     const productMatch = (!isQG && !isQE) || (isQG && tgt.producten.includes('QG')) || (isQE && tgt.producten.includes('QE'));
-    const typeMatch = !tgt.types.length || tgt.types.includes(type);
+    // Type matching: exact match OR if platform has no specific types configured
+    // For user-configured platforms (in localStorage), use strict matching
+    // For defaults, also match if thema+product match and type is related
+    const hasUserConfig = !!config[p.naam];
+    const typeMatch = !tgt.types.length || tgt.types.includes(type) || (!hasUserConfig && themaMatch && productMatch);
 
     if (themaMatch && productMatch && typeMatch) {
       suggested.push(p.naam);
@@ -1737,12 +1741,8 @@ function generateMediaPitch() {
     pitch += relevantie ? `Waarom is dit relevant voor jullie lezers?\n${relevantie}\n\n` : `Waarom is dit relevant voor jullie lezers?\n[Leg uit waarom dit aansluit bij hun doelgroep]\n\n`;
     pitch += feiten ? `Onderbouwing:\n${feiten}\n\n` : `Onderbouwing:\n[Cijfers, data, projectresultaten]\n\n`;
     if (extra) pitch += `${extra}\n\n`;
-    pitch += `---\n`;
-    pitch += `Contactpersoon: ${contact || 'Viktor de Haan, Country Manager Qvantum Nederland'}\n`;
-    pitch += `E-mail: [e-mail]\n`;
-    pitch += `Telefoon: [telefoon]\n`;
     if (selectedMedia.length) {
-      pitch += `\n---\nVoorgestelde mediaplatformen: ${selectedMedia.join(', ')}`;
+      pitch += `---\nVoorgestelde mediaplatformen: ${selectedMedia.join(', ')}`;
     }
   } else {
     pitch += `Dear [journalist name / editorial team],\n\n`;
@@ -1750,12 +1750,8 @@ function generateMediaPitch() {
     pitch += relevantie ? `Why is this relevant for your readers?\n${relevantie}\n\n` : `Why is this relevant for your readers?\n[Explain why this fits their audience]\n\n`;
     pitch += feiten ? `Supporting evidence:\n${feiten}\n\n` : `Supporting evidence:\n[Numbers, data, project results]\n\n`;
     if (extra) pitch += `${extra}\n\n`;
-    pitch += `---\n`;
-    pitch += `Contact: ${contact || 'Viktor de Haan, Country Manager Qvantum Netherlands'}\n`;
-    pitch += `Email: [email]\n`;
-    pitch += `Phone: [phone]\n`;
     if (selectedMedia.length) {
-      pitch += `\n---\nSuggested media platforms: ${selectedMedia.join(', ')}`;
+      pitch += `---\nSuggested media platforms: ${selectedMedia.join(', ')}`;
     }
   }
 
