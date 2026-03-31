@@ -151,8 +151,14 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .week-label { font-weight: 600; font-size: 0.7rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 8px; padding-left: 4px; display: flex; align-items: center; gap: 12px; }
 .vacation-badges { display: flex; gap: 4px; flex-wrap: wrap; }
 .vacation-badge { font-weight: 500; font-size: 0.6rem; letter-spacing: 0.3px; text-transform: none; padding: 2px 8px; border-radius: 10px; background: #F0EDE8; color: #A09889; }
-.week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.week-grid { display: grid; grid-template-columns: repeat(5, 1fr) 0.5fr 0.5fr; gap: 8px; }
 .day-column { background: var(--q-white); border-radius: var(--radius-lg); padding: 10px; min-height: 80px; }
+.day-column.weekend { background: #EEEDEA; opacity: 0.55; min-height: 40px; }
+.day-column.weekend .day-header { color: #B5AFA6; font-size: 0.65rem; }
+.day-column.weekend .day-num { color: #B5AFA6 !important; }
+.day-column.weekend .di-title { font-size: 0.6rem; }
+.day-column.weekend .di-meta { font-size: 0.5rem; }
+.day-column.weekend .di-status { font-size: 0.5rem; }
 .day-column.holiday { background: #EEEDEA; opacity: 0.6; }
 .day-column.holiday .day-header { color: #B5AFA6; }
 .day-column.holiday .day-num { color: #B5AFA6 !important; }
@@ -294,7 +300,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
   .stats-row { flex-wrap: wrap; }
   .month-nav { gap: 2px; }
   .month-btn { padding: 5px 8px; font-size: 0.65rem; }
-  .week-grid { grid-template-columns: repeat(5, 1fr); font-size: 0.85rem; }
+  .week-grid { grid-template-columns: repeat(5, 1fr) 0.5fr 0.5fr; font-size: 0.85rem; }
 }
 .main::-webkit-scrollbar { width: 6px; }
 .main::-webkit-scrollbar-track { background: transparent; }
@@ -546,7 +552,7 @@ const T = {
     footerLeft: 'Qvantum Nederland — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.',
     // Days
-    days: ['Ma','Di','Wo','Do','Vr'],
+    days: ['Ma','Di','Wo','Do','Vr','Za','Zo'],
     qgOnly: 'Alleen QG',
   },
   en: {
@@ -602,7 +608,7 @@ const T = {
     footerLeft: 'Qvantum Netherlands — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Share via GitHub Pages or Netlify Drop. Future migration to HubSpot Marketing Calendar.',
     // Days
-    days: ['Mon','Tue','Wed','Thu','Fri'],
+    days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
     qgOnly: 'QG only',
   }
 };
@@ -1069,11 +1075,12 @@ function renderWeekView(container, filtered) {
       ? `<span class="vacation-badges">${vacations.map(v => `<span class="vacation-badge">${esc(v.label)}</span>`).join('')}</span>`
       : '';
     html += `<div class="week-block"><div class="week-label">Week ${weekNum}${vacBadges}</div><div class="week-grid">`;
-    for (let d = 0; d < 5; d++) {
+    for (let d = 0; d < 7; d++) {
       const date = week[d];
       const dayNames = t('days');
+      const isWeekend = d >= 5;
       if (!date) {
-        html += `<div class="day-column"><div class="day-header">${dayNames[d]}</div></div>`;
+        html += `<div class="day-column${isWeekend ? ' weekend' : ''}"><div class="day-header">${dayNames[d]}</div></div>`;
         continue;
       }
       const ds = fmt(date);
@@ -1082,26 +1089,35 @@ function renderWeekView(container, filtered) {
       const dayNum = date.getDate();
       const holiday = getHoliday(ds);
       const holidayClass = holiday ? ' holiday' : '';
-      html += `<div class="day-column${holidayClass}"><div class="day-header">${dayName} <span class="day-num">${dayNum}</span></div>`;
+      const weekendClass = isWeekend ? ' weekend' : '';
+      html += `<div class="day-column${holidayClass}${weekendClass}"><div class="day-header">${dayName} <span class="day-num">${dayNum}</span></div>`;
       if (holiday) {
         html += `<div class="holiday-label">${esc(holiday[lang])}</div>`;
       } else if (dayItems.length === 0) {
-        html += `<div class="day-empty">—</div>`;
+        html += isWeekend ? '' : `<div class="day-empty">—</div>`;
       } else {
         dayItems.forEach(item => {
           const tc = TYPE_COLORS[item.type] || '#91877A';
           const sc = statusClass(item.status);
           const hasContent = item.content && item.content.trim();
-          html += `<div class="day-item" style="border-left-color:${tc}">
-            <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 60))}</div>
-            <div class="di-meta"><span class="di-auteur">${esc(item.thema)}</span> &middot; ${esc(item.type)}</div>
-            <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
-            ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,3).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 3 ? `<span class="media-tag">+${item.media.length - 3}</span>` : ''}</div>` : ''}
-            <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
-            <div class="di-content" id="dc-${item.id}">
-              <textarea class="di-content-text" placeholder="${t('textPlaceholderShort')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
-            </div>
-          </div>`;
+          if (isWeekend) {
+            // Compact weekend item
+            html += `<div class="day-item" style="border-left-color:${tc}">
+              <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 35))}</div>
+              <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
+            </div>`;
+          } else {
+            html += `<div class="day-item" style="border-left-color:${tc}">
+              <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 60))}</div>
+              <div class="di-meta"><span class="di-auteur">${esc(item.thema)}</span> &middot; ${esc(item.type)}</div>
+              <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
+              ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,3).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 3 ? `<span class="media-tag">+${item.media.length - 3}</span>` : ''}</div>` : ''}
+              <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
+              <div class="di-content" id="dc-${item.id}">
+                <textarea class="di-content-text" placeholder="${t('textPlaceholderShort')}" onblur="saveContentInline(${item.id}, this.value)">${esc(item.content || '')}</textarea>
+              </div>
+            </div>`;
+          }
         });
       }
       html += `</div>`;
@@ -1286,7 +1302,7 @@ function getWeeksInMonth(year, month) {
 
   while (start <= last || weeks.length === 0) {
     const week = [];
-    for (let d = 0; d < 5; d++) { // Mon-Fri
+    for (let d = 0; d < 7; d++) { // Mon-Sun
       const date = new Date(start);
       date.setDate(date.getDate() + d);
       // Only include if in the target month
