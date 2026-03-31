@@ -79,6 +79,10 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 #caseStudyPanel .form-group label { font-size: 0.65rem; margin-bottom: 4px; }
 #caseStudyPanel input, #caseStudyPanel textarea { font-size: 0.8rem; padding: 8px 12px; }
 
+/* MODAL CHECKBOXES (compact) */
+.modal-check { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: var(--q-brown); cursor: pointer; padding: 3px 10px; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: 14px; white-space: nowrap; }
+.modal-check input[type="checkbox"] { width: 13px; height: 13px; margin: 0; accent-color: var(--q-brown); cursor: pointer; }
+
 /* MEDIA CHECKLIST in modal */
 #mediaChecklistPanel { margin-top: 12px; border: 1px solid var(--q-beige); border-radius: var(--radius-lg); padding: 14px 16px; background: var(--q-off-white); }
 #mediaChecklistPanel .media-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer; }
@@ -91,7 +95,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 #mediaChecklistPanel .media-group-label:first-of-type { margin-top: 0; }
 #mediaChecklistPanel .media-checks { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 #mediaChecklistPanel .media-check { display: flex; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--q-off-black); cursor: pointer; padding: 2px 0; }
-#mediaChecklistPanel .media-check input { margin: 0; cursor: pointer; }
+#mediaChecklistPanel .media-check input { width: 12px; height: 12px; margin: 0; cursor: pointer; }
 #mediaChecklistPanel .media-check.suggested { font-weight: 600; color: var(--q-blue); }
 .media-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
 .media-tag { font-size: 0.55rem; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: var(--q-beige); color: var(--q-brown); letter-spacing: 0.3px; }
@@ -419,7 +423,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
-    <div class="form-group" style="display:flex;gap:16px;flex-wrap:wrap"><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQG"> <span>QG-gerelateerd</span></label><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldQE"> <span>QE-gerelateerd</span></label><label class="filter-checkbox" style="padding:0"><input type="checkbox" id="fieldCAB"> <span>CAB-relevant</span></label></div>
+    <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="modal-check"><input type="checkbox" id="fieldQG"> <span>QG</span></label><label class="modal-check"><input type="checkbox" id="fieldQE"> <span>QE</span></label><label class="modal-check"><input type="checkbox" id="fieldCAB"> <span>CAB</span></label></div>
 
     <!-- Media Checklist -->
     <div id="mediaChecklistPanel">
