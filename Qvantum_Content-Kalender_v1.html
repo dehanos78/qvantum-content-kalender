@@ -83,6 +83,25 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .modal-check { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: var(--q-brown); cursor: pointer; padding: 3px 10px; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: 14px; white-space: nowrap; }
 .modal-check input[type="checkbox"] { width: 13px; height: 13px; margin: 0; accent-color: var(--q-brown); cursor: pointer; }
 
+/* PLATFORM TARGETING CONFIG */
+.platform-targeting { margin-top: 8px; border-top: 1px solid var(--q-beige); padding-top: 8px; }
+.platform-targeting summary { font-size: 0.65rem; font-weight: 600; color: var(--q-brown); cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; }
+.platform-targeting-body { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.targeting-row { display: flex; align-items: center; gap: 6px; }
+.targeting-row span { font-size: 0.6rem; font-weight: 600; color: var(--q-brown); min-width: 55px; text-transform: uppercase; letter-spacing: 0.3px; }
+.targeting-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.targeting-tag { display: inline-flex; align-items: center; gap: 2px; font-size: 0.6rem; padding: 1px 7px; border-radius: 8px; background: var(--q-beige); color: var(--q-off-black); cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+.targeting-tag.active { background: var(--q-blue); color: var(--q-white); border-color: var(--q-blue); }
+.targeting-tag:hover { border-color: var(--q-brown); }
+
+/* MEDIA PITCH PANEL */
+#mediaPitchPanel { display:none; background: #FFF8F0; border: 1px solid #E8D5C0; border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+#mediaPitchPanel h3 { font-weight: 600; font-size: 0.85rem; color: var(--q-off-black); margin: 0 0 12px; }
+#mediaPitchPanel .form-group { margin-bottom: 10px; }
+#mediaPitchPanel .form-group label { font-size: 0.65rem; margin-bottom: 4px; }
+#mediaPitchPanel input, #mediaPitchPanel textarea { font-size: 0.8rem; padding: 8px 12px; }
+#mediaPitchPanel .pitch-preview { background: var(--q-white); border: 1px solid var(--q-beige); border-radius: var(--radius); padding: 14px; font-size: 0.78rem; line-height: 1.6; white-space: pre-wrap; max-height: 300px; overflow-y: auto; margin-top: 8px; }
+
 /* MEDIA CHECKLIST in modal */
 #mediaChecklistPanel { margin-top: 12px; border: 1px solid var(--q-beige); border-radius: var(--radius-lg); padding: 14px 16px; background: var(--q-off-white); }
 #mediaChecklistPanel .media-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer; }
@@ -422,6 +441,23 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <div class="form-group"><label id="csLblHashtags">Hashtags</label><input type="text" id="csHashtags" value="#Qvantum #Warmtepomp #Energietransitie" placeholder="#Qvantum #Warmtepomp ..."></div>
     </div>
 
+    <!-- MEDIA PITCH TEMPLATE -->
+    <div id="mediaPitchPanel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+        <h3 id="mpTitle">Mediabericht / pers-pitch</h3>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-small btn-primary" type="button" onclick="generateMediaPitch()" id="mpGenerateBtn">Genereer pitch</button>
+          <button class="btn btn-small btn-ghost" type="button" onclick="copyPitchToClipboard()">Kopieer</button>
+        </div>
+      </div>
+      <div class="form-group"><label id="mpLblNieuws">Wat is het nieuws?</label><textarea id="mpNieuws" rows="2" placeholder="Wat maakt dit nieuwswaardig? Wat is uniek, onderbouwbaar en actueel?"></textarea></div>
+      <div class="form-group"><label id="mpLblRelevantie">Waarom relevant voor dit platform?</label><textarea id="mpRelevantie" rows="2" placeholder="Waarom is dit interessant voor hun lezers/doelgroep?"></textarea></div>
+      <div class="form-group"><label id="mpLblFeiten">Feiten / data / onderbouwing</label><textarea id="mpFeiten" rows="2" placeholder="Cijfers, projectresultaten, technische specs die het onderbouwen"></textarea></div>
+      <div class="form-group"><label id="mpLblContact">Contactpersoon</label><input type="text" id="mpContact" value="Viktor de Haan, Country Manager Qvantum Nederland"></div>
+      <div class="form-group"><label id="mpLblExtra">Extra (embargo, exclusiviteit, foto)</label><input type="text" id="mpExtra" placeholder="bijv. Embargo tot 18 april, foto bijgevoegd (rechtenvrij)"></div>
+      <div id="mpPreview" class="pitch-preview" style="display:none"></div>
+    </div>
+
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
     <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="modal-check"><input type="checkbox" id="fieldQG"> <span>QG</span></label><label class="modal-check"><input type="checkbox" id="fieldQE"> <span>QE</span></label><label class="modal-check"><input type="checkbox" id="fieldCAB"> <span>CAB</span></label></div>
 
@@ -442,7 +478,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="modal-actions">
-      <div><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button></div>
+      <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button><button class="btn btn-small btn-ghost" id="btnMediaPitch" type="button" onclick="toggleMediaPitch()" style="color:var(--q-orange)">Maak mediabericht</button></div>
       <div class="modal-actions-right">
         <button class="btn btn-small btn-ghost" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-primary" onclick="saveItem()">Opslaan</button>
@@ -499,6 +535,13 @@ const T = {
     mediaTitle: 'Media distributie', mediaAutoSuggest: 'Auto-suggestie', mediaSelectHoog: 'Alle hoog',
     mediaClear: 'Wis selectie', mediaGroupHoog: 'Hoog', mediaGroupMidden: 'Midden', mediaGroupLaag: 'Laag',
     mediaDistLabel: 'Media',
+    // Media pitch
+    mpTitle: 'Mediabericht / pers-pitch', mpGenerate: 'Genereer pitch', mpCopy: 'Kopieer',
+    mpNieuws: 'Wat is het nieuws?', mpRelevantie: 'Waarom relevant voor dit platform?',
+    mpFeiten: 'Feiten / data / onderbouwing', mpContact: 'Contactpersoon',
+    mpExtra: 'Extra (embargo, exclusiviteit, foto)', mpBtn: 'Maak mediabericht',
+    // Platform targeting
+    targetConfig: 'Doelgroep instelling',
     // Footer
     footerLeft: 'Qvantum Nederland — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.',
@@ -548,6 +591,13 @@ const T = {
     mediaTitle: 'Media distribution', mediaAutoSuggest: 'Auto-suggest', mediaSelectHoog: 'All high',
     mediaClear: 'Clear selection', mediaGroupHoog: 'High', mediaGroupMidden: 'Medium', mediaGroupLaag: 'Low',
     mediaDistLabel: 'Media',
+    // Media pitch
+    mpTitle: 'Media pitch / press release', mpGenerate: 'Generate pitch', mpCopy: 'Copy',
+    mpNieuws: 'What is the news?', mpRelevantie: 'Why relevant for this platform?',
+    mpFeiten: 'Facts / data / evidence', mpContact: 'Contact person',
+    mpExtra: 'Extra (embargo, exclusivity, photo)', mpBtn: 'Create media pitch',
+    // Platform targeting
+    targetConfig: 'Audience targeting',
     // Footer
     footerLeft: 'Qvantum Netherlands — Content Planning Dashboard v1.0',
     footerRight: 'Data in LocalStorage + JSON export. Share via GitHub Pages or Netlify Drop. Future migration to HubSpot Marketing Calendar.',
@@ -1387,6 +1437,16 @@ function openModal(id) {
     mediaPanelOpen = (item.media && item.media.length > 0);
     document.getElementById('mediaPanelBody').style.display = mediaPanelOpen ? 'block' : 'none';
     document.getElementById('mediaPanelToggle').innerHTML = mediaPanelOpen ? '&#9650;' : '&#9660;';
+    // Load media pitch data
+    const mp = item.mediaPitch || {};
+    document.getElementById('mpNieuws').value = mp.nieuws || '';
+    document.getElementById('mpRelevantie').value = mp.relevantie || '';
+    document.getElementById('mpFeiten').value = mp.feiten || '';
+    document.getElementById('mpContact').value = mp.contact || 'Viktor de Haan, Country Manager Qvantum Nederland';
+    document.getElementById('mpExtra').value = mp.extra || '';
+    document.getElementById('mpPreview').textContent = '';
+    document.getElementById('mpPreview').style.display = 'none';
+    document.getElementById('mediaPitchPanel').style.display = mp.nieuws ? 'block' : 'none';
     btnDel.style.display = 'inline-block';
   } else {
     document.getElementById('modalTitle').textContent = t('modalNew');
@@ -1409,6 +1469,15 @@ function openModal(id) {
     mediaPanelOpen = false;
     document.getElementById('mediaPanelBody').style.display = 'none';
     document.getElementById('mediaPanelToggle').innerHTML = '&#9660;';
+    // Reset media pitch
+    document.getElementById('mpNieuws').value = '';
+    document.getElementById('mpRelevantie').value = '';
+    document.getElementById('mpFeiten').value = '';
+    document.getElementById('mpContact').value = 'Viktor de Haan, Country Manager Qvantum Nederland';
+    document.getElementById('mpExtra').value = '';
+    document.getElementById('mpPreview').textContent = '';
+    document.getElementById('mpPreview').style.display = 'none';
+    document.getElementById('mediaPitchPanel').style.display = 'none';
     btnDel.style.display = 'none';
   }
   toggleCaseStudy();
@@ -1434,6 +1503,17 @@ function saveItem() {
     cab: document.getElementById('fieldCAB').checked,
     media: getSelectedMedia(),
   };
+  // Save media pitch if filled
+  const mpNieuws = document.getElementById('mpNieuws').value;
+  if (mpNieuws) {
+    data.mediaPitch = {
+      nieuws: mpNieuws,
+      relevantie: document.getElementById('mpRelevantie').value,
+      feiten: document.getElementById('mpFeiten').value,
+      contact: document.getElementById('mpContact').value,
+      extra: document.getElementById('mpExtra').value,
+    };
+  }
   // Save case study fields if type is Case study
   if (data.type === 'Case study') {
     data.caseStudy = {
@@ -1527,56 +1607,80 @@ function clearAllMedia() {
   });
 }
 
+/* PLATFORM TARGETING CONFIG */
+// Each platform can have targeting: { themas: [...], producten: ['QG','QE'], types: [...] }
+// Stored in localStorage, editable per platform card
+function getPlatformTargeting() {
+  return JSON.parse(localStorage.getItem('qvantum-platform-targeting') || '{}');
+}
+function savePlatformTargeting(config) {
+  localStorage.setItem('qvantum-platform-targeting', JSON.stringify(config));
+}
+function getTargetingForPlatform(naam) {
+  const config = getPlatformTargeting();
+  return config[naam] || getDefaultTargeting(naam);
+}
+function getDefaultTargeting(naam) {
+  // Smart defaults per platform category
+  const defs = {
+    'Warmte365': { themas:['QG Launch','QE Installer Campagne','Connectiviteit & EMS','Projecten & referentiecases'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel','Rondetafel'] },
+    'Vakblad Warmtepompen': { themas:['QG Launch','QE Installer Campagne','Connectiviteit & EMS','Projecten & referentiecases'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel'] },
+    'Gawalo': { themas:['QE Installer Campagne','QG Launch','Projecten & referentiecases'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel'] },
+    'Installatie & Bouw': { themas:['QE Installer Campagne','QG Launch','Projecten & referentiecases'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel'] },
+    'Installatie.nl': { themas:['QE Installer Campagne','QG Launch','Projecten & referentiecases','Connectiviteit & EMS'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel','Webinar'] },
+    'Installatie Journaal': { themas:['QE Installer Campagne','QG Launch','Projecten & referentiecases'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel'] },
+    'Cobouw': { themas:['Projecten & referentiecases','QG Launch','Het Blok — Net5'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel','Rondetafel'] },
+    'Duurzaam Gebouwd': { themas:['Projecten & referentiecases','QG Launch','Connectiviteit & EMS'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel','Rondetafel'] },
+    'Energeia': { themas:['QG Launch','Connectiviteit & EMS','Vakbeurs Energie'], producten:['QG','QE'], types:['Vakpublicatie','Artikel'] },
+    'Energie+ / Renda': { themas:['Projecten & referentiecases','QE Installer Campagne'], producten:['QE'], types:['Vakpublicatie','Case study','Artikel','Rondetafel'] },
+    'Solar&Storage Magazine': { themas:['QG Launch','Connectiviteit & EMS'], producten:['QG'], types:['Vakpublicatie','Artikel'] },
+    'Aedes': { themas:['Projecten & referentiecases','QE Installer Campagne'], producten:['QE'], types:['Case study','Rondetafel'] },
+    'Bouwend Nederland': { themas:['Projecten & referentiecases','QG Launch'], producten:['QG','QE'], types:['Case study','Vakpublicatie','Rondetafel'] },
+    'Vereniging Warmtepompen': { themas:['QG Launch','Connectiviteit & EMS','Vakbeurs Energie'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Artikel','Beurs / event'] },
+    'Stichting Warmtenetwerk': { themas:['QG Launch','Warmte Congrestival'], producten:['QG'], types:['Vakpublicatie','Case study','Beurs / event'] },
+    'LinkedIn Groepen': { themas:['QG Launch','QE Installer Campagne','Projecten & referentiecases','Het Blok — Net5','Connectiviteit & EMS'], producten:['QG','QE'], types:['LinkedIn post','Case study'] },
+    'BNR Duurzaam': { themas:['QG Launch','Het Blok — Net5','Vakbeurs Energie'], producten:['QG','QE'], types:['Vakpublicatie','Case study','Beurs / event'] },
+    'Techniek Nederland': { themas:['QE Installer Campagne','Connectiviteit & EMS'], producten:['QE'], types:['Vakpublicatie','Rondetafel'] },
+    'Conceptueel Bouwen': { themas:['QE Installer Campagne','Projecten & referentiecases'], producten:['QE'], types:['Case study','Rondetafel'] },
+    'Vastgoedmarkt': { themas:['Projecten & referentiecases'], producten:['QE'], types:['Case study','Artikel'] },
+    'Vastgoed Actueel': { themas:['Projecten & referentiecases'], producten:['QE'], types:['Case study','Artikel'] },
+    'PropertyNL': { themas:['Projecten & referentiecases'], producten:['QE'], types:['Case study','Artikel'] },
+    'Vereniging Eigen Huis': { themas:['Projecten & referentiecases','Het Blok — Net5'], producten:['QE'], types:['Case study','Artikel'] },
+    'De Telegraaf': { themas:['Het Blok — Net5'], producten:['QE'], types:['Vakpublicatie','Case study'] },
+    'NPO Radio 1': { themas:['Het Blok — Net5','QG Launch'], producten:['QG','QE'], types:['Vakpublicatie'] },
+    'Financieele Dagblad': { themas:['QG Launch'], producten:['QG'], types:['Vakpublicatie','Artikel'] },
+    'Bodemenergie.nl': { themas:['QG Launch'], producten:['QG'], types:['Vakpublicatie','Case study','Artikel'] },
+  };
+  return defs[naam] || { themas:[], producten:[], types:[] };
+}
+
 function autoSuggestMedia() {
   clearAllMedia();
   const type = document.getElementById('fieldType').value;
-  const thema = document.getElementById('fieldThema').value.toLowerCase();
+  const thema = document.getElementById('fieldThema').value;
   const isQG = document.getElementById('fieldQG').checked;
   const isQE = document.getElementById('fieldQE').checked;
 
   const suggested = [];
+  const config = getPlatformTargeting();
 
-  // Always suggest core platforms for high-value content
-  const highValueTypes = ['Vakpublicatie', 'Artikel', 'Case study', 'Blog', 'Whitepaper', 'Rondetafel', 'Nieuwsbrief', 'Beurs / event', 'Webinar', 'Website'];
-  const prTypes = ['Vakpublicatie', 'Case study', 'Rondetafel'];
-  const socialTypes = ['LinkedIn post'];
+  PLATFORMS.forEach(p => {
+    const tgt = config[p.naam] || getDefaultTargeting(p.naam);
+    if (!tgt.themas || !tgt.themas.length) return;
 
-  // Core warmtepomp/installatie platforms — always relevant
-  const coreInstallatie = ['Warmte365', 'Vakblad Warmtepompen', 'Installatie.nl', 'Installatie Journaal', 'Gawalo'];
-  const coreBouw = ['Cobouw', 'Duurzaam Gebouwd', 'Bouwend Nederland', 'Bouw&Uitvoering'];
-  const coreEnergie = ['Energeia', 'Solar&Storage Magazine', 'BNR Duurzaam'];
-  const coreCorporatie = ['Aedes', 'Energie+ / Renda', 'Vereniging Eigen Huis'];
-  const coreVastgoed = ['Vastgoedmarkt', 'Vastgoed Actueel', 'PropertyNL'];
+    // Match: platform's targeting must overlap with current item
+    const themaMatch = tgt.themas.some(t => thema.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(thema.toLowerCase()));
+    const productMatch = (!isQG && !isQE) || (isQG && tgt.producten.includes('QG')) || (isQE && tgt.producten.includes('QE'));
+    const typeMatch = !tgt.types.length || tgt.types.includes(type);
 
-  if (highValueTypes.includes(type) || prTypes.includes(type)) {
-    suggested.push(...coreInstallatie);
-    if (thema.includes('qg') || isQG) {
-      suggested.push('Vereniging Warmtepompen', 'Stichting Warmtenetwerk', 'Bodemenergie.nl');
+    if (themaMatch && productMatch && typeMatch) {
+      suggested.push(p.naam);
     }
-    if (thema.includes('project') || thema.includes('referentie') || type === 'Case study') {
-      suggested.push(...coreBouw, ...coreCorporatie);
-    }
-    if (thema.includes('launch') || thema.includes('campagne')) {
-      suggested.push(...coreEnergie, ...coreBouw);
-    }
-    if (thema.includes('corporat') || thema.includes('woningbouw') || thema.includes('renovatie')) {
-      suggested.push(...coreCorporatie, ...coreVastgoed);
-    }
-    if (thema.includes('ems') || thema.includes('connectiviteit') || thema.includes('netcongestie')) {
-      suggested.push(...coreEnergie, 'Techniek Nederland');
-    }
-  }
+  });
 
-  if (socialTypes.includes(type)) {
+  // Always suggest LinkedIn Groepen for LinkedIn posts
+  if (type === 'LinkedIn post' && !suggested.includes('LinkedIn Groepen')) {
     suggested.push('LinkedIn Groepen');
-  }
-
-  if (thema.includes('het blok') || thema.includes('tv')) {
-    suggested.push('De Telegraaf', 'NPO Radio 1', 'BNR Duurzaam', 'Duurzaam Ondernemen');
-  }
-
-  if (thema.includes('beurs') || thema.includes('congres') || thema.includes('vakbeurs')) {
-    suggested.push(...coreInstallatie, ...coreBouw, ...coreEnergie);
   }
 
   // Deduplicate and apply
@@ -1595,6 +1699,82 @@ function autoSuggestMedia() {
   if (!mediaPanelOpen) toggleMediaPanel();
 }
 
+/* MEDIA PITCH */
+function toggleMediaPitch() {
+  const panel = document.getElementById('mediaPitchPanel');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    // Pre-fill from item data
+    const omschr = document.getElementById('fieldOmschrijving').value;
+    const thema = document.getElementById('fieldThema').value;
+    if (!document.getElementById('mpNieuws').value) {
+      document.getElementById('mpNieuws').value = omschr;
+    }
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function generateMediaPitch() {
+  const nieuws = document.getElementById('mpNieuws').value.trim();
+  const relevantie = document.getElementById('mpRelevantie').value.trim();
+  const feiten = document.getElementById('mpFeiten').value.trim();
+  const contact = document.getElementById('mpContact').value.trim();
+  const extra = document.getElementById('mpExtra').value.trim();
+  const omschr = document.getElementById('fieldOmschrijving').value.trim();
+  const thema = document.getElementById('fieldThema').value.trim();
+  const type = document.getElementById('fieldType').value;
+  const datum = document.getElementById('fieldDatum').value;
+  const datumStr = datum ? new Date(datum).toLocaleDateString(lang === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+  // Get selected media platforms
+  const selectedMedia = getSelectedMedia();
+
+  let pitch = '';
+  if (lang === 'nl') {
+    pitch += `Beste [naam journalist / redactie],\n\n`;
+    pitch += nieuws ? `${nieuws}\n\n` : `[Beschrijf hier kort het nieuws]\n\n`;
+    pitch += relevantie ? `Waarom is dit relevant voor jullie lezers?\n${relevantie}\n\n` : `Waarom is dit relevant voor jullie lezers?\n[Leg uit waarom dit aansluit bij hun doelgroep]\n\n`;
+    pitch += feiten ? `Onderbouwing:\n${feiten}\n\n` : `Onderbouwing:\n[Cijfers, data, projectresultaten]\n\n`;
+    if (extra) pitch += `${extra}\n\n`;
+    pitch += `---\n`;
+    pitch += `Contactpersoon: ${contact || 'Viktor de Haan, Country Manager Qvantum Nederland'}\n`;
+    pitch += `E-mail: [e-mail]\n`;
+    pitch += `Telefoon: [telefoon]\n`;
+    if (selectedMedia.length) {
+      pitch += `\n---\nVoorgestelde mediaplatformen: ${selectedMedia.join(', ')}`;
+    }
+  } else {
+    pitch += `Dear [journalist name / editorial team],\n\n`;
+    pitch += nieuws ? `${nieuws}\n\n` : `[Briefly describe the news here]\n\n`;
+    pitch += relevantie ? `Why is this relevant for your readers?\n${relevantie}\n\n` : `Why is this relevant for your readers?\n[Explain why this fits their audience]\n\n`;
+    pitch += feiten ? `Supporting evidence:\n${feiten}\n\n` : `Supporting evidence:\n[Numbers, data, project results]\n\n`;
+    if (extra) pitch += `${extra}\n\n`;
+    pitch += `---\n`;
+    pitch += `Contact: ${contact || 'Viktor de Haan, Country Manager Qvantum Netherlands'}\n`;
+    pitch += `Email: [email]\n`;
+    pitch += `Phone: [phone]\n`;
+    if (selectedMedia.length) {
+      pitch += `\n---\nSuggested media platforms: ${selectedMedia.join(', ')}`;
+    }
+  }
+
+  const preview = document.getElementById('mpPreview');
+  preview.textContent = pitch;
+  preview.style.display = 'block';
+}
+
+function copyPitchToClipboard() {
+  const preview = document.getElementById('mpPreview');
+  if (!preview.textContent) { generateMediaPitch(); }
+  navigator.clipboard.writeText(preview.textContent).then(() => {
+    const btn = document.querySelector('#mediaPitchPanel .btn-ghost');
+    const orig = btn.textContent;
+    btn.textContent = lang === 'nl' ? 'Gekopieerd!' : 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
 /* PLATFORMS */
 let platformFilter = 'alle';
 
@@ -1602,6 +1782,58 @@ function filterPlatforms(level) {
   platformFilter = level;
   document.querySelectorAll('.platform-filter-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`.platform-filter-btn[onclick="filterPlatforms('${level}')"]`).classList.add('active');
+  renderPlatforms();
+}
+
+function renderPlatformTargeting(naam) {
+  const tgt = getTargetingForPlatform(naam);
+  const allThemas = [...new Set(items.map(i => i.thema))].sort();
+  const allTypes = ['LinkedIn post','Case study','Rondetafel','Artikel','Nieuwsbrief','Beurs / event','Webinar','Vakpublicatie','Website'];
+  const allProducten = ['QG','QE'];
+  const eName = naam.replace(/[^a-zA-Z0-9]/g, '_');
+
+  let html = `<div class="platform-targeting"><details><summary>${t('targetConfig')}</summary><div class="platform-targeting-body">`;
+
+  // Themas
+  html += `<div class="targeting-row"><span>Thema's</span><div class="targeting-tags">`;
+  allThemas.forEach(th => {
+    const active = tgt.themas && tgt.themas.includes(th);
+    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','themas','${esc(th)}')">${esc(th)}</span>`;
+  });
+  html += `</div></div>`;
+
+  // Producten
+  html += `<div class="targeting-row"><span>Product</span><div class="targeting-tags">`;
+  allProducten.forEach(pr => {
+    const active = tgt.producten && tgt.producten.includes(pr);
+    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','producten','${pr}')">${pr}</span>`;
+  });
+  html += `</div></div>`;
+
+  // Types
+  html += `<div class="targeting-row"><span>Types</span><div class="targeting-tags">`;
+  allTypes.forEach(tp => {
+    const active = tgt.types && tgt.types.includes(tp);
+    html += `<span class="targeting-tag${active?' active':''}" onclick="togglePlatformTarget('${eName}','types','${esc(tp)}')">${esc(tp)}</span>`;
+  });
+  html += `</div></div>`;
+
+  html += `</div></details></div>`;
+  return html;
+}
+
+function togglePlatformTarget(eName, field, value) {
+  // Reverse the escaped name back to original
+  const naam = PLATFORMS.find(p => p.naam.replace(/[^a-zA-Z0-9]/g, '_') === eName)?.naam;
+  if (!naam) return;
+  const config = getPlatformTargeting();
+  if (!config[naam]) config[naam] = { ...getDefaultTargeting(naam) };
+  const arr = config[naam][field] || [];
+  const idx = arr.indexOf(value);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push(value);
+  config[naam][field] = arr;
+  savePlatformTargeting(config);
   renderPlatforms();
 }
 
@@ -1639,6 +1871,7 @@ function renderPlatforms() {
         <option value="midden" ${p.relevantie==='midden'?'selected':''}>Midden</option>
         <option value="laag" ${p.relevantie==='laag'?'selected':''}>Laag</option>
       </select>
+      ${renderPlatformTargeting(p.naam)}
     </div>`;
   });
   document.getElementById('platformsGrid').innerHTML = html;
