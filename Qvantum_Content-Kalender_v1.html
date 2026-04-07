@@ -1931,7 +1931,7 @@ function buildTeamsCard(notifType, itemData) {
   ];
 
   // Add LinkedIn link for published items
-  if (notifType === 'published' && d.linkedinUrl) {
+  if (d.linkedinUrl) {
     body.push({ type: 'TextBlock', text: '[\ud83d\udd17 Bekijk op LinkedIn](' + d.linkedinUrl + ')', wrap: true, color: 'Accent' });
   }
 
