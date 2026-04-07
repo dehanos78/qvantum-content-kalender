@@ -1904,43 +1904,54 @@ function updateNotifyButton() {
 // Build Adaptive Card for Teams Workflows
 function buildTeamsCard(notifType, itemData) {
   const d = itemData;
-  const dateFormatted = d.datum ? new Date(d.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  const producten = [d.qg ? 'QG' : '', d.qe ? 'QE' : ''].filter(Boolean).join(', ') || 'Algemeen';
+  const isCab = notifType === 'cab';
+  const locale = isCab ? 'en-GB' : 'nl-NL';
+  const dateFormatted = d.datum ? new Date(d.datum).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const producten = [d.qg ? 'QG' : '', d.qe ? 'QE' : ''].filter(Boolean).join(', ') || (isCab ? 'General' : 'Algemeen');
   const calUrl = getCalendarUrl();
 
-  const titles = {
+  const titlesNL = {
     cab: { icon: '\ud83d\udce2', title: 'CAB Content Update', color: 'Accent' },
     planned: { icon: '\ud83d\udcc5', title: 'Content Gepland', color: 'Good' },
     published: { icon: '\u2705', title: 'Content Gepubliceerd', color: 'Good' },
     updated: { icon: '\ud83d\udd04', title: 'Planning Gewijzigd', color: 'Warning' },
   };
+  const titlesEN = {
+    cab: { icon: '\ud83d\udce2', title: 'CAB Content Update', color: 'Accent' },
+    planned: { icon: '\ud83d\udcc5', title: 'Content Planned', color: 'Good' },
+    published: { icon: '\u2705', title: 'Content Published', color: 'Good' },
+    updated: { icon: '\ud83d\udd04', title: 'Planning Updated', color: 'Warning' },
+  };
+  const titles = isCab ? titlesEN : titlesNL;
   const t = titles[notifType] || titles.planned;
+
+  const lbl = isCab
+    ? { theme: 'Theme', type: 'Type', date: 'Date', channel: 'Channel', product: 'Product', status: 'Status', author: 'Author' }
+    : { theme: 'Thema', type: 'Type', date: 'Datum', channel: 'Kanaal', product: 'Product', status: 'Status', author: 'Auteur' };
 
   const body = [
     { type: 'TextBlock', size: 'Medium', weight: 'Bolder', text: t.icon + ' ' + t.title, color: t.color },
     { type: 'TextBlock', text: d.omschrijving, wrap: true, weight: 'Bolder', size: 'Small' },
     { type: 'FactSet', facts: [
-      { title: 'Thema', value: d.thema },
-      { title: 'Type', value: d.type },
-      { title: 'Datum', value: dateFormatted },
-      { title: 'Kanaal', value: d.kanaal },
-      { title: 'Product', value: producten },
-      { title: 'Status', value: d.status },
-      { title: 'Auteur', value: d.auteur },
+      { title: lbl.theme, value: d.thema },
+      { title: lbl.type, value: d.type },
+      { title: lbl.date, value: dateFormatted },
+      { title: lbl.channel, value: d.kanaal },
+      { title: lbl.product, value: producten },
+      { title: lbl.status, value: d.status },
+      { title: lbl.author, value: d.auteur },
     ]},
   ];
 
-  // Add LinkedIn link for published items
   if (d.linkedinUrl) {
-    body.push({ type: 'TextBlock', text: '[\ud83d\udd17 Bekijk op LinkedIn](' + d.linkedinUrl + ')', wrap: true, color: 'Accent' });
+    body.push({ type: 'TextBlock', text: '[\ud83d\udd17 ' + (isCab ? 'View on LinkedIn' : 'Bekijk op LinkedIn') + '](' + d.linkedinUrl + ')', wrap: true, color: 'Accent' });
   }
 
-  // Add calendar link
   if (calUrl) {
-    body.push({ type: 'TextBlock', text: '[\ud83d\udcc6 Bekijk in Content Kalender](' + calUrl + ')', wrap: true, size: 'Small' });
+    body.push({ type: 'TextBlock', text: '[\ud83d\udcc6 ' + (isCab ? 'View in Content Calendar' : 'Bekijk in Content Kalender') + '](' + calUrl + ')', wrap: true, size: 'Small' });
   }
 
-  body.push({ type: 'TextBlock', text: 'Via Qvantum Content Kalender \u2014 ' + new Date().toLocaleDateString('nl-NL'), size: 'Small', isSubtle: true, wrap: true });
+  body.push({ type: 'TextBlock', text: 'Via Qvantum Content Calendar \u2014 ' + new Date().toLocaleDateString(locale), size: 'Small', isSubtle: true, wrap: true });
 
   return {
     type: 'message',
