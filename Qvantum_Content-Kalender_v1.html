@@ -1582,15 +1582,17 @@ function saveItem() {
   if (!data.datum || !data.thema) { alert(t('validationMsg')); return; }
   // Track old status for auto-notify
   let oldStatus = '';
+  let itemId = editId ? parseInt(editId) : null;
   if (editId) {
     const idx = items.findIndex(i => i.id === parseInt(editId));
     if (idx !== -1) { oldStatus = items[idx].status || ''; items[idx] = { ...items[idx], ...data }; }
   } else {
-    items.push({ id: nextId++, ...data });
+    itemId = nextId++;
+    items.push({ id: itemId, ...data });
   }
   saveToStorage(); closeModal(); refreshThemaFilter(); renderCalendar();
   // Auto-notify Teams on status change (fire and forget)
-  autoNotifyOnStatusChange(oldStatus, data);
+  autoNotifyOnStatusChange(oldStatus, data, itemId);
 }
 
 function deleteItem() {
@@ -2004,7 +2006,7 @@ async function notifyCAB() {
 }
 
 // Auto-notify on status change — called from saveItem()
-async function autoNotifyOnStatusChange(oldStatus, newItem) {
+async function autoNotifyOnStatusChange(oldStatus, newItem, itemId) {
   const settings = getAutoNotifySettings();
   const url = getWebhookUrl();
   if (!url) return;
@@ -2015,6 +2017,21 @@ async function autoNotifyOnStatusChange(oldStatus, newItem) {
   }
   // Status changed to Gepubliceerd
   if (settings.publish && newItem.status === 'Gepubliceerd' && oldStatus !== 'Gepubliceerd') {
+    const isLinkedin = (newItem.kanaal || '').toLowerCase().includes('linkedin');
+    // Ask for LinkedIn URL if applicable and not yet filled
+    if (isLinkedin && !newItem.linkedinUrl) {
+      const liUrl = prompt(lang === 'nl'
+        ? 'LinkedIn post URL?\n\nPlak de link naar de geplaatste LinkedIn post (of laat leeg om zonder link te versturen):'
+        : 'LinkedIn post URL?\n\nPaste the link to the published LinkedIn post (or leave empty to send without link):');
+      if (liUrl && liUrl.trim()) {
+        newItem.linkedinUrl = liUrl.trim();
+        // Save the URL back to the item in storage
+        if (itemId) {
+          const idx = items.findIndex(i => i.id === itemId);
+          if (idx !== -1) { items[idx].linkedinUrl = newItem.linkedinUrl; saveToStorage(); }
+        }
+      }
+    }
     await sendTeamsNotification('published', newItem);
   }
 }
