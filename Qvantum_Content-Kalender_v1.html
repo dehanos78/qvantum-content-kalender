@@ -1852,36 +1852,60 @@ async function notifyCAB() {
   btn.textContent = lang === 'nl' ? 'Verzenden...' : 'Sending...';
 
   // Gather item data
-  const editId = document.getElementById('editId').value;
-  const payload = {
-    action: 'cab_notify',
-    timestamp: new Date().toISOString(),
-    item: {
-      id: editId || 'new',
-      datum: document.getElementById('fieldDatum').value,
-      week: document.getElementById('fieldWeek').value,
-      thema: document.getElementById('fieldThema').value,
-      type: document.getElementById('fieldType').value,
-      kanaal: document.getElementById('fieldKanaal').value,
-      auteur: document.getElementById('fieldAuteur').value,
-      status: document.getElementById('fieldStatus').value,
-      omschrijving: document.getElementById('fieldOmschrijving').value,
-      qg: document.getElementById('fieldQG').checked,
-      qe: document.getElementById('fieldQE').checked,
-    },
-    notifiedBy: 'Viktor de Haan',
-    calendarUrl: window.location.href,
+  const datum = document.getElementById('fieldDatum').value;
+  const thema = document.getElementById('fieldThema').value;
+  const type = document.getElementById('fieldType').value;
+  const kanaal = document.getElementById('fieldKanaal').value;
+  const auteur = document.getElementById('fieldAuteur').value;
+  const status = document.getElementById('fieldStatus').value;
+  const omschrijving = document.getElementById('fieldOmschrijving').value;
+  const qg = document.getElementById('fieldQG').checked;
+  const qe = document.getElementById('fieldQE').checked;
+  const producten = [qg ? 'QG' : '', qe ? 'QE' : ''].filter(Boolean).join(', ') || 'Algemeen';
+  const dateFormatted = datum ? new Date(datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+  // Teams Workflows Adaptive Card format
+  const teamsPayload = {
+    type: 'message',
+    attachments: [{
+      contentType: 'application/vnd.microsoft.card.adaptive',
+      contentUrl: null,
+      content: {
+        '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json',
+        type: 'AdaptiveCard',
+        version: '1.4',
+        body: [
+          { type: 'TextBlock', size: 'Medium', weight: 'Bolder', text: 'CAB Content Update', color: 'Accent' },
+          { type: 'TextBlock', text: omschrijving, wrap: true },
+          { type: 'FactSet', facts: [
+            { title: 'Thema', value: thema },
+            { title: 'Type', value: type },
+            { title: 'Datum', value: dateFormatted },
+            { title: 'Kanaal', value: kanaal },
+            { title: 'Product', value: producten },
+            { title: 'Status', value: status },
+            { title: 'Auteur', value: auteur }
+          ]},
+          { type: 'TextBlock', text: 'Genotificeerd door Viktor de Haan via Content Kalender', size: 'Small', isSubtle: true, wrap: true }
+        ]
+      }
+    }]
   };
 
   try {
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      mode: 'no-cors', // N8N webhooks may not have CORS headers
-      body: JSON.stringify(payload),
+      body: JSON.stringify(teamsPayload),
     });
-    btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
-    btn.classList.add('sent');
+    if (resp.ok || resp.status === 202) {
+      btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
+      btn.classList.add('sent');
+    } else {
+      const errText = await resp.text().catch(() => resp.status);
+      btn.textContent = lang === 'nl' ? 'Fout! (' + resp.status + ')' : 'Error! (' + resp.status + ')';
+      console.error('Webhook response:', resp.status, errText);
+    }
     setTimeout(() => {
       btn.textContent = 'Notify CAB';
       btn.classList.remove('sent');
