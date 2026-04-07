@@ -411,12 +411,20 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </span>
   </footer>
   <div id="webhookSettings" class="webhook-settings" style="display:none;margin:0 32px 16px">
-    <h4>CAB Webhook Notificatie</h4>
+    <h4>Teams & Notificatie-instellingen</h4>
     <div class="form-group" style="margin-bottom:8px">
-      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">N8N Webhook URL</label>
-      <input type="url" id="webhookUrl" placeholder="https://jouw-n8n.app/webhook/cab-notify" oninput="saveWebhookUrl(this.value)">
+      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Teams Webhook URL</label>
+      <input type="url" id="webhookUrl" placeholder="https://...powerplatform.com/.../invoke?..." oninput="saveWebhookUrl(this.value)">
     </div>
-    <div class="wh-hint">Plak hier de webhook URL uit je N8N workflow. De kalender stuurt item-data als JSON naar dit adres wanneer je op "Notify CAB" klikt.</div>
+    <div class="form-group" style="margin-bottom:8px">
+      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Content Kalender URL (publiek)</label>
+      <input type="url" id="calendarPublicUrl" placeholder="https://dehanos78.github.io/qvantum-content-kalender/..." oninput="saveCalendarUrl(this.value)">
+    </div>
+    <div class="form-group" style="margin-bottom:8px;display:flex;gap:12px;align-items:center">
+      <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPlan" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepland'</span></label>
+      <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPublish" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepubliceerd'</span></label>
+    </div>
+    <div class="wh-hint">De kalender stuurt automatisch een Teams-bericht bij statuswijzigingen. Notify CAB werkt ook handmatig vanuit de modal.</div>
   </div>
 </div>
 
@@ -435,7 +443,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select id="fieldType" onchange="toggleCaseStudy()"><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option></select>
       </div>
       <div class="form-group"><label>Kanaal</label>
-        <select id="fieldKanaal"><option value="LinkedIn — Viktor de Haan">LinkedIn — Viktor de Haan</option><option value="LinkedIn — Qvantum Nederland">LinkedIn — Qvantum Nederland</option><option value="LinkedIn — Mark Vellinga">LinkedIn — Mark Vellinga</option><option value="LinkedIn — Koen Pape">LinkedIn — Koen Pape</option><option value="LinkedIn — Pascal Boy">LinkedIn — Pascal Boy</option><option value="LinkedIn — Sebastiaan Rietveld">LinkedIn — Sebastiaan Rietveld</option><option value="HubSpot — Nieuwsbrief / email">HubSpot — Nieuwsbrief / email</option><option value="HubSpot — Blog">HubSpot — Blog</option><option value="Vakpublicaties (extern)">Vakpublicaties (extern)</option><option value="Beurzen & events">Beurzen & events</option><option value="Website qvantum.com">Website qvantum.com</option></select>
+        <select id="fieldKanaal" onchange="toggleLinkedinUrlField()"><option value="LinkedIn — Viktor de Haan">LinkedIn — Viktor de Haan</option><option value="LinkedIn — Qvantum Nederland">LinkedIn — Qvantum Nederland</option><option value="LinkedIn — Mark Vellinga">LinkedIn — Mark Vellinga</option><option value="LinkedIn — Koen Pape">LinkedIn — Koen Pape</option><option value="LinkedIn — Pascal Boy">LinkedIn — Pascal Boy</option><option value="LinkedIn — Sebastiaan Rietveld">LinkedIn — Sebastiaan Rietveld</option><option value="HubSpot — Nieuwsbrief / email">HubSpot — Nieuwsbrief / email</option><option value="HubSpot — Blog">HubSpot — Blog</option><option value="Vakpublicaties (extern)">Vakpublicaties (extern)</option><option value="Beurzen & events">Beurzen & events</option><option value="Website qvantum.com">Website qvantum.com</option></select>
       </div>
     </div>
     <div class="form-row">
@@ -443,7 +451,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select id="fieldAuteur"><option value="Viktor de Haan">Viktor de Haan</option><option value="Mark Vellinga">Mark Vellinga</option><option value="Koen Pape">Koen Pape</option><option value="Pascal Boy">Pascal Boy</option><option value="Sebastiaan Rietveld">Sebastiaan Rietveld</option><option value="Qvantum NL bedrijfspagina">Qvantum NL bedrijfspagina</option></select>
       </div>
       <div class="form-group"><label>Status</label>
-        <select id="fieldStatus"><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option></select>
+        <select id="fieldStatus" onchange="toggleLinkedinUrlField()"><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option></select>
       </div>
     </div>
     <div class="form-group"><label>Korte omschrijving</label><textarea id="fieldOmschrijving" rows="2" placeholder="Waar gaat dit item over?"></textarea></div>
@@ -485,6 +493,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
+    <div class="form-group" id="linkedinUrlGroup" style="display:none"><label>LinkedIn post URL</label><input type="url" id="fieldLinkedinUrl" placeholder="https://www.linkedin.com/feed/update/urn:li:activity:..." style="font-size:0.75rem"></div>
     <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="modal-check"><input type="checkbox" id="fieldQG"> <span>QG</span></label><label class="modal-check"><input type="checkbox" id="fieldQE"> <span>QE</span></label><label class="modal-check"><input type="checkbox" id="fieldCAB" onchange="updateNotifyButton()"> <span>CAB</span></label></div>
 
     <!-- Media Checklist -->
@@ -1454,6 +1463,8 @@ function openModal(id) {
     document.getElementById('fieldQG').checked = !!item.qg;
     document.getElementById('fieldQE').checked = !!item.qe;
     document.getElementById('fieldCAB').checked = !!item.cab;
+    document.getElementById('fieldLinkedinUrl').value = item.linkedinUrl || '';
+    toggleLinkedinUrlField();
     // Load case study data if present
     if (item.caseStudy) {
       const cs = item.caseStudy;
@@ -1499,6 +1510,8 @@ function openModal(id) {
     document.getElementById('fieldQG').checked = false;
     document.getElementById('fieldQE').checked = false;
     document.getElementById('fieldCAB').checked = false;
+    document.getElementById('fieldLinkedinUrl').value = '';
+    toggleLinkedinUrlField();
     clearCaseStudyFields();
     buildMediaChecklist();
     setSelectedMedia([]);
@@ -1538,6 +1551,7 @@ function saveItem() {
     qg: document.getElementById('fieldQG').checked,
     qe: document.getElementById('fieldQE').checked,
     cab: document.getElementById('fieldCAB').checked,
+    linkedinUrl: document.getElementById('fieldLinkedinUrl').value.trim(),
     media: getSelectedMedia(),
   };
   // Save media pitch if filled
@@ -1566,9 +1580,17 @@ function saveItem() {
     };
   }
   if (!data.datum || !data.thema) { alert(t('validationMsg')); return; }
-  if (editId) { const idx = items.findIndex(i => i.id === parseInt(editId)); if (idx !== -1) items[idx] = { ...items[idx], ...data }; }
-  else items.push({ id: nextId++, ...data });
+  // Track old status for auto-notify
+  let oldStatus = '';
+  if (editId) {
+    const idx = items.findIndex(i => i.id === parseInt(editId));
+    if (idx !== -1) { oldStatus = items[idx].status || ''; items[idx] = { ...items[idx], ...data }; }
+  } else {
+    items.push({ id: nextId++, ...data });
+  }
   saveToStorage(); closeModal(); refreshThemaFilter(); renderCalendar();
+  // Auto-notify Teams on status change (fire and forget)
+  autoNotifyOnStatusChange(oldStatus, data);
 }
 
 function deleteItem() {
@@ -1824,12 +1846,40 @@ function copyPitchToClipboard() {
   });
 }
 
-/* WEBHOOK / NOTIFY CAB */
+/* WEBHOOK / NOTIFY */
 function getWebhookUrl() { return localStorage.getItem('qvantum-webhook-url') || ''; }
 function saveWebhookUrl(url) { localStorage.setItem('qvantum-webhook-url', url.trim()); }
+function getCalendarUrl() { return localStorage.getItem('qvantum-calendar-url') || ''; }
+function saveCalendarUrl(url) { localStorage.setItem('qvantum-calendar-url', url.trim()); }
+function saveAutoNotifySettings() {
+  localStorage.setItem('qvantum-auto-notify', JSON.stringify({
+    plan: document.getElementById('chkAutoNotifyPlan').checked,
+    publish: document.getElementById('chkAutoNotifyPublish').checked,
+  }));
+}
+function getAutoNotifySettings() {
+  try { return JSON.parse(localStorage.getItem('qvantum-auto-notify')) || { plan: false, publish: false }; }
+  catch { return { plan: false, publish: false }; }
+}
+
 function initWebhookSettings() {
   const el = document.getElementById('webhookUrl');
   if (el) el.value = getWebhookUrl();
+  const cal = document.getElementById('calendarPublicUrl');
+  if (cal) cal.value = getCalendarUrl();
+  const settings = getAutoNotifySettings();
+  const chkPlan = document.getElementById('chkAutoNotifyPlan');
+  const chkPub = document.getElementById('chkAutoNotifyPublish');
+  if (chkPlan) chkPlan.checked = settings.plan;
+  if (chkPub) chkPub.checked = settings.publish;
+}
+
+function toggleLinkedinUrlField() {
+  const status = document.getElementById('fieldStatus').value;
+  const kanaal = document.getElementById('fieldKanaal').value;
+  const isLinkedin = kanaal.toLowerCase().includes('linkedin');
+  const showField = isLinkedin && (status === 'Gepubliceerd' || status === 'In productie');
+  document.getElementById('linkedinUrlGroup').style.display = showField ? 'block' : 'none';
 }
 
 function updateNotifyButton() {
@@ -1838,34 +1888,48 @@ function updateNotifyButton() {
   if (btn) btn.style.display = cabChecked ? 'inline-block' : 'none';
 }
 
-async function notifyCAB() {
-  const url = getWebhookUrl();
-  if (!url) {
-    alert(lang === 'nl'
-      ? 'Geen webhook URL geconfigureerd. Ga naar "Webhook instellingen" onderaan de pagina.'
-      : 'No webhook URL configured. Go to "Webhook settings" at the bottom of the page.');
-    return;
+// Build Adaptive Card for Teams Workflows
+function buildTeamsCard(notifType, itemData) {
+  const d = itemData;
+  const dateFormatted = d.datum ? new Date(d.datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const producten = [d.qg ? 'QG' : '', d.qe ? 'QE' : ''].filter(Boolean).join(', ') || 'Algemeen';
+  const calUrl = getCalendarUrl();
+
+  const titles = {
+    cab: { icon: '\ud83d\udce2', title: 'CAB Content Update', color: 'Accent' },
+    planned: { icon: '\ud83d\udcc5', title: 'Content Gepland', color: 'Good' },
+    published: { icon: '\u2705', title: 'Content Gepubliceerd', color: 'Good' },
+    updated: { icon: '\ud83d\udd04', title: 'Planning Gewijzigd', color: 'Warning' },
+  };
+  const t = titles[notifType] || titles.planned;
+
+  const body = [
+    { type: 'TextBlock', size: 'Medium', weight: 'Bolder', text: t.icon + ' ' + t.title, color: t.color },
+    { type: 'TextBlock', text: d.omschrijving, wrap: true, weight: 'Bolder', size: 'Small' },
+    { type: 'FactSet', facts: [
+      { title: 'Thema', value: d.thema },
+      { title: 'Type', value: d.type },
+      { title: 'Datum', value: dateFormatted },
+      { title: 'Kanaal', value: d.kanaal },
+      { title: 'Product', value: producten },
+      { title: 'Status', value: d.status },
+      { title: 'Auteur', value: d.auteur },
+    ]},
+  ];
+
+  // Add LinkedIn link for published items
+  if (notifType === 'published' && d.linkedinUrl) {
+    body.push({ type: 'TextBlock', text: '[\ud83d\udd17 Bekijk op LinkedIn](' + d.linkedinUrl + ')', wrap: true, color: 'Accent' });
   }
 
-  const btn = document.getElementById('btnNotifyCAB');
-  btn.disabled = true;
-  btn.textContent = lang === 'nl' ? 'Verzenden...' : 'Sending...';
+  // Add calendar link
+  if (calUrl) {
+    body.push({ type: 'TextBlock', text: '[\ud83d\udcc6 Bekijk in Content Kalender](' + calUrl + ')', wrap: true, size: 'Small' });
+  }
 
-  // Gather item data
-  const datum = document.getElementById('fieldDatum').value;
-  const thema = document.getElementById('fieldThema').value;
-  const type = document.getElementById('fieldType').value;
-  const kanaal = document.getElementById('fieldKanaal').value;
-  const auteur = document.getElementById('fieldAuteur').value;
-  const status = document.getElementById('fieldStatus').value;
-  const omschrijving = document.getElementById('fieldOmschrijving').value;
-  const qg = document.getElementById('fieldQG').checked;
-  const qe = document.getElementById('fieldQE').checked;
-  const producten = [qg ? 'QG' : '', qe ? 'QE' : ''].filter(Boolean).join(', ') || 'Algemeen';
-  const dateFormatted = datum ? new Date(datum).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  body.push({ type: 'TextBlock', text: 'Via Qvantum Content Kalender \u2014 ' + new Date().toLocaleDateString('nl-NL'), size: 'Small', isSubtle: true, wrap: true });
 
-  // Teams Workflows Adaptive Card format
-  const teamsPayload = {
+  return {
     type: 'message',
     attachments: [{
       contentType: 'application/vnd.microsoft.card.adaptive',
@@ -1874,48 +1938,84 @@ async function notifyCAB() {
         '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json',
         type: 'AdaptiveCard',
         version: '1.4',
-        body: [
-          { type: 'TextBlock', size: 'Medium', weight: 'Bolder', text: 'CAB Content Update', color: 'Accent' },
-          { type: 'TextBlock', text: omschrijving, wrap: true },
-          { type: 'FactSet', facts: [
-            { title: 'Thema', value: thema },
-            { title: 'Type', value: type },
-            { title: 'Datum', value: dateFormatted },
-            { title: 'Kanaal', value: kanaal },
-            { title: 'Product', value: producten },
-            { title: 'Status', value: status },
-            { title: 'Auteur', value: auteur }
-          ]},
-          { type: 'TextBlock', text: 'Genotificeerd door Viktor de Haan via Content Kalender', size: 'Small', isSubtle: true, wrap: true }
-        ]
+        body,
       }
     }]
   };
+}
 
+// Send notification to Teams — returns { ok, status, error }
+async function sendTeamsNotification(notifType, itemData) {
+  const url = getWebhookUrl();
+  if (!url) return { ok: false, error: 'no-url' };
+  const payload = buildTeamsCard(notifType, itemData);
   try {
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(teamsPayload),
+      body: JSON.stringify(payload),
     });
-    if (resp.ok || resp.status === 202) {
-      btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
-      btn.classList.add('sent');
-    } else {
-      const errText = await resp.text().catch(() => resp.status);
-      btn.textContent = lang === 'nl' ? 'Fout! (' + resp.status + ')' : 'Error! (' + resp.status + ')';
-      console.error('Webhook response:', resp.status, errText);
-    }
-    setTimeout(() => {
-      btn.textContent = 'Notify CAB';
-      btn.classList.remove('sent');
-      btn.disabled = false;
-    }, 3000);
+    if (resp.ok || resp.status === 202) return { ok: true };
+    const errText = await resp.text().catch(() => '');
+    console.error('Teams webhook:', resp.status, errText);
+    return { ok: false, status: resp.status, error: errText };
   } catch (err) {
-    btn.textContent = lang === 'nl' ? 'Fout!' : 'Error!';
-    btn.disabled = false;
-    setTimeout(() => { btn.textContent = 'Notify CAB'; }, 2000);
-    console.error('Webhook error:', err);
+    console.error('Teams webhook error:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+// Gather item data from the modal form fields
+function getModalItemData() {
+  return {
+    datum: document.getElementById('fieldDatum').value,
+    thema: document.getElementById('fieldThema').value,
+    type: document.getElementById('fieldType').value,
+    kanaal: document.getElementById('fieldKanaal').value,
+    auteur: document.getElementById('fieldAuteur').value,
+    status: document.getElementById('fieldStatus').value,
+    omschrijving: document.getElementById('fieldOmschrijving').value,
+    qg: document.getElementById('fieldQG').checked,
+    qe: document.getElementById('fieldQE').checked,
+    linkedinUrl: document.getElementById('fieldLinkedinUrl').value.trim(),
+  };
+}
+
+// Manual CAB notify button
+async function notifyCAB() {
+  const url = getWebhookUrl();
+  if (!url) {
+    alert(lang === 'nl'
+      ? 'Geen webhook URL geconfigureerd. Ga naar "Webhook instellingen" onderaan de pagina.'
+      : 'No webhook URL configured. Go to "Webhook settings" at the bottom of the page.');
+    return;
+  }
+  const btn = document.getElementById('btnNotifyCAB');
+  btn.disabled = true;
+  btn.textContent = lang === 'nl' ? 'Verzenden...' : 'Sending...';
+  const result = await sendTeamsNotification('cab', getModalItemData());
+  if (result.ok) {
+    btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
+    btn.classList.add('sent');
+  } else {
+    btn.textContent = (lang === 'nl' ? 'Fout!' : 'Error!') + (result.status ? ' (' + result.status + ')' : '');
+  }
+  setTimeout(() => { btn.textContent = 'Notify CAB'; btn.classList.remove('sent'); btn.disabled = false; }, 3000);
+}
+
+// Auto-notify on status change — called from saveItem()
+async function autoNotifyOnStatusChange(oldStatus, newItem) {
+  const settings = getAutoNotifySettings();
+  const url = getWebhookUrl();
+  if (!url) return;
+
+  // Status changed to Gepland
+  if (settings.plan && newItem.status === 'Gepland' && oldStatus !== 'Gepland') {
+    await sendTeamsNotification('planned', newItem);
+  }
+  // Status changed to Gepubliceerd
+  if (settings.publish && newItem.status === 'Gepubliceerd' && oldStatus !== 'Gepubliceerd') {
+    await sendTeamsNotification('published', newItem);
   }
 }
 
