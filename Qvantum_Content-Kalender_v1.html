@@ -83,6 +83,16 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .modal-check { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 600; color: var(--q-brown); cursor: pointer; padding: 3px 10px; background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: 14px; white-space: nowrap; }
 .modal-check input[type="checkbox"] { width: 13px; height: 13px; margin: 0; accent-color: var(--q-brown); cursor: pointer; }
 
+/* WEBHOOK NOTIFY */
+.btn-notify { background: var(--q-navy); color: var(--q-white); font-size: 0.65rem; padding: 4px 10px; border-radius: 12px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.15s; }
+.btn-notify:hover { background: #003A80; }
+.btn-notify.sent { background: #5A9E6F; }
+.btn-notify:disabled { opacity: 0.5; cursor: not-allowed; }
+.webhook-settings { background: var(--q-off-white); border: 1px solid var(--q-beige); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; }
+.webhook-settings h4 { font-size: 0.7rem; font-weight: 600; color: var(--q-brown); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+.webhook-settings input { width: 100%; font-size: 0.75rem; padding: 6px 10px; border: 1px solid var(--q-beige); border-radius: var(--radius); font-family: monospace; }
+.webhook-settings .wh-hint { font-size: 0.6rem; color: var(--q-brown); margin-top: 4px; }
+
 /* PLATFORM TARGETING CONFIG */
 .platform-targeting { margin-top: 8px; border-top: 1px solid var(--q-beige); padding-top: 8px; }
 .platform-targeting summary { font-size: 0.65rem; font-weight: 600; color: var(--q-brown); cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; }
@@ -396,8 +406,18 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 
   <footer class="app-footer">
     <span>Qvantum Nederland — Content Planning Dashboard v1.0</span>
-    <span>Data in LocalStorage + JSON export. Deel via GitHub Pages of Netlify Drop. Migratie naar HubSpot Marketing Calendar.</span>
+    <span style="display:flex;gap:8px;align-items:center">
+      <a href="#" onclick="event.preventDefault();document.getElementById('webhookSettings').style.display=document.getElementById('webhookSettings').style.display==='none'?'block':'none'" style="font-size:0.6rem;color:var(--q-brown)">Webhook instellingen</a>
+    </span>
   </footer>
+  <div id="webhookSettings" class="webhook-settings" style="display:none;margin:0 32px 16px">
+    <h4>CAB Webhook Notificatie</h4>
+    <div class="form-group" style="margin-bottom:8px">
+      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">N8N Webhook URL</label>
+      <input type="url" id="webhookUrl" placeholder="https://jouw-n8n.app/webhook/cab-notify" oninput="saveWebhookUrl(this.value)">
+    </div>
+    <div class="wh-hint">Plak hier de webhook URL uit je N8N workflow. De kalender stuurt item-data als JSON naar dit adres wanneer je op "Notify CAB" klikt.</div>
+  </div>
 </div>
 
 <!-- MODAL -->
@@ -465,7 +485,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="form-group"><label>Content tekst (volledige post / artikel)</label><textarea id="fieldContent" rows="6" placeholder="Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc. Dit veld is uitklapbaar in de kalenderweergave."></textarea></div>
-    <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="modal-check"><input type="checkbox" id="fieldQG"> <span>QG</span></label><label class="modal-check"><input type="checkbox" id="fieldQE"> <span>QE</span></label><label class="modal-check"><input type="checkbox" id="fieldCAB"> <span>CAB</span></label></div>
+    <div class="form-group" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><label class="modal-check"><input type="checkbox" id="fieldQG"> <span>QG</span></label><label class="modal-check"><input type="checkbox" id="fieldQE"> <span>QE</span></label><label class="modal-check"><input type="checkbox" id="fieldCAB" onchange="updateNotifyButton()"> <span>CAB</span></label></div>
 
     <!-- Media Checklist -->
     <div id="mediaChecklistPanel">
@@ -484,7 +504,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="modal-actions">
-      <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button><button class="btn btn-small btn-ghost" id="btnMediaPitch" type="button" onclick="toggleMediaPitch()" style="color:var(--q-orange)">Maak mediabericht</button></div>
+      <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button><button class="btn btn-small btn-ghost" id="btnMediaPitch" type="button" onclick="toggleMediaPitch()" style="color:var(--q-orange)">Maak mediabericht</button><button class="btn-notify" id="btnNotifyCAB" type="button" onclick="notifyCAB()" style="display:none">Notify CAB</button></div>
       <div class="modal-actions-right">
         <button class="btn btn-small btn-ghost" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-primary" onclick="saveItem()">Opslaan</button>
@@ -901,7 +921,7 @@ function init() {
   if (stored) {
     try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
   } else { seedItems(); }
-  loadPlatformOverrides(); buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs();
+  loadPlatformOverrides(); buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs(); initWebhookSettings();
 }
 
 function seedItems() {
@@ -1497,6 +1517,7 @@ function openModal(id) {
     btnDel.style.display = 'none';
   }
   toggleCaseStudy();
+  updateNotifyButton();
   modal.classList.add('active');
 }
 
@@ -1801,6 +1822,77 @@ function copyPitchToClipboard() {
     btn.textContent = lang === 'nl' ? 'Gekopieerd!' : 'Copied!';
     setTimeout(() => btn.textContent = orig, 1500);
   });
+}
+
+/* WEBHOOK / NOTIFY CAB */
+function getWebhookUrl() { return localStorage.getItem('qvantum-webhook-url') || ''; }
+function saveWebhookUrl(url) { localStorage.setItem('qvantum-webhook-url', url.trim()); }
+function initWebhookSettings() {
+  const el = document.getElementById('webhookUrl');
+  if (el) el.value = getWebhookUrl();
+}
+
+function updateNotifyButton() {
+  const btn = document.getElementById('btnNotifyCAB');
+  const cabChecked = document.getElementById('fieldCAB')?.checked;
+  if (btn) btn.style.display = cabChecked ? 'inline-block' : 'none';
+}
+
+async function notifyCAB() {
+  const url = getWebhookUrl();
+  if (!url) {
+    alert(lang === 'nl'
+      ? 'Geen webhook URL geconfigureerd. Ga naar "Webhook instellingen" onderaan de pagina.'
+      : 'No webhook URL configured. Go to "Webhook settings" at the bottom of the page.');
+    return;
+  }
+
+  const btn = document.getElementById('btnNotifyCAB');
+  btn.disabled = true;
+  btn.textContent = lang === 'nl' ? 'Verzenden...' : 'Sending...';
+
+  // Gather item data
+  const editId = document.getElementById('editId').value;
+  const payload = {
+    action: 'cab_notify',
+    timestamp: new Date().toISOString(),
+    item: {
+      id: editId || 'new',
+      datum: document.getElementById('fieldDatum').value,
+      week: document.getElementById('fieldWeek').value,
+      thema: document.getElementById('fieldThema').value,
+      type: document.getElementById('fieldType').value,
+      kanaal: document.getElementById('fieldKanaal').value,
+      auteur: document.getElementById('fieldAuteur').value,
+      status: document.getElementById('fieldStatus').value,
+      omschrijving: document.getElementById('fieldOmschrijving').value,
+      qg: document.getElementById('fieldQG').checked,
+      qe: document.getElementById('fieldQE').checked,
+    },
+    notifiedBy: 'Viktor de Haan',
+    calendarUrl: window.location.href,
+  };
+
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      mode: 'no-cors', // N8N webhooks may not have CORS headers
+      body: JSON.stringify(payload),
+    });
+    btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
+    btn.classList.add('sent');
+    setTimeout(() => {
+      btn.textContent = 'Notify CAB';
+      btn.classList.remove('sent');
+      btn.disabled = false;
+    }, 3000);
+  } catch (err) {
+    btn.textContent = lang === 'nl' ? 'Fout!' : 'Error!';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'Notify CAB'; }, 2000);
+    console.error('Webhook error:', err);
+  }
 }
 
 /* PLATFORMS */

@@ -1,0 +1,106 @@
+{
+  "name": "Qvantum CAB Notify",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cab-notify",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook — CAB Notify",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the incoming CAB notification into a readable message\nconst item = $input.first().json.body.item;\nconst notifiedBy = $input.first().json.body.notifiedBy || 'Qvantum NL';\nconst timestamp = $input.first().json.body.timestamp;\nconst calendarUrl = $input.first().json.body.calendarUrl || '';\n\nconst date = new Date(item.datum).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });\nconst products = [item.qg ? 'QG' : '', item.qe ? 'QE' : ''].filter(Boolean).join(', ') || 'General';\n\n// Teams Adaptive Card format\nconst teamsMessage = {\n  \"@type\": \"MessageCard\",\n  \"@context\": \"http://schema.org/extensions\",\n  \"themeColor\": \"002656\",\n  \"summary\": `CAB Update: ${item.thema}`,\n  \"sections\": [{\n    \"activityTitle\": `CAB Content Update — ${item.thema}`,\n    \"activitySubtitle\": `Flagged by ${notifiedBy}`,\n    \"activityImage\": \"\",\n    \"facts\": [\n      { \"name\": \"Date\", \"value\": date },\n      { \"name\": \"Type\", \"value\": item.type },\n      { \"name\": \"Channel\", \"value\": item.kanaal },\n      { \"name\": \"Product\", \"value\": products },\n      { \"name\": \"Status\", \"value\": item.status },\n      { \"name\": \"Author\", \"value\": item.auteur }\n    ],\n    \"markdown\": true,\n    \"text\": item.omschrijving\n  }]\n};\n\n// Plain text for email\nconst emailSubject = `[CAB] ${item.thema} — ${item.type} (${date})`;\nconst emailBody = `Hi,\\n\\nA content item has been flagged as relevant for the Communication Advisory Board:\\n\\n` +\n  `Theme: ${item.thema}\\n` +\n  `Type: ${item.type}\\n` +\n  `Date: ${date}\\n` +\n  `Channel: ${item.kanaal}\\n` +\n  `Product: ${products}\\n` +\n  `Status: ${item.status}\\n` +\n  `Author: ${item.auteur}\\n\\n` +\n  `Description:\\n${item.omschrijving}\\n\\n` +\n  `Flagged by: ${notifiedBy}\\n` +\n  (calendarUrl ? `Calendar: ${calendarUrl}\\n` : '') +\n  `\\n---\\nThis is an automated notification from the Qvantum Content Calendar.`;\n\nreturn [\n  {\n    json: {\n      teamsMessage,\n      emailSubject,\n      emailBody,\n      item,\n      notifiedBy,\n      timestamp\n    }\n  }\n];"
+      },
+      "id": "format-message",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.TEAMS_WEBHOOK_URL || 'https://YOUR-TEAMS-WEBHOOK-URL-HERE' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.teamsMessage) }}",
+        "options": {}
+      },
+      "id": "send-teams",
+      "name": "Send to Teams",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $vars.SMTP_FROM || 'noreply@qvantum.com' }}",
+        "toEmail": "={{ $vars.CAB_EMAIL || 'colleague@qvantum.com' }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "text",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [720, 400],
+      "credentials": {
+        "smtp": {
+          "id": "CONFIGURE_YOUR_SMTP",
+          "name": "SMTP — configure in N8N"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook — CAB Notify": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Teams",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "Qvantum",
+      "id": "qvantum"
+    }
+  ],
+  "triggerCount": 1
+}
