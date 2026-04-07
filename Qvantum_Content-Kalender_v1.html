@@ -412,9 +412,17 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
   </footer>
   <div id="webhookSettings" class="webhook-settings" style="display:none;margin:0 32px 16px">
     <h4>Teams & Notificatie-instellingen</h4>
-    <div class="form-group" style="margin-bottom:8px">
-      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Teams Webhook URL</label>
-      <input type="url" id="webhookUrl" placeholder="https://...powerplatform.com/.../invoke?..." oninput="saveWebhookUrl(this.value)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px">
+      <div class="form-group" style="margin:0">
+        <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Teams Webhook — Content Updates</label>
+        <input type="url" id="webhookUrl" placeholder="https://...powerplatform.com/.../invoke?..." oninput="saveWebhookUrl(this.value)">
+        <div class="wh-hint" style="margin-top:4px">Gepland / Gepubliceerd meldingen voor het team</div>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Teams Webhook — CAB (apart kanaal)</label>
+        <input type="url" id="webhookUrlCAB" placeholder="https://...powerplatform.com/.../invoke?..." oninput="saveCabWebhookUrl(this.value)">
+        <div class="wh-hint" style="margin-top:4px">CAB-notificaties naar je collega in Zweden</div>
+      </div>
     </div>
     <div class="form-group" style="margin-bottom:8px">
       <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Content Kalender URL (publiek)</label>
@@ -424,7 +432,6 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPlan" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepland'</span></label>
       <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPublish" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepubliceerd'</span></label>
     </div>
-    <div class="wh-hint">De kalender stuurt automatisch een Teams-bericht bij statuswijzigingen. Notify CAB werkt ook handmatig vanuit de modal.</div>
   </div>
 </div>
 
@@ -1851,6 +1858,8 @@ function copyPitchToClipboard() {
 /* WEBHOOK / NOTIFY */
 function getWebhookUrl() { return localStorage.getItem('qvantum-webhook-url') || ''; }
 function saveWebhookUrl(url) { localStorage.setItem('qvantum-webhook-url', url.trim()); }
+function getCabWebhookUrl() { return localStorage.getItem('qvantum-webhook-url-cab') || ''; }
+function saveCabWebhookUrl(url) { localStorage.setItem('qvantum-webhook-url-cab', url.trim()); }
 function getCalendarUrl() { return localStorage.getItem('qvantum-calendar-url') || ''; }
 function saveCalendarUrl(url) { localStorage.setItem('qvantum-calendar-url', url.trim()); }
 function saveAutoNotifySettings() {
@@ -1867,6 +1876,8 @@ function getAutoNotifySettings() {
 function initWebhookSettings() {
   const el = document.getElementById('webhookUrl');
   if (el) el.value = getWebhookUrl();
+  const cabEl = document.getElementById('webhookUrlCAB');
+  if (cabEl) cabEl.value = getCabWebhookUrl();
   const cal = document.getElementById('calendarPublicUrl');
   if (cal) cal.value = getCalendarUrl();
   const settings = getAutoNotifySettings();
@@ -1983,24 +1994,35 @@ function getModalItemData() {
   };
 }
 
-// Manual CAB notify button
+// Manual CAB notify button — uses separate CAB webhook URL
 async function notifyCAB() {
-  const url = getWebhookUrl();
+  const url = getCabWebhookUrl();
   if (!url) {
     alert(lang === 'nl'
-      ? 'Geen webhook URL geconfigureerd. Ga naar "Webhook instellingen" onderaan de pagina.'
-      : 'No webhook URL configured. Go to "Webhook settings" at the bottom of the page.');
+      ? 'Geen CAB webhook URL geconfigureerd. Ga naar "Webhook instellingen" onderaan de pagina en vul de CAB webhook URL in.'
+      : 'No CAB webhook URL configured. Go to "Webhook settings" at the bottom of the page and fill in the CAB webhook URL.');
     return;
   }
   const btn = document.getElementById('btnNotifyCAB');
   btn.disabled = true;
   btn.textContent = lang === 'nl' ? 'Verzenden...' : 'Sending...';
-  const result = await sendTeamsNotification('cab', getModalItemData());
-  if (result.ok) {
-    btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
-    btn.classList.add('sent');
-  } else {
-    btn.textContent = (lang === 'nl' ? 'Fout!' : 'Error!') + (result.status ? ' (' + result.status + ')' : '');
+  const payload = buildTeamsCard('cab', getModalItemData());
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (resp.ok || resp.status === 202) {
+      btn.textContent = lang === 'nl' ? 'Verzonden!' : 'Sent!';
+      btn.classList.add('sent');
+    } else {
+      btn.textContent = (lang === 'nl' ? 'Fout!' : 'Error!') + ' (' + resp.status + ')';
+      console.error('CAB webhook:', resp.status);
+    }
+  } catch (err) {
+    btn.textContent = lang === 'nl' ? 'Fout!' : 'Error!';
+    console.error('CAB webhook error:', err);
   }
   setTimeout(() => { btn.textContent = 'Notify CAB'; btn.classList.remove('sent'); btn.disabled = false; }, 3000);
 }
