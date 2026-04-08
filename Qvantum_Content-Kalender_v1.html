@@ -133,6 +133,29 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .matrix-tag.row-perspective { background: #E5E6DF; color: #232222; }
 .matrix-tag.row-proof { background: #91877A; color: #FFFFFF; }
 .matrix-tag.row-promotion { background: #002656; color: #FFFFFF; }
+.matrix-hint { font-size: 0.65rem; color: var(--q-brown); margin-top: 6px; padding: 6px 8px; background: var(--q-off-white); border-radius: 4px; line-height: 1.4; border-left: 3px solid var(--q-beige); }
+.matrix-hint.row-perspective { border-left-color: #E5E6DF; }
+.matrix-hint.row-proof { border-left-color: #91877A; }
+.matrix-hint.row-promotion { border-left-color: #002656; }
+.matrix-hint strong { color: var(--q-off-black); }
+.matrix-overview { margin-top: 8px; }
+.matrix-overview summary { cursor: pointer; font-size: 0.65rem; color: var(--q-blue); font-weight: 500; padding: 4px 0; user-select: none; list-style: none; }
+.matrix-overview summary::-webkit-details-marker { display: none; }
+.matrix-overview summary::before { content: '\25B8'; display: inline-block; margin-right: 6px; transition: transform 0.15s; }
+.matrix-overview[open] summary::before { transform: rotate(90deg); }
+.matrix-overview summary:hover { text-decoration: underline; }
+.matrix-overview-grid { display: grid; grid-template-columns: 90px 1fr 1fr 1fr; gap: 4px; margin-top: 8px; }
+.matrix-overview-grid .moc { padding: 6px 8px; border-radius: 4px; font-size: 0.6rem; line-height: 1.35; background: var(--q-off-white); }
+.matrix-overview-grid .moc.col-header { font-weight: 700; text-align: center; background: var(--q-beige); color: var(--q-brown); text-transform: uppercase; letter-spacing: 0.3px; }
+.matrix-overview-grid .moc.row-label { font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; }
+.matrix-overview-grid .moc.row-label.row-perspective { background: #E5E6DF; color: #232222; }
+.matrix-overview-grid .moc.row-label.row-proof { background: #91877A; color: #FFFFFF; }
+.matrix-overview-grid .moc.row-label.row-promotion { background: #002656; color: #FFFFFF; }
+.matrix-overview-grid .moc.cell-perspective { background: #F2F2EE; color: #232222; border-top: 2px solid #E5E6DF; }
+.matrix-overview-grid .moc.cell-proof { background: #F0EDE9; color: #232222; border-top: 2px solid #91877A; }
+.matrix-overview-grid .moc.cell-promotion { background: #E8EEF7; color: #232222; border-top: 2px solid #002656; }
+.matrix-overview-grid .moc strong { display: inline-block; margin-right: 4px; font-weight: 700; }
+.matrix-overview-grid .moc.empty { background: transparent; }
 
 /* LANG TOGGLE */
 .lang-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
@@ -465,7 +488,12 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       </div>
     </div>
     <div class="form-group"><label>Matrix-cel</label>
-      <select id="fieldMatrix"><option value="">— geen —</option></select>
+      <select id="fieldMatrix" onchange="updateMatrixHint()"><option value="">— geen —</option></select>
+      <div class="matrix-hint" id="matrixHint">Kies de cel die past bij de intentie (rij) en de fase in de klantreis (kolom).</div>
+      <details class="matrix-overview" id="matrixOverview">
+        <summary>Wat is de matrix?</summary>
+        <div id="matrixOverviewBody"></div>
+      </details>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Auteur / account</label>
@@ -729,7 +757,74 @@ const MATRIX_ROW_LABELS = {
   en: { perspective: 'Perspective', proof: 'Proof', promotion: 'Promotion' },
 };
 const MATRIX_COL_LABELS = { awareness: 'Awareness', education: 'Education', selection: 'Selection' };
+/* Short NL descriptions per cel — used in the form hint and the overview grid.
+   Edit these to refine the wording or examples. Single source of truth. */
+const MATRIX_CELL_DESCRIPTIONS = {
+  'perspective-awareness': 'Tegendraadse stellingen, prikkelende meningen, breken met de norm.',
+  'perspective-education': 'Andere manier van denken — analogieën, denkmodellen, frameworks.',
+  'perspective-selection': 'Beslismodellen, vergelijkingen, keuzehulp voor de koper.',
+  'proof-awareness':       'Sectortrends, marktdata, beleidsontwikkelingen.',
+  'proof-education':       'Hoe het werkt — techniek, mechanismes, prestatiedata.',
+  'proof-selection':       'Cases, referentieprojecten, klantverhalen, testimonials.',
+  'promotion-awareness':   'Evenementen, mediamomenten, naamsbekendheid.',
+  'promotion-education':   'Productuitleg, whitepapers, webinars, brochures.',
+  'promotion-selection':   'Productlanceringen, demo\u2019s, downloads, mailings, offertes.',
+};
 const MATRIX_FILTER_NONE = '__none__';
+
+/* SEED MATRIX LABELS — one entry per seed item, index-aligned with getSeedData().
+   Single source of truth for the initial matrix classification of all seed items.
+   To change a label: edit the value here. To leave an item unlabeled: use empty string ''.
+   Used both during initial seeding AND as a migration for existing localStorage data
+   (matched by datum + omschrijving, so items keep their labels even if reordered). */
+const SEED_MATRIX_LABELS = [
+  'perspective-education',  //  0  rondetafel prefab QE (25-03)
+  'perspective-education',  //  1  LI bevindingen rondetafel Viktor (31-03)
+  'perspective-education',  //  2  blog verslag rondetafel (02-04)
+  'promotion-selection',    //  3  mailing installateurs QE (01-04)
+  'proof-education',        //  4  SmartControl blog (07-04)
+  'promotion-selection',    //  5  LI benadering installateurs QNL (08-04)
+  'perspective-education',  //  6  SmartControl LI Viktor (09-04)
+  'proof-education',        //  7  whitepaper QE+QS+INNOVA (14-04)
+  'proof-education',        //  8  connectiviteit blog (15-04)
+  'proof-education',        //  9  connectiviteit LI QNL (17-04)
+  'promotion-awareness',    // 10  Energiemarkt Nieuwegein / opening Warm Vreeswijk (18-04)
+  'proof-selection',        // 11  post opening Warm Vreeswijk QNL (20-04)
+  'perspective-education',  // 12  reflectie opening Warm Vreeswijk Viktor (20-04)
+  'proof-selection',        // 13  installateur testimonial DBI (22-04)
+  'promotion-selection',    // 14  follow-up mailing installateurs (07-05)
+  'promotion-education',    // 15  QG "koel blijft" (22-04)
+  'promotion-education',    // 16  QG "stilletjes" (29-04)
+  'promotion-education',    // 17  QG "tijd geeft" (06-05)
+  'promotion-education',    // 18  QG "eruit loopt" (13-05)
+  'perspective-awareness',  // 19  opiniestuk New energy era Viktor (11-05)
+  'promotion-education',    // 20  whitepaper QG online (18-05)
+  'promotion-awareness',    // 21  PR pitch QG vakbladen (20-05)
+  'promotion-awareness',    // 22  A4 advertentie Warmtepomptrendrapport (01-05)
+  'proof-selection',        // 23  case De Tol Zaltbommel (28-04)
+  'proof-selection',        // 24  case Pilot Efteling (27-04)
+  'promotion-education',    // 25  QE Skid fotoshoot Viktor (05-05)
+  'proof-selection',        // 26  case Mathilda Oosterhout (01-04)
+  'proof-education',        // 27  configuratie I/O use cases blog (19-05)
+  'proof-education',        // 28  configuratie use cases LI Viktor (21-05)
+  'proof-selection',        // 29  case Warm Vreeswijk QG12 (01-06)
+  'proof-selection',        // 30  case Recreatiewoningen Vorden (15-06)
+  'promotion-awareness',    // 31  aankondiging Het Blok (06-04)
+  'promotion-awareness',    // 32  BTS Het Blok (04-05)
+  'proof-selection',        // 33  update Het Blok bewoners (01-06)
+  'perspective-awareness',  // 34  Cobouw prospecting agent Viktor (14-04)
+  'proof-education',        // 35  QG Pilot 1 field test (15-06)
+  'proof-education',        // 36  QG Pilot 2 metingen (06-07)
+  'proof-education',        // 37  QG Pilot 3 data-analyse (03-08)
+  'proof-education',        // 38  QG Whitepaper post-launch (14-09)
+  'proof-awareness',        // 39  follow-up sectorstukken QG vakbladen (21-09)
+  'promotion-awareness',    // 40  aankondiging Vakbeurs Energie (05-10)
+  'promotion-awareness',    // 41  Vakbeurs Energie beurs (06-10)
+  'perspective-education',  // 42  terugblik Vakbeurs Energie Viktor (09-10)
+  'promotion-awareness',    // 43  aankondiging Warmte Congrestival (16-11)
+  'promotion-awareness',    // 44  Warmte Congrestival beurs (19-11)
+  'perspective-education',  // 45  terugblik Warmte Congrestival Viktor (23-11)
+];
 
 function matrixSplit(value) {
   if (!value || typeof value !== 'string') return null;
@@ -760,6 +855,49 @@ function matrixBadgeHtml(value) {
   const short = matrixShortLabel(value);
   const full = matrixLabel(value);
   return '<span class="matrix-tag row-' + parts.row + '" title="' + esc(full) + '">' + esc(short) + '</span>';
+}
+
+/* Updates the dynamic hint under the matrix-cel select to reflect the current choice. */
+function updateMatrixHint() {
+  const sel = document.getElementById('fieldMatrix');
+  const hint = document.getElementById('matrixHint');
+  if (!sel || !hint) return;
+  const value = sel.value;
+  if (!value) {
+    hint.textContent = 'Kies de cel die past bij de intentie (rij) en de fase in de klantreis (kolom).';
+    hint.className = 'matrix-hint';
+    return;
+  }
+  const parts = matrixSplit(value);
+  const desc = MATRIX_CELL_DESCRIPTIONS[value] || '';
+  const full = matrixLabel(value);
+  hint.innerHTML = '<strong>' + esc(full) + ':</strong> ' + esc(desc);
+  hint.className = 'matrix-hint' + (parts ? ' row-' + parts.row : '');
+}
+
+/* Builds the 3x3 overview grid HTML — pulls from MATRIX_CELL_DESCRIPTIONS so wording
+   stays in sync with the dynamic hint. Called once on init. */
+function buildMatrixOverviewHtml() {
+  const rows = ['perspective', 'proof', 'promotion'];
+  const cols = ['awareness', 'education', 'selection'];
+  let html = '<div class="matrix-overview-grid">';
+  // Header row: empty corner + 3 column headers
+  html += '<div class="moc empty"></div>';
+  cols.forEach(c => {
+    html += '<div class="moc col-header">' + esc(MATRIX_COL_LABELS[c]) + '</div>';
+  });
+  // Data rows: row label + 3 cells
+  rows.forEach(r => {
+    html += '<div class="moc row-label row-' + r + '">' + esc(MATRIX_ROW_LABELS.nl[r]) + '</div>';
+    cols.forEach(c => {
+      const cell = r + '-' + c;
+      const short = matrixShortLabel(cell);
+      const desc = MATRIX_CELL_DESCRIPTIONS[cell] || '';
+      html += '<div class="moc cell-' + r + '"><strong>' + esc(short) + '</strong>' + esc(desc) + '</div>';
+    });
+  });
+  html += '</div>';
+  return html;
 }
 
 function switchLang(newLang) {
@@ -1049,13 +1187,37 @@ function init() {
   if (stored) {
     try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
   } else { seedItems(); }
+  migrateSeedMatrixLabels();
   loadPlatformOverrides(); buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs(); initWebhookSettings();
+  // Render the static 3x3 overview once
+  const moBody = document.getElementById('matrixOverviewBody');
+  if (moBody) moBody.innerHTML = buildMatrixOverviewHtml();
 }
 
 function seedItems() {
   items = []; nextId = 1;
-  getSeedData().forEach(s => { items.push({ id: nextId++, ...s }); });
+  getSeedData().forEach((s, i) => {
+    const m = SEED_MATRIX_LABELS[i];
+    items.push({ id: nextId++, ...s, ...(m ? { matrix: m } : {}) });
+  });
   saveToStorage();
+}
+
+/* One-time migration: applies SEED_MATRIX_LABELS to items in localStorage that don't
+   yet have a matrix value. Matches by datum + omschrijving (stable across reorders).
+   Items the user has already labeled manually are never overridden. Idempotent. */
+function migrateSeedMatrixLabels() {
+  if (!Array.isArray(items) || items.length === 0) return;
+  const seedData = getSeedData();
+  let changed = false;
+  items.forEach(it => {
+    if (it.matrix) return;
+    const idx = seedData.findIndex(s => s.datum === it.datum && s.omschrijving === it.omschrijving);
+    if (idx === -1) return;
+    const m = SEED_MATRIX_LABELS[idx];
+    if (m) { it.matrix = m; changed = true; }
+  });
+  if (changed) saveToStorage();
 }
 
 function resetData() {
@@ -1695,6 +1857,7 @@ function openModal(id) {
   }
   toggleCaseStudy();
   updateNotifyButton();
+  updateMatrixHint();
   modal.classList.add('active');
 }
 
