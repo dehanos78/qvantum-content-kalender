@@ -129,6 +129,10 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .media-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
 .media-tag { font-size: 0.55rem; font-weight: 600; padding: 1px 6px; border-radius: 8px; background: var(--q-beige); color: var(--q-brown); letter-spacing: 0.3px; }
 .media-tag.hoog { background: #E8F0E8; color: #3A6B3A; }
+.matrix-tag { display: inline-block; font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 8px; letter-spacing: 0.5px; cursor: help; }
+.matrix-tag.row-perspective { background: #E5E6DF; color: #232222; }
+.matrix-tag.row-proof { background: #91877A; color: #FFFFFF; }
+.matrix-tag.row-promotion { background: #002656; color: #FFFFFF; }
 
 /* LANG TOGGLE */
 .lang-toggle { display: flex; gap: 2px; background: var(--q-beige); border-radius: 20px; padding: 2px; }
@@ -370,6 +374,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select class="filter-select" id="filterKanaal" onchange="renderCalendar()"><option value="">Alle kanalen</option></select>
         <select class="filter-select" id="filterAuteur" onchange="renderCalendar()"><option value="">Alle auteurs</option></select>
         <select class="filter-select" id="filterThema" onchange="renderCalendar()"><option value="">Alle thema's</option></select>
+        <select class="filter-select" id="filterMatrix" onchange="renderCalendar()"><option value="">Alle matrix-cellen</option></select>
         <select class="filter-select" id="filterStatus" onchange="renderCalendar()">
           <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option>
         </select>
@@ -458,6 +463,9 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <div class="form-group"><label>Kanaal</label>
         <select id="fieldKanaal" onchange="toggleLinkedinUrlField()"><option value="LinkedIn — Viktor de Haan">LinkedIn — Viktor de Haan</option><option value="LinkedIn — Qvantum Nederland">LinkedIn — Qvantum Nederland</option><option value="LinkedIn — Mark Vellinga">LinkedIn — Mark Vellinga</option><option value="LinkedIn — Koen Pape">LinkedIn — Koen Pape</option><option value="LinkedIn — Pascal Boy">LinkedIn — Pascal Boy</option><option value="LinkedIn — Sebastiaan Rietveld">LinkedIn — Sebastiaan Rietveld</option><option value="HubSpot — Nieuwsbrief / email">HubSpot — Nieuwsbrief / email</option><option value="HubSpot — Blog">HubSpot — Blog</option><option value="Vakpublicaties (extern)">Vakpublicaties (extern)</option><option value="Beurzen & events">Beurzen & events</option><option value="Website qvantum.com">Website qvantum.com</option></select>
       </div>
+    </div>
+    <div class="form-group"><label>Matrix-cel</label>
+      <select id="fieldMatrix"><option value="">— geen —</option></select>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Auteur / account</label>
@@ -582,6 +590,7 @@ const T = {
     weekView: 'Weekweergave', cardView: 'Kaarten', newItem: '+ Nieuw item',
     allChannels: 'Alle kanalen', allAuthors: 'Alle auteurs', allThemes: "Alle thema's",
     allStatuses: 'Alle statussen', allTypes: 'Alle types',
+    allMatrix: 'Alle matrix-cellen', matrixUnlabeled: 'Niet gelabeld',
     total: 'Totaal', thisMonth: 'Deze maand',
     statusIdee: 'Idee', statusGepland: 'Gepland', statusProductie: 'In productie', statusGepubliceerd: 'Gepubliceerd',
     noItems: 'Geen items gevonden', noItemsDesc: 'Pas de filters aan of voeg een nieuw item toe.',
@@ -593,6 +602,7 @@ const T = {
     lblDate: 'Datum', lblWeek: 'Week (optioneel)', lblTheme: 'Thema / campagne',
     lblType: 'Type activiteit', lblChannel: 'Kanaal', lblAuthor: 'Auteur / account',
     lblStatus: 'Status', lblDesc: 'Korte omschrijving', lblContent: 'Content tekst (volledige post / artikel)',
+    lblMatrix: 'Matrix-cel', phMatrix: 'Kies een cel (optioneel)',
     phWeek: 'bijv. Week 14', phTheme: 'bijv. QG Launch, Energieplanologie',
     phDesc: 'Waar gaat dit item over?',
     phContent: 'Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc.',
@@ -638,6 +648,7 @@ const T = {
     weekView: 'Week view', cardView: 'Cards', newItem: '+ New item',
     allChannels: 'All channels', allAuthors: 'All authors', allThemes: 'All themes',
     allStatuses: 'All statuses', allTypes: 'All types',
+    allMatrix: 'All matrix cells', matrixUnlabeled: 'Unlabeled',
     total: 'Total', thisMonth: 'This month',
     statusIdee: 'Idea', statusGepland: 'Planned', statusProductie: 'In production', statusGepubliceerd: 'Published',
     noItems: 'No items found', noItemsDesc: 'Adjust filters or add a new item.',
@@ -649,6 +660,7 @@ const T = {
     lblDate: 'Date', lblWeek: 'Week (optional)', lblTheme: 'Theme / campaign',
     lblType: 'Activity type', lblChannel: 'Channel', lblAuthor: 'Author / account',
     lblStatus: 'Status', lblDesc: 'Short description', lblContent: 'Content text (full post / article)',
+    lblMatrix: 'Matrix cell', phMatrix: 'Choose a cell (optional)',
     phWeek: 'e.g. Week 14', phTheme: 'e.g. QG Launch, Energy Planning',
     phDesc: 'What is this item about?',
     phContent: 'Write the full text of the LinkedIn post, article, newsletter etc. here.',
@@ -698,6 +710,58 @@ const STATUS_LABELS = {
 function t(key) { return T[lang][key] || T['nl'][key] || key; }
 function tStatus(s) { return (STATUS_LABELS[lang] && STATUS_LABELS[lang][s]) || s; }
 
+/* CONTENT MATRIX (Ideal Customer-Led Content Matrix — Douwe Wester)
+   Single source of truth: change these three objects to rename rows, swap colors,
+   or extend the grid. All matrix UI reads from here. */
+const MATRIX_CELLS = [
+  'perspective-awareness', 'perspective-education', 'perspective-selection',
+  'proof-awareness',       'proof-education',       'proof-selection',
+  'promotion-awareness',   'promotion-education',   'promotion-selection',
+];
+const MATRIX_ROW_STYLES = {
+  perspective: { bg: '#E5E6DF', fg: '#232222', short: 'Pe' },
+  proof:       { bg: '#91877A', fg: '#FFFFFF', short: 'Pr' },
+  promotion:   { bg: '#002656', fg: '#FFFFFF', short: 'Po' },
+};
+const MATRIX_COL_SHORT = { awareness: 'A', education: 'E', selection: 'S' };
+const MATRIX_ROW_LABELS = {
+  nl: { perspective: 'Perspectief', proof: 'Proof', promotion: 'Promotie' },
+  en: { perspective: 'Perspective', proof: 'Proof', promotion: 'Promotion' },
+};
+const MATRIX_COL_LABELS = { awareness: 'Awareness', education: 'Education', selection: 'Selection' };
+const MATRIX_FILTER_NONE = '__none__';
+
+function matrixSplit(value) {
+  if (!value || typeof value !== 'string') return null;
+  const idx = value.indexOf('-');
+  if (idx === -1) return null;
+  return { row: value.slice(0, idx), col: value.slice(idx + 1) };
+}
+function matrixLabel(value, lng) {
+  const parts = matrixSplit(value);
+  if (!parts) return '';
+  const l = lng || lang;
+  const rowLbl = (MATRIX_ROW_LABELS[l] && MATRIX_ROW_LABELS[l][parts.row]) || parts.row;
+  const colLbl = MATRIX_COL_LABELS[parts.col] || parts.col;
+  return rowLbl + ' \u00B7 ' + colLbl;
+}
+function matrixShortLabel(value) {
+  const parts = matrixSplit(value);
+  if (!parts) return '';
+  const rowShort = (MATRIX_ROW_STYLES[parts.row] && MATRIX_ROW_STYLES[parts.row].short) || '?';
+  const colShort = MATRIX_COL_SHORT[parts.col] || '?';
+  return rowShort + colShort;
+}
+function matrixBadgeHtml(value) {
+  const parts = matrixSplit(value);
+  if (!parts) return '';
+  const style = MATRIX_ROW_STYLES[parts.row];
+  if (!style) return '';
+  const short = matrixShortLabel(value);
+  const full = matrixLabel(value);
+  return '<span class="matrix-tag row-' + parts.row + '" title="' + esc(full) + '">' + esc(short) + '</span>';
+}
+
 function switchLang(newLang) {
   lang = newLang;
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
@@ -725,6 +789,12 @@ function renderAllUI() {
   document.getElementById('filterThema').options[0].text = t('allThemes');
   document.getElementById('filterStatus').options[0].text = t('allStatuses');
   document.getElementById('filterType').options[0].text = t('allTypes');
+  document.getElementById('filterMatrix').options[0].text = t('allMatrix');
+  // Rebuild matrix selects so labels follow the active language
+  buildMatrixSelectOptions();
+  buildMatrixFilterOptions();
+  // Rebuild calendar so matrix badge tooltips reflect the active language
+  if (typeof renderCalendar === 'function') renderCalendar();
   // Status options in filter
   const fStat = document.getElementById('filterStatus');
   for (let i = 1; i < fStat.options.length; i++) {
@@ -745,7 +815,8 @@ function renderAllUI() {
       'Thema / campagne':'lblTheme','Theme / campaign':'lblTheme', 'Type activiteit':'lblType','Activity type':'lblType',
       'Kanaal':'lblChannel','Channel':'lblChannel', 'Auteur / account':'lblAuthor','Author / account':'lblAuthor',
       'Status':'lblStatus', 'Korte omschrijving':'lblDesc','Short description':'lblDesc',
-      'Content tekst (volledige post / artikel)':'lblContent','Content text (full post / article)':'lblContent' };
+      'Content tekst (volledige post / artikel)':'lblContent','Content text (full post / article)':'lblContent',
+      'Matrix-cel':'lblMatrix','Matrix cell':'lblMatrix' };
     const key = map[lbl.textContent];
     if (key) lbl.textContent = t(key);
   });
@@ -1073,7 +1144,45 @@ function buildFilterOptions() {
   KANALEN.forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = k; kSel.appendChild(o); });
   const aSel = document.getElementById('filterAuteur');
   ['Viktor de Haan','Mark Vellinga','Koen Pape','Pascal Boy','Sebastiaan Rietveld','Qvantum NL bedrijfspagina'].forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; aSel.appendChild(o); });
+  buildMatrixSelectOptions();
+  buildMatrixFilterOptions();
   refreshThemaFilter();
+}
+
+function buildMatrixSelectOptions() {
+  // Populates the modal <select id="fieldMatrix"> — keeps the leading "— none —" option
+  const sel = document.getElementById('fieldMatrix');
+  if (!sel) return;
+  const current = sel.value;
+  // Reset to first option only
+  while (sel.options.length > 1) sel.remove(1);
+  // Translate the leading "no value" option label
+  sel.options[0].text = (lang === 'en' ? '\u2014 none \u2014' : '\u2014 geen \u2014');
+  MATRIX_CELLS.forEach(cell => {
+    const o = document.createElement('option');
+    o.value = cell;
+    o.textContent = matrixLabel(cell);
+    sel.appendChild(o);
+  });
+  sel.value = current;
+}
+
+function buildMatrixFilterOptions() {
+  const sel = document.getElementById('filterMatrix');
+  if (!sel) return;
+  const current = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  MATRIX_CELLS.forEach(cell => {
+    const o = document.createElement('option');
+    o.value = cell;
+    o.textContent = matrixLabel(cell);
+    sel.appendChild(o);
+  });
+  const oNone = document.createElement('option');
+  oNone.value = MATRIX_FILTER_NONE;
+  oNone.textContent = t('matrixUnlabeled');
+  sel.appendChild(oNone);
+  sel.value = current;
 }
 
 function refreshThemaFilter() {
@@ -1091,6 +1200,7 @@ function getFilteredItems() {
   const fS = document.getElementById('filterStatus').value;
   const fTy = document.getElementById('filterType').value;
   const fProduct = document.getElementById('filterProduct').value;
+  const fM = document.getElementById('filterMatrix').value;
   return items.filter(item => {
     const monthMatch = quarterMode
       ? quarterMode.some(m => item.datum.startsWith(m))
@@ -1104,6 +1214,8 @@ function getFilteredItems() {
     if (fProduct === 'qg' && !item.qg) return false;
     if (fProduct === 'qe' && !item.qe) return false;
     if (document.getElementById('filterCAB').checked && !item.cab) return false;
+    if (fM === MATRIX_FILTER_NONE && item.matrix) return false;
+    if (fM && fM !== MATRIX_FILTER_NONE && item.matrix !== fM) return false;
     return true;
   }).sort((a, b) => a.datum.localeCompare(b.datum));
 }
@@ -1182,11 +1294,12 @@ function renderWeekView(container, filtered) {
             html += `<div class="day-item" style="border-left-color:${tc}">
               <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 35))}</div>
               <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
+              ${matrixBadgeHtml(item.matrix)}
             </div>`;
           } else {
             html += `<div class="day-item" style="border-left-color:${tc}">
               <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 60))}</div>
-              <div class="di-meta"><span class="di-auteur">${esc(item.thema)}</span> &middot; ${esc(item.type)}</div>
+              <div class="di-meta"><span class="di-auteur">${esc(item.thema)}</span> &middot; ${esc(item.type)} ${matrixBadgeHtml(item.matrix)}</div>
               <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
               ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,3).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 3 ? `<span class="media-tag">+${item.media.length - 3}</span>` : ''}</div>` : ''}
               <div class="di-content-toggle" onclick="toggleDayContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
@@ -1245,6 +1358,7 @@ function renderCardItem(item) {
         <span class="tag">${esc(item.thema)}</span>
         <span class="tag">${esc(item.type)}</span>
         <span class="tag">${esc(item.auteur)}</span>
+        ${matrixBadgeHtml(item.matrix)}
       </div>
       ${item.media && item.media.length > 0 ? `<div class="media-tags">${item.media.slice(0,4).map(m => `<span class="media-tag${PLATFORMS.find(p=>p.naam===m)?.relevantie==='hoog'?' hoog':''}">${esc(m)}</span>`).join('')}${item.media.length > 4 ? `<span class="media-tag">+${item.media.length - 4}</span>` : ''}</div>` : ''}
       <div class="item-content-toggle" onclick="toggleCardContent(event, ${item.id})">${hasContent ? t('showText') : t('writeText')} &#9662;</div>
@@ -1504,6 +1618,7 @@ function openModal(id) {
     document.getElementById('fieldThema').value = item.thema;
     document.getElementById('fieldType').value = item.type;
     document.getElementById('fieldKanaal').value = item.kanaal;
+    document.getElementById('fieldMatrix').value = item.matrix || '';
     document.getElementById('fieldAuteur').value = item.auteur;
     document.getElementById('fieldStatus').value = item.status;
     document.getElementById('fieldOmschrijving').value = item.omschrijving;
@@ -1551,6 +1666,7 @@ function openModal(id) {
     document.getElementById('fieldThema').value = '';
     document.getElementById('fieldType').value = 'LinkedIn post';
     document.getElementById('fieldKanaal').value = 'LinkedIn — Viktor de Haan';
+    document.getElementById('fieldMatrix').value = '';
     document.getElementById('fieldAuteur').value = 'Viktor de Haan';
     document.getElementById('fieldStatus').value = 'Idee';
     document.getElementById('fieldOmschrijving').value = '';
@@ -1586,6 +1702,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 
 function saveItem() {
   const editId = document.getElementById('editId').value;
+  const matrixVal = document.getElementById('fieldMatrix').value;
   const data = {
     datum: document.getElementById('fieldDatum').value,
     week: document.getElementById('fieldWeek').value,
@@ -1601,6 +1718,7 @@ function saveItem() {
     cab: document.getElementById('fieldCAB').checked,
     linkedinUrl: document.getElementById('fieldLinkedinUrl').value.trim(),
     media: getSelectedMedia(),
+    matrix: matrixVal || undefined,
   };
   // Save media pitch if filled
   const mpNieuws = document.getElementById('mpNieuws').value;
