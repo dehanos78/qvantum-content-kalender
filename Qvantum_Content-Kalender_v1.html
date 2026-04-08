@@ -1737,31 +1737,33 @@ function autoSuggestMedia() {
   const isQG = document.getElementById('fieldQG').checked;
   const isQE = document.getElementById('fieldQE').checked;
 
-  const suggested = [];
-  const config = getPlatformTargeting();
+  const MAX_NON_PARTNER = 5;
+  const relevanceRank = { hoog: 0, midden: 1, laag: 2 };
+
+  // Collect all matches, split into partners (member/lid) vs others
+  const partners = [];
+  const others = [];
 
   PLATFORMS.forEach(p => {
     const tgt = getTargetingForPlatform(p.naam);
     if (!tgt.themas || !tgt.themas.length) return;
 
-    // Match: platform's targeting must overlap with current item
     const themaMatch = tgt.themas.some(t => thema.toLowerCase().includes(t.toLowerCase()) || t.toLowerCase().includes(thema.toLowerCase()));
     const productMatch = (!isQG && !isQE) || (isQG && tgt.producten.includes('QG')) || (isQE && tgt.producten.includes('QE'));
-    const typeMatch = !tgt.types.length || tgt.types.includes(type);
 
-    // Suggest if thema + product match (type is used for targeting display, not as strict filter)
     if (themaMatch && productMatch) {
-      suggested.push(p.naam);
+      if (p.partner) partners.push(p);
+      else others.push(p);
     }
   });
 
-  // Always suggest LinkedIn Groepen for LinkedIn posts
-  if (type === 'LinkedIn post' && !suggested.includes('LinkedIn Groepen')) {
-    suggested.push('LinkedIn Groepen');
-  }
+  // Sort others by relevance (hoog → midden → laag)
+  others.sort((a, b) => (relevanceRank[a.relevantie] ?? 9) - (relevanceRank[b.relevantie] ?? 9));
 
-  // Deduplicate and apply
+  // Final suggested list: all partners + up to MAX_NON_PARTNER others
+  const suggested = [...partners.map(p => p.naam), ...others.slice(0, MAX_NON_PARTNER).map(p => p.naam)];
   const unique = [...new Set(suggested)];
+
   unique.forEach(name => {
     const id = 'media_' + name.replace(/[^a-zA-Z0-9]/g, '_');
     const el = document.getElementById(id);
@@ -1776,11 +1778,13 @@ function autoSuggestMedia() {
   const btn = document.getElementById('btnAutoSuggest');
   if (btn) {
     const orig = btn.textContent;
+    const partnerCount = partners.length;
+    const otherCount = Math.min(others.length, MAX_NON_PARTNER);
     btn.textContent = unique.length > 0
-      ? `${unique.length} ${lang === 'nl' ? 'gesuggereerd' : 'suggested'}`
+      ? `${unique.length} ${lang === 'nl' ? 'gesuggereerd' : 'suggested'}` + (partnerCount > 0 ? ` (${partnerCount} partner)` : '')
       : (lang === 'nl' ? 'Geen match' : 'No match');
     btn.style.fontWeight = '700';
-    setTimeout(() => { btn.textContent = orig; btn.style.fontWeight = ''; }, 2000);
+    setTimeout(() => { btn.textContent = orig; btn.style.fontWeight = ''; }, 2500);
   }
 
   // Open panel if closed
