@@ -273,7 +273,9 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .partner-badge.partner-active:hover { background: var(--q-off-white); border-color: var(--q-beige); }
 .partner-badge.partner-inactive { color: #C5C0B5; opacity: 0.5; }
 .partner-badge.partner-inactive:hover { color: var(--q-brown); opacity: 1; background: var(--q-off-white); border-color: var(--q-beige); }
-.relevance-select { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 4px 8px; border: 1.5px solid var(--q-beige); border-radius: 12px; background: var(--q-off-white); color: var(--q-brown); cursor: pointer; appearance: auto; margin-top: 8px; }
+.relevance-select { font-family: inherit; font-weight: 600; font-size: 0.7rem; padding: 4px 8px; border: 1.5px solid var(--q-beige); border-radius: 12px; background: var(--q-off-white); color: var(--q-brown); cursor: pointer; appearance: auto; }
+.btn-edit-platform { font-family: inherit; font-weight: 600; font-size: 0.65rem; padding: 5px 10px; border: 1px solid var(--q-beige); border-radius: 12px; background: var(--q-white); color: var(--q-brown); cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.5px; }
+.btn-edit-platform:hover { background: var(--q-off-white); border-color: var(--q-brown); color: var(--q-off-black); }
 .relevance-select.relevance-hoog { border-color: var(--q-brown); color: var(--q-off-black); }
 .relevance-select.relevance-midden { border-color: var(--q-blue-light); color: var(--q-blue); }
 .relevance-select.relevance-laag { border-color: var(--q-beige); color: #999; }
@@ -528,6 +530,41 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <div class="modal-actions-right">
         <button class="btn btn-small btn-ghost" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-primary" onclick="saveItem()">Opslaan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLATFORM EDIT MODAL -->
+<div class="modal-overlay" id="platformModalOverlay" onclick="if(event.target===this)closePlatformModal()">
+  <div class="modal">
+    <h2 id="platformModalTitle">Platform bewerken</h2>
+    <input type="hidden" id="platformEditOriginalName">
+    <div class="form-group"><label>Naam</label><input type="text" id="platformFieldNaam"></div>
+    <div class="form-group"><label>URL</label><input type="url" id="platformFieldUrl" placeholder="https://..."></div>
+    <div class="form-row">
+      <div class="form-group"><label>Type</label><input type="text" id="platformFieldType" placeholder="bijv. Vakblad, Online platform, Branchevereniging"></div>
+      <div class="form-group"><label>Kosten</label><input type="text" id="platformFieldKosten" placeholder="bijv. Op aanvraag, Lidmaatschap, Gratis"></div>
+    </div>
+    <div class="form-group"><label>Bereik / doelgroep</label><textarea id="platformFieldBereik" rows="2" placeholder="Wie bereikt dit platform?"></textarea></div>
+    <div class="form-group"><label>Publicatie / mogelijkheden</label><textarea id="platformFieldPublicatie" rows="2" placeholder="Hoe publiceren we hier? Frequentie, formaten, redactioneel/betaald?"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Relevantie</label>
+        <select id="platformFieldRelevantie">
+          <option value="hoog">Hoog</option>
+          <option value="midden">Midden</option>
+          <option value="laag">Laag</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end">
+        <label class="modal-check"><input type="checkbox" id="platformFieldPartner"> <span>Partner / lid</span></label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <div><button class="btn btn-small btn-ghost" id="platformBtnReset" type="button" onclick="resetPlatformOverrides()" style="color:var(--q-brown)">Reset naar standaard</button></div>
+      <div class="modal-actions-right">
+        <button class="btn btn-small btn-ghost" onclick="closePlatformModal()">Annuleren</button>
+        <button class="btn btn-primary" onclick="savePlatform()">Opslaan</button>
       </div>
     </div>
   </div>
@@ -2170,18 +2207,23 @@ function renderPlatforms() {
     const partnerHtml = p.partner
       ? `<button type="button" class="partner-badge partner-active" title="${lang === 'nl' ? 'Klik om partnerstatus uit te zetten' : 'Click to remove partner status'}" onclick="togglePlatformPartner('${esc(p.naam).replace(/'/g, "\\'")}')">${partnerSvg}Partner</button>`
       : `<button type="button" class="partner-badge partner-inactive" title="${lang === 'nl' ? 'Markeer als partner / lid' : 'Mark as partner / member'}" onclick="togglePlatformPartner('${esc(p.naam).replace(/'/g, "\\'")}')">${partnerSvg}+ Partner</button>`;
+    const safeName = esc(p.naam).replace(/'/g, "\\'");
+    const urlLink = p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.naam)}</a>` : esc(p.naam);
     html += `<div class="platform-card relevance-${p.relevantie}">
       ${partnerHtml}
-      <h3><a href="${p.url}" target="_blank" rel="noopener">${esc(p.naam)}</a></h3>
+      <h3>${urlLink}</h3>
       <div class="platform-type">${esc(p.type)}</div>
       <div class="platform-detail"><strong>${t('lblReach')}:</strong> ${esc(p.bereik)}</div>
       <div class="platform-detail"><strong>${t('lblPublication')}:</strong> ${esc(p.publicatie)}</div>
       <div class="platform-detail"><strong>${t('lblCost')}:</strong> ${esc(p.kosten)}</div>
-      <select class="relevance-select relevance-${p.relevantie}" data-platform="${esc(p.naam)}" onchange="updatePlatformRelevance('${esc(p.naam)}', this.value)">
-        <option value="hoog" ${p.relevantie==='hoog'?'selected':''}>Hoog</option>
-        <option value="midden" ${p.relevantie==='midden'?'selected':''}>Midden</option>
-        <option value="laag" ${p.relevantie==='laag'?'selected':''}>Laag</option>
-      </select>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+        <select class="relevance-select relevance-${p.relevantie}" data-platform="${esc(p.naam)}" onchange="updatePlatformRelevance('${safeName}', this.value)">
+          <option value="hoog" ${p.relevantie==='hoog'?'selected':''}>Hoog</option>
+          <option value="midden" ${p.relevantie==='midden'?'selected':''}>Midden</option>
+          <option value="laag" ${p.relevantie==='laag'?'selected':''}>Laag</option>
+        </select>
+        <button type="button" class="btn-edit-platform" onclick="openPlatformModal('${safeName}')" title="${lang === 'nl' ? 'Bewerk platform' : 'Edit platform'}">${lang === 'nl' ? 'Bewerken' : 'Edit'}</button>
+      </div>
       ${renderPlatformTargeting(p.naam)}
     </div>`;
   });
@@ -2207,7 +2249,70 @@ function loadPlatformOverrides() {
     if (!p) continue;
     if (vals.relevantie) p.relevantie = vals.relevantie;
     if (typeof vals.partner === 'boolean') p.partner = vals.partner;
+    if (typeof vals.url === 'string') p.url = vals.url;
+    if (typeof vals.type === 'string') p.type = vals.type;
+    if (typeof vals.bereik === 'string') p.bereik = vals.bereik;
+    if (typeof vals.publicatie === 'string') p.publicatie = vals.publicatie;
+    if (typeof vals.kosten === 'string') p.kosten = vals.kosten;
+    if (typeof vals.naam === 'string') p.naam = vals.naam;
   }
+}
+
+function openPlatformModal(naam) {
+  const p = PLATFORMS.find(p => p.naam === naam);
+  if (!p) return;
+  document.getElementById('platformEditOriginalName').value = naam;
+  document.getElementById('platformFieldNaam').value = p.naam || '';
+  document.getElementById('platformFieldUrl').value = p.url || '';
+  document.getElementById('platformFieldType').value = p.type || '';
+  document.getElementById('platformFieldKosten').value = p.kosten || '';
+  document.getElementById('platformFieldBereik').value = p.bereik || '';
+  document.getElementById('platformFieldPublicatie').value = p.publicatie || '';
+  document.getElementById('platformFieldRelevantie').value = p.relevantie || 'midden';
+  document.getElementById('platformFieldPartner').checked = !!p.partner;
+  document.getElementById('platformModalOverlay').classList.add('active');
+}
+
+function closePlatformModal() {
+  document.getElementById('platformModalOverlay').classList.remove('active');
+}
+
+function savePlatform() {
+  const originalName = document.getElementById('platformEditOriginalName').value;
+  const p = PLATFORMS.find(p => p.naam === originalName);
+  if (!p) return;
+  const newVals = {
+    naam: document.getElementById('platformFieldNaam').value.trim() || p.naam,
+    url: document.getElementById('platformFieldUrl').value.trim(),
+    type: document.getElementById('platformFieldType').value.trim(),
+    kosten: document.getElementById('platformFieldKosten').value.trim(),
+    bereik: document.getElementById('platformFieldBereik').value.trim(),
+    publicatie: document.getElementById('platformFieldPublicatie').value.trim(),
+    relevantie: document.getElementById('platformFieldRelevantie').value,
+    partner: document.getElementById('platformFieldPartner').checked,
+  };
+  // Apply to in-memory PLATFORMS
+  Object.assign(p, newVals);
+  // Persist as override (use original name as key so we can reset later)
+  const overrides = JSON.parse(localStorage.getItem('qvantum-platform-overrides') || '{}');
+  overrides[originalName] = { ...(overrides[originalName] || {}), ...newVals };
+  localStorage.setItem('qvantum-platform-overrides', JSON.stringify(overrides));
+  closePlatformModal();
+  renderPlatforms();
+}
+
+function resetPlatformOverrides() {
+  const originalName = document.getElementById('platformEditOriginalName').value;
+  if (!originalName) return;
+  if (!confirm(lang === 'nl'
+    ? 'Alle aanpassingen voor "' + originalName + '" terugzetten naar standaardwaarden?'
+    : 'Reset all customizations for "' + originalName + '" to defaults?')) return;
+  const overrides = JSON.parse(localStorage.getItem('qvantum-platform-overrides') || '{}');
+  delete overrides[originalName];
+  localStorage.setItem('qvantum-platform-overrides', JSON.stringify(overrides));
+  closePlatformModal();
+  // Reload page to re-init PLATFORMS from source data
+  window.location.reload();
 }
 
 function togglePlatformPartner(naam) {
@@ -2268,7 +2373,7 @@ function importJSON(event) {
 
 /* KEYBOARD */
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Escape') { closeModal(); closePlatformModal(); }
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
 
