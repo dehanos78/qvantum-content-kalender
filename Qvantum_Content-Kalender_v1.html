@@ -824,6 +824,40 @@ const SEED_MATRIX_LABELS = [
   'promotion-awareness',    // 43  aankondiging Warmte Congrestival (16-11)
   'promotion-awareness',    // 44  Warmte Congrestival beurs (19-11)
   'perspective-education',  // 45  terugblik Warmte Congrestival Viktor (23-11)
+
+  // === GAP-FILL: KEUZEHULP & ADVISEURS-CONTENT ===
+  'perspective-selection',  // 46  QE of QG keuzehulp blog (27-05)
+  'promotion-selection',    // 47  mailing QE demo aanvragen (02-06)
+  'perspective-selection',  // 48  5 vragen voor specificeren WP — Viktor LI (09-06)
+  'promotion-selection',    // 49  download QE brochure 2026 — QNL LI (16-06)
+  'proof-awareness',        // 50  H1 2026 cijfers warmtepompinstallaties NL — QNL LI (23-06)
+  'perspective-education',  // 51  warmtevisie naar uitvoering wijkaanpak — blog (30-06)
+  'promotion-selection',    // 52  engineering support meedenken — Viktor LI (07-07)
+  'proof-awareness',        // 53  netcongestie TenneT-rapport — blog (21-07)
+
+  // === GAP-FILL: ZLT-NETTEN, BRONNETTEN, COLLECTIEVE PROJECTEN ===
+  'proof-education',        // 54  bronnetten en ambient loops + QG — blog (04-08)
+  'proof-education',        // 55  fleet control vakantieparken — blog (11-08)
+  'proof-education',        // 56  collectieve systemen sizen voor adviseurs — blog (25-08)
+  'perspective-selection',  // 57  prefab-ready checklist — blog (08-09)
+  'promotion-education',    // 58  QG aangesloten op bronnet — QNL LI (15-09)
+  'perspective-selection',  // 59  3 vragen voor adviseurs collectief warmteplan — Viktor LI (22-09)
+  'promotion-selection',    // 60  webinar QG live demo aankondiging — QNL LI (29-09)
+
+  // === GAP-FILL: GEMEENTEN, BELEID, VAKBEURS-AANLOOP ===
+  'proof-selection',        // 61  Wijkaanpak Vreeswijk vanuit gemeenteperspectief — QNL LI (13-10)
+  'proof-awareness',        // 62  ISDE 2027 update — Viktor LI (20-10)
+  'proof-education',        // 63  whitepaper bronnetten + ZLT met QG voor gemeenten (03-11)
+
+  // === GAP-FILL: WINTERSEIZOEN DEC 2026 - MRT 2027 ===
+  'proof-selection',        // 64  jaaroverzicht 2026 pilots/projecten — blog (08-12)
+  'perspective-education',  // 65  5 lessen eerste jaar QG — Viktor LI (15-12)
+  'proof-awareness',        // 66  Qvantum NL 2026 in cijfers — QNL LI (22-12)
+  'promotion-education',    // 67  Qvantum roadmap 2027 — blog (12-01)
+  'promotion-selection',    // 68  Q1 2027 mailing installateurs — nieuwsbrief (26-01)
+  'proof-awareness',        // 69  subsidiewijzigingen 2027 — QNL LI (09-02)
+  'proof-awareness',        // 70  5 grote collectieve projecten 2027 — blog (23-02)
+  'perspective-awareness',  // 71  wat ik anders doe in 2027 — Viktor LI (09-03)
 ];
 
 function matrixSplit(value) {
@@ -1114,6 +1148,40 @@ function getSeedData() {
     { datum:'2026-11-16', week:'Week 47', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Aankondiging: Qvantum op Warmte Congrestival. Keynote over missie, visie, QG.', content:'', qg:true, qe:false , cab:true },
     { datum:'2026-11-19', week:'Week 47', thema:'Warmte Congrestival', type:'Beurs / event', kanaal:'Beurzen & events', auteur:'Viktor de Haan', status:'Gepland', omschrijving:'Warmte Congrestival november 2026. Keynote: missie, visie, producten, proofpoints.', content:'', qg:true, qe:false , cab:true },
     { datum:'2026-11-23', week:'Week 48', thema:'Warmte Congrestival', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Terugblik Warmte Congrestival: highlights en reacties op QG.', content:'', qg:true, qe:false , cab:true },
+
+    // === GAP-FILL: KEUZEHULP & ADVISEURS-CONTENT ===
+    { datum:'2026-05-27', week:'Week 22', thema:'Kennis delen', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QE of QG: welke Qvantum-oplossing past bij jouw project? Beslismatrix per woningtype, individueel vs collectief, renovatie vs nieuwbouw.', content:'', qg:true, qe:true },
+    { datum:'2026-06-02', week:'Week 23', thema:'QE Installer Campagne', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QE demo aanvragen — fysieke showroom Qvantum NL. CTA-mailing met agenda en inschrijving.', content:'', qg:false, qe:true },
+    { datum:'2026-06-09', week:'Week 24', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'5 vragen die je moet stellen voordat je een warmtepomp specificeert. Checklist voor installateurs.', content:'', qg:false, qe:true },
+    { datum:'2026-06-16', week:'Week 25', thema:'QE Installer Campagne', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Download de QE productbrochure 2026. Content-download met form voor lead generation.', content:'', qg:false, qe:true },
+    { datum:'2026-06-23', week:'Week 26', thema:'Kennis delen', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Eerste helft 2026 in cijfers: warmtepompinstallaties NL. Duiding van CBS/RVO data en wat het betekent voor de markt.', content:'', qg:false, qe:false },
+    { datum:'2026-06-30', week:'Week 27', thema:'Kennis delen', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Van warmtevisie naar uitvoering: waar Qvantum past in de wijkaanpak. Voor gemeenten en woningcorporaties.', content:'', qg:true, qe:false , cab:true },
+    { datum:'2026-07-07', week:'Week 28', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Engineering support: hoe ons projectteam meedenkt vanaf concept tot oplevering. Wat adviseurs en installateurs van Qvantum kunnen verwachten in de ontwerpfase.', content:'', qg:true, qe:true },
+    { datum:'2026-07-21', week:'Week 30', thema:'Connectiviteit & EMS', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Netcongestie in cijfers: wat het laatste TenneT-rapport betekent voor warmtepompen. Sectorduiding met data.', content:'', qg:false, qe:true },
+
+    // === GAP-FILL: ZLT-NETTEN, BRONNETTEN, COLLECTIEVE PROJECTEN ===
+    { datum:'2026-08-04', week:'Week 32', thema:'Connectiviteit & EMS', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Bronnetten en ambient loops: waarom de QG hier perfect bij past. Brontemperatuurbereik –10 tot +40 °C, inzet in ZLT-netten en collectieve systemen.', content:'', qg:true, qe:false , cab:true },
+    { datum:'2026-08-11', week:'Week 33', thema:'Connectiviteit & EMS', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Fleet control voor vakantieparken: zo houden we tientallen warmtepompen binnen één bestaande netaansluiting. Qvantum-aanpak met EMS over meerdere units, met verwijzing naar Recreatiewoningen Vorden en lopende parkenprojecten.', content:'', qg:false, qe:true , cab:true },
+    { datum:'2026-08-25', week:'Week 35', thema:'Kennis delen', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Collectieve systemen sizen: thumb rules en ontwerp-uitgangspunten voor adviseurs. Vermogen, buffer, bron, regeling.', content:'', qg:true, qe:false },
+    { datum:'2026-09-08', week:'Week 37', thema:'Kennis delen', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Is jouw nieuwbouwproject prefab-ready? Checklist in 7 punten voor ontwikkelaars en aannemers.', content:'', qg:false, qe:true },
+    { datum:'2026-09-15', week:'Week 38', thema:'Connectiviteit & EMS', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'QG aangesloten op een bronnet: één water/water warmtepomp in een collectief systeem. Productuitleg met schema.', content:'', qg:true, qe:false , cab:true },
+    { datum:'2026-09-22', week:'Week 39', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'3 vragen die ik elke adviseur stel bij een collectief warmteplan. Denkkader voor consultants en engineers.', content:'', qg:true, qe:false },
+    { datum:'2026-09-29', week:'Week 40', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Webinar QG live demo en Q&A voor installateurs. Aankondiging met registratielink.', content:'', qg:true, qe:false , cab:true },
+
+    // === GAP-FILL: GEMEENTEN, BELEID, VAKBEURS-AANLOOP ===
+    { datum:'2026-10-13', week:'Week 42', thema:'Projecten & referentiecases', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Wijkaanpak Vreeswijk: van concept naar installatie — wat gemeenten ervan kunnen leren. Warm Vreeswijk vanuit beleidsperspectief.', content:'', qg:true, qe:false , cab:true },
+    { datum:'2026-10-20', week:'Week 43', thema:'Kennis delen', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'ISDE 2027: wat verandert er voor installateurs en eindklanten. Beleidsupdate met praktische impact.', content:'', qg:false, qe:true },
+    { datum:'2026-11-03', week:'Week 45', thema:'Kennis delen', type:'Artikel', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Whitepaper: Bronnetten en ZLT-netwerken met QG — technische en bestuurlijke handreiking voor gemeenten. Bouwblokken, fasering, businesscase.', content:'', qg:true, qe:false , cab:true },
+
+    // === GAP-FILL: WINTERSEIZOEN DEC 2026 - MRT 2027 ===
+    { datum:'2026-12-08', week:'Week 50', thema:'Projecten & referentiecases', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Jaaroverzicht 2026: pilots, projecten en lessons learned. Terugblik op het eerste jaar QE en QG in de Nederlandse markt.', content:'', qg:true, qe:true },
+    { datum:'2026-12-15', week:'Week 51', thema:'QG Launch', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'5 lessen uit het eerste jaar QG in de praktijk. Persoonlijke reflectie op wat werkt en wat anders moet.', content:'', qg:true, qe:false },
+    { datum:'2026-12-22', week:'Week 52', thema:'Kennis delen', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Qvantum NL 2026 in cijfers: bereik, projecten, partners. Het jaar samengevat in nummers.', content:'', qg:false, qe:false },
+    { datum:'2027-01-12', week:'Week 2', thema:'Kennis delen', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Qvantum roadmap 2027: product, partners, doelen. Wat staat er op de planning voor het komende jaar.', content:'', qg:true, qe:true },
+    { datum:'2027-01-26', week:'Week 4', thema:'QE Installer Campagne', type:'Nieuwsbrief', kanaal:'HubSpot — Nieuwsbrief / email', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Q1 2027 voor installateurs: demo dagen, training agenda en projectstart. Mailing met concrete CTA.', content:'', qg:false, qe:true },
+    { datum:'2027-02-09', week:'Week 6', thema:'Kennis delen', type:'LinkedIn post', kanaal:'LinkedIn — Qvantum Nederland', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'Subsidiewijzigingen 2027: wat installateurs moeten weten. ISDE, SEEH en lokale regelingen.', content:'', qg:false, qe:true },
+    { datum:'2027-02-23', week:'Week 8', thema:'Kennis delen', type:'Blog', kanaal:'HubSpot — Blog', auteur:'Qvantum NL bedrijfspagina', status:'Idee', omschrijving:'5 grote collectieve warmteprojecten die in 2027 starten — en wat ze gemeen hebben. Sectortrend en pipeline-zicht.', content:'', qg:true, qe:false , cab:true },
+    { datum:'2027-03-09', week:'Week 10', thema:'Kennis delen', type:'LinkedIn post', kanaal:'LinkedIn — Viktor de Haan', auteur:'Viktor de Haan', status:'Idee', omschrijving:'Wat ik anders doe in 2027: opiniestuk over de installateursmarkt. Persoonlijke visie op wat moet veranderen.', content:'', qg:false, qe:true },
   ];
 }
 
@@ -1188,6 +1256,7 @@ function init() {
     try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
   } else { seedItems(); }
   migrateSeedMatrixLabels();
+  migrateAddMissingSeedItems();
   loadPlatformOverrides(); buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs(); initWebhookSettings();
   // Render the static 3x3 overview once
   const moBody = document.getElementById('matrixOverviewBody');
@@ -1218,6 +1287,23 @@ function migrateSeedMatrixLabels() {
     if (m) { it.matrix = m; changed = true; }
   });
   if (changed) saveToStorage();
+}
+
+/* Migration: appends new seed items to existing localStorage so users get newly added
+   content suggestions without having to reset their data. Matches by datum + omschrijving;
+   anything not present is appended with a fresh id and its matrix label. Idempotent. */
+function migrateAddMissingSeedItems() {
+  if (!Array.isArray(items)) items = [];
+  const seedData = getSeedData();
+  let added = 0;
+  seedData.forEach((s, i) => {
+    const exists = items.some(it => it.datum === s.datum && it.omschrijving === s.omschrijving);
+    if (exists) return;
+    const m = SEED_MATRIX_LABELS[i];
+    items.push({ id: nextId++, ...s, ...(m ? { matrix: m } : {}) });
+    added++;
+  });
+  if (added > 0) saveToStorage();
 }
 
 function resetData() {
