@@ -363,6 +363,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <button class="lang-btn active" data-lang="nl" onclick="switchLang('nl')">NL</button>
         <button class="lang-btn" data-lang="en" onclick="switchLang('en')">EN</button>
       </div>
+      <button class="btn btn-small btn-ghost" onclick="dedupeItems()" id="btnDedupe" title="Remove duplicate items">Ontdubbel</button>
       <button class="btn btn-small btn-ghost" onclick="resetData()" id="btnReset">Reset</button>
       <button class="btn btn-small btn-ghost" onclick="exportJSON()" id="btnExport">Export JSON</button>
       <button class="btn btn-small btn-ghost" onclick="document.getElementById('importFile').click()" id="btnImport">Import JSON</button>
@@ -1263,12 +1264,29 @@ function init() {
   if (moBody) moBody.innerHTML = buildMatrixOverviewHtml();
 }
 
+/* Stable key for each seed item, independent of user edits. Used to track which
+   seeds have already been applied so the migration does not re-add edited or
+   deleted items on every reload. */
+function seedKey(s) { return (s.datum || '') + '|' + (s.omschrijving || ''); }
+
+function getKnownSeedKeys() {
+  try { return new Set(JSON.parse(localStorage.getItem('qvantum-known-seed-keys') || '[]')); }
+  catch(e) { return new Set(); }
+}
+
+function saveKnownSeedKeys(set) {
+  localStorage.setItem('qvantum-known-seed-keys', JSON.stringify([...set]));
+}
+
 function seedItems() {
   items = []; nextId = 1;
+  const known = new Set();
   getSeedData().forEach((s, i) => {
     const m = SEED_MATRIX_LABELS[i];
     items.push({ id: nextId++, ...s, ...(m ? { matrix: m } : {}) });
+    known.add(seedKey(s));
   });
+  saveKnownSeedKeys(known);
   saveToStorage();
 }
 
@@ -1289,20 +1307,39 @@ function migrateSeedMatrixLabels() {
   if (changed) saveToStorage();
 }
 
-/* Migration: appends new seed items to existing localStorage so users get newly added
-   content suggestions without having to reset their data. Matches by datum + omschrijving;
-   anything not present is appended with a fresh id and its matrix label. Idempotent. */
+/* Migration: appends newly added seed items (from the code) to existing localStorage
+   so users get fresh content suggestions without resetting their data.
+
+   Key rule: a seed is only added the FIRST time it is ever seen. This prevents
+   edited or deleted items from reappearing after a reload. We track seen seeds by
+   a stable key (datum + omschrijving at seed-definition time) in a localStorage set.
+
+   Backfill: for users from before this tracking existed, we mark every seed whose
+   datum+omschrijving currently matches an item as "known" on first run. Only seeds
+   that are truly new to the code are appended. */
 function migrateAddMissingSeedItems() {
   if (!Array.isArray(items)) items = [];
   const seedData = getSeedData();
+  const known = getKnownSeedKeys();
+  const firstRun = known.size === 0;
   let added = 0;
+  let knownChanged = false;
   seedData.forEach((s, i) => {
-    const exists = items.some(it => it.datum === s.datum && it.omschrijving === s.omschrijving);
-    if (exists) return;
+    const key = seedKey(s);
+    if (known.has(key)) return; // already applied once, never re-add
+    if (firstRun) {
+      // Backfill: mark every seed already present in items as known without re-adding.
+      const exists = items.some(it => it.datum === s.datum && it.omschrijving === s.omschrijving);
+      known.add(key); knownChanged = true;
+      if (exists) return;
+    }
+    // Truly new seed (not in known set, not already in items): add it.
     const m = SEED_MATRIX_LABELS[i];
     items.push({ id: nextId++, ...s, ...(m ? { matrix: m } : {}) });
+    known.add(key); knownChanged = true;
     added++;
   });
+  if (knownChanged) saveKnownSeedKeys(known);
   if (added > 0) saveToStorage();
 }
 
@@ -1315,10 +1352,38 @@ function resetData() {
   }
   if (confirm(t('confirmReset'))) {
     localStorage.removeItem('qvantum-content-kalender-v2');
+    localStorage.removeItem('qvantum-known-seed-keys');
     seedItems(); refreshThemaFilter(); renderCalendar();
   }
 }
 function saveToStorage() { localStorage.setItem('qvantum-content-kalender-v2', JSON.stringify({ items, nextId })); }
+
+/* Dedupe helper: removes items that share the same datum + omschrijving + kanaal.
+   Keeps the most recently edited version (highest id) — assumed to carry the user's
+   latest tweaks. One-click cleanup for duplicates caused by earlier seed-migration bug. */
+function dedupeItems() {
+  if (!Array.isArray(items) || items.length === 0) return;
+  const seen = new Map(); // key -> item with highest id
+  items.forEach(it => {
+    const key = (it.datum || '') + '|' + (it.omschrijving || '') + '|' + (it.kanaal || '');
+    const prev = seen.get(key);
+    if (!prev || (it.id || 0) > (prev.id || 0)) seen.set(key, it);
+  });
+  const deduped = [...seen.values()];
+  const removed = items.length - deduped.length;
+  if (removed === 0) {
+    alert(lang === 'nl' ? 'Geen duplicaten gevonden.' : 'No duplicates found.');
+    return;
+  }
+  const msg = lang === 'nl'
+    ? removed + ' duplica' + (removed === 1 ? 'at' : 'ten') + ' gevonden. Verwijderen? (de meest recent bewerkte versie blijft behouden)'
+    : removed + ' duplicate' + (removed === 1 ? '' : 's') + ' found. Remove them? (the most recently edited version is kept)';
+  if (!confirm(msg)) return;
+  items = deduped;
+  saveToStorage();
+  renderCalendar();
+  alert(lang === 'nl' ? removed + ' duplicaten verwijderd.' : removed + ' duplicates removed.');
+}
 
 /* TABS */
 function setupTabs() {
