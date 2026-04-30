@@ -467,6 +467,16 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPlan" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepland'</span></label>
       <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPublish" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepubliceerd'</span></label>
     </div>
+    <div style="border-top:1px solid var(--q-beige);padding-top:10px;margin-top:10px">
+      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown);text-transform:uppercase;letter-spacing:0.5px">Backup &amp; Herstel</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-small btn-ghost" onclick="exportSettings()" style="font-size:0.65rem">Backup downloaden</button>
+        <button type="button" class="btn btn-small btn-ghost" onclick="document.getElementById('importSettingsFile').click()" style="font-size:0.65rem">Backup importeren</button>
+        <input type="file" id="importSettingsFile" accept="application/json,.json" style="display:none" onchange="importSettings(event)">
+        <span id="backupStatus" style="font-size:0.6rem;color:var(--q-brown)"></span>
+      </div>
+      <div class="wh-hint" style="margin-top:6px">Exporteert alle webhook-instellingen als JSON-bestand. Bewaar het op een veilige plek (1Password, OneDrive, of dev folder) zodat je ze kunt herstellen na browser-cache wissen of bij wisselen van laptop.</div>
+    </div>
   </div>
 </div>
 
@@ -2369,6 +2379,71 @@ function initWebhookSettings() {
   const chkPub = document.getElementById('chkAutoNotifyPublish');
   if (chkPlan) chkPlan.checked = settings.plan;
   if (chkPub) chkPub.checked = settings.publish;
+}
+
+/* BACKUP / RESTORE */
+function exportSettings() {
+  const payload = {
+    _meta: {
+      app: 'Qvantum Content Kalender',
+      version: 'v1.0',
+      exportedAt: new Date().toISOString(),
+      schema: 1,
+    },
+    webhookUrl: getWebhookUrl(),
+    webhookUrlCAB: getCabWebhookUrl(),
+    calendarUrl: getCalendarUrl(),
+    autoNotify: getAutoNotifySettings(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().slice(0, 10);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `qvantum-kalender-settings-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setBackupStatus('Backup gedownload ✓');
+}
+
+function importSettings(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (typeof data !== 'object' || data === null) throw new Error('Ongeldig formaat');
+      if (typeof data.webhookUrl === 'string') saveWebhookUrl(data.webhookUrl);
+      if (typeof data.webhookUrlCAB === 'string') saveCabWebhookUrl(data.webhookUrlCAB);
+      if (typeof data.calendarUrl === 'string') saveCalendarUrl(data.calendarUrl);
+      if (data.autoNotify && typeof data.autoNotify === 'object') {
+        localStorage.setItem('qvantum-auto-notify', JSON.stringify({
+          plan: !!data.autoNotify.plan,
+          publish: !!data.autoNotify.publish,
+        }));
+      }
+      initWebhookSettings();
+      setBackupStatus('Backup hersteld ✓');
+    } catch (err) {
+      setBackupStatus('Import mislukt: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.onerror = function() {
+    setBackupStatus('Bestand kon niet worden gelezen');
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function setBackupStatus(msg) {
+  const el = document.getElementById('backupStatus');
+  if (!el) return;
+  el.textContent = msg;
+  setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 4000);
 }
 
 function toggleLinkedinUrlField() {
