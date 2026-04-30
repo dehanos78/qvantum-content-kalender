@@ -1752,7 +1752,10 @@ function getDutchHolidays(year) {
   // Fixed holidays
   holidays[f(new Date(year, 0, 1))] = { nl: 'Nieuwjaarsdag', en: "New Year's Day" };
   holidays[f(new Date(year, 3, 27))] = { nl: 'Koningsdag', en: "King's Day" };
-  holidays[f(new Date(year, 4, 5))] = { nl: 'Bevrijdingsdag', en: 'Liberation Day' };
+  // Bevrijdingsdag is alleen een officiële vrije dag in lustrumjaren (elke 5 jaar)
+  if (year % 5 === 0) {
+    holidays[f(new Date(year, 4, 5))] = { nl: 'Bevrijdingsdag', en: 'Liberation Day' };
+  }
   holidays[f(new Date(year, 11, 25))] = { nl: '1e Kerstdag', en: 'Christmas Day' };
   holidays[f(new Date(year, 11, 26))] = { nl: '2e Kerstdag', en: 'Boxing Day' };
   // Easter-based moveable holidays
