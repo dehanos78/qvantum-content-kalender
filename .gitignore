@@ -1,3 +1,5 @@
 .claude/
+.DS_Store
 *.local.json
+webhook-settings*.json
 qvantum-kalender-settings-*.json

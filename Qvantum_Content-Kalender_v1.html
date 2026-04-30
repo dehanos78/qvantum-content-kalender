@@ -1455,8 +1455,6 @@ function selectQuarter(idx) {
     return;
   }
   quarterMode = q.months;
-  currentView = 'card';
-  document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'card'));
   buildMonthNav();
   renderCalendar();
 }
@@ -1573,11 +1571,26 @@ function renderStats() {
 
 /* WEEK VIEW */
 function renderWeekView(container, filtered) {
-  const [year, month] = selectedMonth.split('-').map(Number);
-  const weeks = getWeeksInMonth(year, month);
   const itemsByDate = {};
   filtered.forEach(item => { if (!itemsByDate[item.datum]) itemsByDate[item.datum] = []; itemsByDate[item.datum].push(item); });
 
+  const monthKeys = quarterMode ? quarterMode : [selectedMonth];
+  const loc = lang === 'nl' ? 'nl-NL' : 'en-GB';
+
+  let html = '';
+  monthKeys.forEach(mk => {
+    const [year, month] = mk.split('-').map(Number);
+    const weeks = getWeeksInMonth(year, month);
+    if (quarterMode) {
+      const monthLabel = new Date(year, month - 1, 1).toLocaleDateString(loc, { month: 'long', year: 'numeric' });
+      html += `<div class="quarter-month-header">${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}</div>`;
+    }
+    html += renderWeekBlocks(weeks, itemsByDate);
+  });
+  container.innerHTML = html;
+}
+
+function renderWeekBlocks(weeks, itemsByDate) {
   let html = '';
   weeks.forEach((week, wi) => {
     const firstDay = week.find(d => d !== null);
@@ -1637,7 +1650,7 @@ function renderWeekView(container, filtered) {
     }
     html += `</div></div>`;
   });
-  container.innerHTML = html;
+  return html;
 }
 
 /* CARD VIEW */
