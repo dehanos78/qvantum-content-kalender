@@ -202,6 +202,9 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .day-column.holiday .holiday-label { font-size: 0.6rem; color: #B5AFA6; font-style: italic; margin-top: 4px; line-height: 1.3; }
 .day-column.out-of-month { background: #EEEDEA; opacity: 0.45; min-height: 40px; }
 .day-column.out-of-month .day-header { color: #B5AFA6; }
+.day-column.today { background: #FAF6EE; outline: 2px solid var(--q-brown); outline-offset: -2px; opacity: 1; }
+.day-column.today .day-header { color: var(--q-brown); }
+.day-column.today .day-num { color: var(--q-brown) !important; }
 .day-header { font-weight: 600; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--q-beige); }
 .day-header .day-num { font-weight: 700; font-size: 0.9rem; color: var(--q-off-black); display: block; }
 .day-item { padding: 8px 10px; border-radius: var(--radius); margin-bottom: 6px; cursor: pointer; border-left: 5px solid var(--q-beige); transition: all 0.15s; background: var(--q-off-white); }
@@ -1044,29 +1047,44 @@ function renderAllUI() {
   renderEvents();
 }
 
-const MONTHS = [
-  { key: '2026-04', label: 'Apr 2026' }, { key: '2026-05', label: 'Mei 2026' },
-  { key: '2026-06', label: 'Jun 2026' }, { key: '2026-07', label: 'Jul 2026' },
-  { key: '2026-08', label: 'Aug 2026' }, { key: '2026-09', label: 'Sep 2026' },
-  { key: '2026-10', label: 'Okt 2026' }, { key: '2026-11', label: 'Nov 2026' },
-  { key: '2026-12', label: 'Dec 2026' }, { key: '2027-01', label: 'Jan 2027' },
-  { key: '2027-02', label: 'Feb 2027' }, { key: '2027-03', label: 'Mar 2027' },
-];
+/* Build a rolling 12-month window starting at the first month of the current quarter,
+   so the navigation always shows today's month plus the next ~3 quarters. */
+function buildMonths() {
+  const now = new Date();
+  const qStartMonth = Math.floor(now.getMonth() / 3) * 3;
+  const labels = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+  const arr = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), qStartMonth + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    arr.push({ key, label: `${labels[d.getMonth()]} ${d.getFullYear()}` });
+  }
+  return arr;
+}
+const MONTHS = buildMonths();
 const KANALEN = ['LinkedIn — Viktor de Haan','LinkedIn — Qvantum Nederland','LinkedIn — Mark Vellinga','LinkedIn — Koen Pape','LinkedIn — Pascal Boy','LinkedIn — Sebastiaan Rietveld','HubSpot — Nieuwsbrief / email','HubSpot — Blog','Vakpublicaties (extern)','Beurzen & events','Website qvantum.com'];
 const DAY_NAMES = ['Zo','Ma','Di','Wo','Do','Vr','Za'];
 const DAY_NAMES_FULL = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
 const TYPE_COLORS = { 'LinkedIn post':'#91877A', 'Case study':'#5A9E6F', 'Rondetafel':'#6B5B95', 'Artikel':'#002656', 'Nieuwsbrief':'#3164FD', 'Beurs / event':'#FF8D5A', 'Webinar':'#4AA1FF', 'Vakpublicatie':'#C41230', 'Website':'#BBA84F' };
 
-let selectedMonth = MONTHS[0].key;
+const _today = new Date();
+const _todayKey = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, '0')}`;
+let selectedMonth = MONTHS.find(m => m.key === _todayKey)?.key || MONTHS[0].key;
 let currentView = 'week';
 let quarterMode = null; // null = single month, or ['2026-04','2026-05','2026-06'] etc.
 
-const QUARTERS = [
-  { label: 'Q2 2026', labelEn: 'Q2 2026', months: ['2026-04','2026-05','2026-06'] },
-  { label: 'Q3 2026', labelEn: 'Q3 2026', months: ['2026-07','2026-08','2026-09'] },
-  { label: 'Q4 2026', labelEn: 'Q4 2026', months: ['2026-10','2026-11','2026-12'] },
-  { label: 'Q1 2027', labelEn: 'Q1 2027', months: ['2027-01','2027-02','2027-03'] },
-];
+function buildQuarters(months) {
+  const arr = [];
+  for (let i = 0; i < 4; i++) {
+    const chunk = months.slice(i * 3, (i + 1) * 3);
+    const [year, monthNum] = chunk[0].key.split('-').map(Number);
+    const qNum = Math.floor((monthNum - 1) / 3) + 1;
+    const label = `Q${qNum} ${year}`;
+    arr.push({ label, labelEn: label, months: chunk.map(m => m.key) });
+  }
+  return arr;
+}
+const QUARTERS = buildQuarters(MONTHS);
 let items = [];
 let nextId = 1;
 
@@ -1603,6 +1621,7 @@ function renderWeekView(container, filtered) {
 
 function renderWeekBlocks(weeks, itemsByDate) {
   let html = '';
+  const todayStr = fmt(new Date());
   weeks.forEach((week, wi) => {
     const firstDay = week.find(d => d !== null);
     const weekNum = getISOWeek(firstDay);
@@ -1626,7 +1645,8 @@ function renderWeekBlocks(weeks, itemsByDate) {
       const holiday = getHoliday(ds);
       const holidayClass = holiday ? ' holiday' : '';
       const weekendClass = isWeekend ? ' weekend' : '';
-      html += `<div class="day-column${holidayClass}${weekendClass}"><div class="day-header">${dayName} <span class="day-num">${dayNum}</span></div>`;
+      const todayClass = ds === todayStr ? ' today' : '';
+      html += `<div class="day-column${holidayClass}${weekendClass}${todayClass}"><div class="day-header">${dayName} <span class="day-num">${dayNum}</span></div>`;
       if (holiday) {
         html += `<div class="holiday-label">${esc(holiday[lang])}</div>`;
       } else if (dayItems.length === 0) {
