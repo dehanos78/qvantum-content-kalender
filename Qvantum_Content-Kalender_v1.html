@@ -479,6 +479,15 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       </div>
       <div class="wh-hint" style="margin-top:6px">Exporteert alle webhook-instellingen als JSON-bestand. Bewaar het op een veilige plek (1Password, OneDrive, of dev folder) zodat je ze kunt herstellen na browser-cache wissen of bij wisselen van laptop.</div>
     </div>
+    <div style="border-top:1px solid var(--q-beige);padding-top:10px;margin-top:10px">
+      <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown);text-transform:uppercase;letter-spacing:0.5px">Sync naar Daily Dashboard</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap">
+        <input type="url" id="dashboardUrl" placeholder="http://localhost:5050" oninput="saveDashboardUrl(this.value)" style="flex:1;min-width:240px;font-size:0.75rem;padding:6px 10px;border:1px solid var(--q-beige);border-radius:var(--radius);font-family:monospace">
+        <button type="button" class="btn btn-small btn-ghost" onclick="syncToDashboard()" style="font-size:0.65rem">Sync nu</button>
+        <span id="dashboardSyncStatus" style="font-size:0.6rem;color:var(--q-brown)"></span>
+      </div>
+      <div class="wh-hint" style="margin-top:6px">Pusht de huidige kalender-data naar je lokale Daily Dashboard zodat de content-tegel up-to-date blijft. Werkt zolang het dashboard draait (localhost:5050).</div>
+    </div>
   </div>
 </div>
 
@@ -2397,6 +2406,41 @@ function initWebhookSettings() {
   const chkPub = document.getElementById('chkAutoNotifyPublish');
   if (chkPlan) chkPlan.checked = settings.plan;
   if (chkPub) chkPub.checked = settings.publish;
+  const dash = document.getElementById('dashboardUrl');
+  if (dash) dash.value = getDashboardUrl();
+}
+
+/* DAILY DASHBOARD SYNC */
+function getDashboardUrl() {
+  return localStorage.getItem('qvantum-dashboard-url') || 'http://localhost:5050';
+}
+function saveDashboardUrl(url) {
+  localStorage.setItem('qvantum-dashboard-url', (url || '').trim());
+}
+async function syncToDashboard() {
+  const status = document.getElementById('dashboardSyncStatus');
+  const base = getDashboardUrl().replace(/\/+$/, '');
+  if (!base) { status.textContent = 'Geen dashboard URL ingesteld'; status.style.color = '#C41230'; return; }
+  status.style.color = 'var(--q-brown)';
+  status.textContent = 'Synchroniseren…';
+  try {
+    const resp = await fetch(base + '/api/content-calendar/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || data.error) {
+      status.textContent = 'Fout: ' + (data.error || resp.statusText || resp.status);
+      status.style.color = '#C41230';
+      return;
+    }
+    const time = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    status.textContent = `${data.count} items gesynced om ${time} ✓`;
+  } catch (e) {
+    status.textContent = 'Kan dashboard niet bereiken (draait localhost:5050?)';
+    status.style.color = '#C41230';
+  }
 }
 
 /* BACKUP / RESTORE */
