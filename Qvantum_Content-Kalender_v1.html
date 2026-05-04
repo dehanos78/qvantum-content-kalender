@@ -489,7 +489,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <button type="button" class="btn btn-small btn-ghost" onclick="syncToDashboard()" style="font-size:0.65rem">Sync nu</button>
         <span id="dashboardSyncStatus" style="font-size:0.6rem;color:var(--q-brown)"></span>
       </div>
-      <div class="wh-hint" style="margin-top:6px">Pusht de huidige kalender-data naar je lokale Daily Dashboard zodat de content-tegel up-to-date blijft. Werkt zolang het dashboard draait (localhost:5050).</div>
+      <div class="wh-hint" style="margin-top:6px">Pusht de kalender-data naar je lokale Daily Dashboard én syncht wijzigingen naar Todoist (Qvantum-project, MarCom-label): nieuwe items als taak, datum/inhoud-wijzigingen als update, status Gepubliceerd als voltooid, verwijderde items als delete. Werkt zolang het dashboard draait (localhost:5050).</div>
     </div>
   </div>
 </div>
@@ -2456,7 +2456,27 @@ async function syncToDashboard() {
       return;
     }
     const time = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-    status.textContent = `${data.count} items gesynced om ${time} ✓`;
+    let msg = `${data.count} items`;
+    const td = data.todoist;
+    if (td) {
+      if (td.skipped) {
+        msg += ` · Todoist: ${td.skipped}`;
+      } else if (td.error) {
+        msg += ` · Todoist fout: ${td.error}`;
+      } else {
+        const parts = [];
+        if (td.created) parts.push(`${td.created} nieuw`);
+        if (td.updated) parts.push(`${td.updated} gewijzigd`);
+        if (td.closed) parts.push(`${td.closed} voltooid`);
+        if (td.deleted) parts.push(`${td.deleted} verwijderd`);
+        msg += ` · Todoist: ${parts.length ? parts.join(', ') : 'geen wijzigingen'}`;
+        if (td.errors && td.errors.length) {
+          msg += ` (${td.errors.length} fout)`;
+          console.warn('Todoist sync errors:', td.errors);
+        }
+      }
+    }
+    status.textContent = `${msg} · ${time} ✓`;
   } catch (e) {
     status.textContent = 'Kan dashboard niet bereiken (draait localhost:5050?)';
     status.style.color = '#C41230';
