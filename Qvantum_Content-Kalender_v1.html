@@ -24,6 +24,7 @@
   --status-gepland: var(--q-blue-light);
   --status-productie: var(--q-orange);
   --status-gepubliceerd: #5A9E6F;
+  --status-archief: #A8A29A;
   --header-height: 64px;
   --radius: 6px;
   --radius-lg: 10px;
@@ -179,6 +180,8 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .stat-card { background: var(--q-white); border-radius: var(--radius-lg); padding: 12px 20px; min-width: 100px; }
 .stat-card .stat-value { font-weight: 700; font-size: 1.4rem; color: var(--q-off-black); }
 .stat-card .stat-label { font-weight: 600; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--q-brown); }
+.stat-card.stat-muted { background: #EEEDEA; opacity: 0.7; }
+.stat-card.stat-muted .stat-value { color: var(--q-brown); }
 
 /* ============================================
    WEEK VIEW
@@ -236,6 +239,8 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .status-gepland { background: var(--status-gepland); }
 .status-inproductie { background: var(--status-productie); }
 .status-gepubliceerd { background: var(--status-gepubliceerd); }
+.status-gearchiveerd { background: var(--status-archief); color: var(--q-white) !important; }
+.calendar-item.is-archived, .day-item.is-archived { opacity: 0.55; }
 .calendar-item .item-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; line-height: 1.3; }
 .calendar-item .item-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.75rem; color: var(--q-brown); }
 .calendar-item .item-meta .tag { padding: 2px 8px; border-radius: 10px; background: var(--q-off-white); font-weight: 500; }
@@ -405,7 +410,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select class="filter-select" id="filterThema" onchange="renderCalendar()"><option value="">Alle thema's</option></select>
         <select class="filter-select" id="filterMatrix" onchange="renderCalendar()"><option value="">Alle matrix-cellen</option></select>
         <select class="filter-select" id="filterStatus" onchange="renderCalendar()">
-          <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option>
+          <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option><option value="Gearchiveerd">Gearchiveerd</option>
         </select>
         <select class="filter-select" id="filterType" onchange="renderCalendar()">
           <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
@@ -418,6 +423,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <label class="filter-checkbox" title="Toon alleen CAB-relevante items">
           <input type="checkbox" id="filterCAB" onchange="renderCalendar()"> <span id="filterCABLabel">CAB</span>
         </label>
+        <button class="btn btn-small btn-ghost" id="btnFocus" onclick="toggleFocusMode()" title="Toont alleen items in deze + volgende week">Focus: 2 weken</button>
         <button class="btn btn-small btn-ghost" id="btnBoardView" onclick="activateBoardView()" title="Board View: CAB + Engels + Kaarten">Board View</button>
       </div>
       <div id="calendarContainer"></div>
@@ -525,7 +531,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select id="fieldAuteur"><option value="Viktor de Haan">Viktor de Haan</option><option value="Mark Vellinga">Mark Vellinga</option><option value="Koen Pape">Koen Pape</option><option value="Pascal Boy">Pascal Boy</option><option value="Sebastiaan Rietveld">Sebastiaan Rietveld</option><option value="Qvantum NL bedrijfspagina">Qvantum NL bedrijfspagina</option></select>
       </div>
       <div class="form-group"><label>Status</label>
-        <select id="fieldStatus" onchange="toggleLinkedinUrlField()"><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option></select>
+        <select id="fieldStatus" onchange="toggleLinkedinUrlField()"><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option><option value="Gearchiveerd">Gearchiveerd</option></select>
       </div>
     </div>
     <div class="form-group"><label>Korte omschrijving</label><textarea id="fieldOmschrijving" rows="2" placeholder="Waar gaat dit item over?"></textarea></div>
@@ -587,7 +593,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
     </div>
 
     <div class="modal-actions">
-      <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button><button class="btn btn-small btn-ghost" id="btnMediaPitch" type="button" onclick="toggleMediaPitch()" style="color:var(--q-orange)">Maak mediabericht</button><button class="btn-notify" id="btnNotifyCAB" type="button" onclick="notifyCAB()" style="display:none">Notify CAB</button></div>
+      <div style="display:flex;gap:8px;align-items:center"><button class="btn btn-small btn-danger" id="btnDelete" style="display:none" onclick="deleteItem()">Verwijderen</button><button class="btn btn-small btn-ghost" id="btnArchive" style="display:none" onclick="archiveItem()" title="Verberg uit actieve planning, maar bewaar het idee">Archiveer</button><button class="btn btn-small btn-ghost" id="btnMediaPitch" type="button" onclick="toggleMediaPitch()" style="color:var(--q-orange)">Maak mediabericht</button><button class="btn-notify" id="btnNotifyCAB" type="button" onclick="notifyCAB()" style="display:none">Notify CAB</button></div>
       <div class="modal-actions-right">
         <button class="btn btn-small btn-ghost" onclick="closeModal()">Annuleren</button>
         <button class="btn btn-primary" onclick="saveItem()">Opslaan</button>
@@ -659,7 +665,8 @@ const T = {
     phWeek: 'bijv. Week 14', phTheme: 'bijv. QG Launch, Energieplanologie',
     phDesc: 'Waar gaat dit item over?',
     phContent: 'Schrijf hier de volledige tekst van de LinkedIn post, het artikel, de nieuwsbrief etc.',
-    btnDelete: 'Verwijderen', btnCancel: 'Annuleren', btnSave: 'Opslaan',
+    btnDelete: 'Verwijderen', btnArchive: 'Archiveer', btnCancel: 'Annuleren', btnSave: 'Opslaan',
+    focusOn: 'Focus: 2 weken', focusOff: 'Volledig overzicht',
     confirmDelete: 'Item verwijderen?', confirmReset: 'Alle wijzigingen resetten naar standaard data?',
     validationMsg: 'Vul minimaal een datum en thema in.',
     importSuccess: 'Import succesvol: {n} items geladen.', importError: 'Ongeldig bestandsformaat.',
@@ -717,7 +724,8 @@ const T = {
     phWeek: 'e.g. Week 14', phTheme: 'e.g. QG Launch, Energy Planning',
     phDesc: 'What is this item about?',
     phContent: 'Write the full text of the LinkedIn post, article, newsletter etc. here.',
-    btnDelete: 'Delete', btnCancel: 'Cancel', btnSave: 'Save',
+    btnDelete: 'Delete', btnArchive: 'Archive', btnCancel: 'Cancel', btnSave: 'Save',
+    focusOn: 'Focus: 2 weeks', focusOff: 'Full overview',
     confirmDelete: 'Delete this item?', confirmReset: 'Reset all changes to default data?',
     validationMsg: 'Please enter at least a date and theme.',
     importSuccess: 'Import successful: {n} items loaded.', importError: 'Invalid file format.',
@@ -756,8 +764,8 @@ const T = {
 };
 
 const STATUS_LABELS = {
-  nl: { 'Idee':'Idee', 'Gepland':'Gepland', 'In productie':'In productie', 'Gepubliceerd':'Gepubliceerd' },
-  en: { 'Idee':'Idea', 'Gepland':'Planned', 'In productie':'In production', 'Gepubliceerd':'Published' }
+  nl: { 'Idee':'Idee', 'Gepland':'Gepland', 'In productie':'In productie', 'Gepubliceerd':'Gepubliceerd', 'Gearchiveerd':'Gearchiveerd' },
+  en: { 'Idee':'Idea', 'Gepland':'Planned', 'In productie':'In production', 'Gepubliceerd':'Published', 'Gearchiveerd':'Archived' }
 };
 
 function t(key) { return T[lang][key] || T['nl'][key] || key; }
@@ -1022,6 +1030,10 @@ function renderAllUI() {
   document.getElementById('fieldOmschrijving').placeholder = t('phDesc');
   document.getElementById('fieldContent').placeholder = t('phContent');
   document.getElementById('btnDelete').textContent = t('btnDelete');
+  const btnArc = document.getElementById('btnArchive');
+  if (btnArc) btnArc.textContent = t('btnArchive');
+  const btnFocus = document.getElementById('btnFocus');
+  if (btnFocus) btnFocus.textContent = focusMode ? t('focusOff') : t('focusOn');
   document.querySelectorAll('.modal-actions-right .btn-ghost')[0].textContent = t('btnCancel');
   document.querySelectorAll('.modal-actions-right .btn-primary')[0].textContent = t('btnSave');
   // Case study panel labels
@@ -1072,6 +1084,7 @@ const _todayKey = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padSt
 let selectedMonth = MONTHS.find(m => m.key === _todayKey)?.key || MONTHS[0].key;
 let currentView = 'week';
 let quarterMode = null; // null = single month, or ['2026-04','2026-05','2026-06'] etc.
+let focusMode = null;  // null = month/quarter view, 'twoWeeks' = today + next ISO week
 
 function buildQuarters(months) {
   const arr = [];
@@ -1443,6 +1456,21 @@ function setView(view) {
   renderCalendar();
 }
 
+/* FOCUS MODE — toon alleen items in deze + volgende ISO week */
+function toggleFocusMode() {
+  focusMode = focusMode === 'twoWeeks' ? null : 'twoWeeks';
+  updateFocusButtonState();
+  renderCalendar();
+}
+
+function updateFocusButtonState() {
+  const btn = document.getElementById('btnFocus');
+  if (!btn) return;
+  btn.textContent = focusMode ? t('focusOff') : t('focusOn');
+  btn.classList.toggle('btn-primary', !!focusMode);
+  btn.classList.toggle('btn-ghost', !focusMode);
+}
+
 /* BOARD VIEW — one-click CAB + EN + cards */
 function activateBoardView() {
   // Switch to English
@@ -1470,11 +1498,13 @@ function buildQuarterNav() {
 function selectMonth(key) {
   quarterMode = null;
   selectedMonth = key;
+  if (focusMode) { focusMode = null; updateFocusButtonState(); }
   buildMonthNav();
   renderCalendar();
 }
 function selectQuarter(idx) {
   const q = QUARTERS[idx];
+  if (focusMode) { focusMode = null; updateFocusButtonState(); }
   if (quarterMode === q.months) {
     // Deselect quarter, go back to first month of that quarter
     quarterMode = null;
@@ -1551,11 +1581,29 @@ function getFilteredItems() {
   const fTy = document.getElementById('filterType').value;
   const fProduct = document.getElementById('filterProduct').value;
   const fM = document.getElementById('filterMatrix').value;
+  // Focus mode: today through end of next ISO week
+  let focusStart = null, focusEnd = null;
+  if (focusMode === 'twoWeeks') {
+    const today = new Date(); today.setHours(0,0,0,0);
+    // Start = monday of current ISO week
+    const dow = today.getDay(); // 0=Sun
+    const mondayOffset = dow === 0 ? -6 : (1 - dow);
+    focusStart = new Date(today); focusStart.setDate(today.getDate() + mondayOffset);
+    // End = sunday of next ISO week (13 days after monday)
+    focusEnd = new Date(focusStart); focusEnd.setDate(focusStart.getDate() + 13);
+  }
+  const fmtD = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   return items.filter(item => {
-    const monthMatch = quarterMode
-      ? quarterMode.some(m => item.datum.startsWith(m))
-      : item.datum.startsWith(selectedMonth);
-    if (!monthMatch) return false;
+    // Hide archived by default unless filter explicitly targets them
+    if (item.status === 'Gearchiveerd' && fS !== 'Gearchiveerd') return false;
+    if (focusMode === 'twoWeeks') {
+      if (item.datum < fmtD(focusStart) || item.datum > fmtD(focusEnd)) return false;
+    } else {
+      const monthMatch = quarterMode
+        ? quarterMode.some(m => item.datum.startsWith(m))
+        : item.datum.startsWith(selectedMonth);
+      if (!monthMatch) return false;
+    }
     if (fK && item.kanaal !== fK) return false;
     if (fA && item.auteur !== fA) return false;
     if (fT && item.thema !== fT) return false;
@@ -1585,17 +1633,25 @@ function renderCalendar() {
 }
 
 function renderStats() {
+  // Exclude archived items from totals — they're inspiration, not active work
+  const active = items.filter(i => i.status !== 'Gearchiveerd');
+  const archivedCount = items.length - active.length;
   const mi = quarterMode
-    ? items.filter(i => quarterMode.some(m => i.datum.startsWith(m)))
-    : items.filter(i => i.datum.startsWith(selectedMonth));
+    ? active.filter(i => quarterMode.some(m => i.datum.startsWith(m)))
+    : active.filter(i => i.datum.startsWith(selectedMonth));
   const stats = [
-    { v: items.length, l: t('total') }, { v: mi.length, l: t('thisMonth') },
+    { v: active.length, l: t('total') }, { v: mi.length, l: t('thisMonth') },
     { v: mi.filter(i => i.status === 'Idee').length, l: tStatus('Idee') },
     { v: mi.filter(i => i.status === 'Gepland').length, l: tStatus('Gepland') },
     { v: mi.filter(i => i.status === 'In productie').length, l: tStatus('In productie') },
     { v: mi.filter(i => i.status === 'Gepubliceerd').length, l: tStatus('Gepubliceerd') },
   ];
-  document.getElementById('statsRow').innerHTML = stats.map(s => `<div class="stat-card"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('');
+  if (archivedCount > 0) {
+    stats.push({ v: archivedCount, l: tStatus('Gearchiveerd'), muted: true });
+  }
+  document.getElementById('statsRow').innerHTML = stats.map(s =>
+    `<div class="stat-card${s.muted ? ' stat-muted' : ''}"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`
+  ).join('');
 }
 
 /* WEEK VIEW */
@@ -1603,9 +1659,29 @@ function renderWeekView(container, filtered) {
   const itemsByDate = {};
   filtered.forEach(item => { if (!itemsByDate[item.datum]) itemsByDate[item.datum] = []; itemsByDate[item.datum].push(item); });
 
-  const monthKeys = quarterMode ? quarterMode : [selectedMonth];
   const loc = lang === 'nl' ? 'nl-NL' : 'en-GB';
 
+  // Focus mode: render exactly the 2 ISO weeks starting at this Monday, all days "in month"
+  if (focusMode === 'twoWeeks') {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dow = today.getDay();
+    const mondayOffset = dow === 0 ? -6 : (1 - dow);
+    const monday = new Date(today); monday.setDate(today.getDate() + mondayOffset);
+    const weeks = [];
+    for (let w = 0; w < 2; w++) {
+      const week = [];
+      for (let d = 0; d < 7; d++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + (w * 7) + d);
+        week.push(date);
+      }
+      weeks.push(week);
+    }
+    container.innerHTML = renderWeekBlocks(weeks, itemsByDate);
+    return;
+  }
+
+  const monthKeys = quarterMode ? quarterMode : [selectedMonth];
   let html = '';
   monthKeys.forEach(mk => {
     const [year, month] = mk.split('-').map(Number);
@@ -1658,13 +1734,13 @@ function renderWeekBlocks(weeks, itemsByDate) {
           const hasContent = item.content && item.content.trim();
           if (isWeekend) {
             // Compact weekend item
-            html += `<div class="day-item" style="border-left-color:${tc}">
+            html += `<div class="day-item${item.status === 'Gearchiveerd' ? ' is-archived' : ''}" style="border-left-color:${tc}">
               <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 35))}</div>
               <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
               ${matrixBadgeHtml(item.matrix)}
             </div>`;
           } else {
-            html += `<div class="day-item" style="border-left-color:${tc}">
+            html += `<div class="day-item${item.status === 'Gearchiveerd' ? ' is-archived' : ''}" style="border-left-color:${tc}">
               <div class="di-title" onclick="openModal(${item.id})">${esc(truncate(item.omschrijving || item.thema, 60))}</div>
               <div class="di-meta"><span class="di-auteur">${esc(item.thema)}</span> &middot; ${esc(item.type)} ${matrixBadgeHtml(item.matrix)}</div>
               <div class="di-status ${sc}">${esc(tStatus(item.status))}</div>
@@ -1715,7 +1791,7 @@ function renderCardItem(item) {
     const loc = lang === 'nl' ? 'nl-NL' : 'en-GB';
     const ds = d.toLocaleDateString(loc, { weekday:'short', day:'numeric', month:'short' });
     const hasContent = item.content && item.content.trim();
-    return `<div class="calendar-item" style="border-left-color:${tc}">
+    return `<div class="calendar-item${item.status === 'Gearchiveerd' ? ' is-archived' : ''}" style="border-left-color:${tc}">
       <div class="item-header" onclick="openModal(${item.id})">
         <span class="item-date">${ds}${item.week ? ' &middot; ' + item.week : ''}</span>
         <span class="item-status ${sc}">${tStatus(item.status)}</span>
@@ -1978,6 +2054,7 @@ function clearCaseStudyFields() {
 function openModal(id) {
   const modal = document.getElementById('modalOverlay');
   const btnDel = document.getElementById('btnDelete');
+  const btnArc = document.getElementById('btnArchive');
   if (id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
@@ -2028,6 +2105,8 @@ function openModal(id) {
     document.getElementById('mpPreview').style.display = 'none';
     document.getElementById('mediaPitchPanel').style.display = mp.nieuws ? 'block' : 'none';
     btnDel.style.display = 'inline-block';
+    // Only offer Archive when the item isn't already archived
+    btnArc.style.display = item.status === 'Gearchiveerd' ? 'none' : 'inline-block';
   } else {
     document.getElementById('modalTitle').textContent = t('modalNew');
     document.getElementById('editId').value = '';
@@ -2069,6 +2148,7 @@ function openModal(id) {
     document.getElementById('mpPreview').style.display = 'none';
     document.getElementById('mediaPitchPanel').style.display = 'none';
     btnDel.style.display = 'none';
+    btnArc.style.display = 'none';
   }
   toggleCaseStudy();
   updateNotifyButton();
@@ -2143,6 +2223,15 @@ function deleteItem() {
   const id = parseInt(document.getElementById('editId').value);
   if (!id || !confirm(t('confirmDelete'))) return;
   items = items.filter(i => i.id !== id);
+  saveToStorage(); closeModal(); renderCalendar();
+}
+
+function archiveItem() {
+  const id = parseInt(document.getElementById('editId').value);
+  if (!id) return;
+  const idx = items.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  items[idx].status = 'Gearchiveerd';
   saveToStorage(); closeModal(); renderCalendar();
 }
 
