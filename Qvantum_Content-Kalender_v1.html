@@ -378,6 +378,8 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <button class="btn btn-small btn-ghost" onclick="exportJSON()" id="btnExport">Export JSON</button>
       <button class="btn btn-small btn-ghost" onclick="document.getElementById('importFile').click()" id="btnImport">Import JSON</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="btn btn-small btn-ghost" onclick="document.getElementById('hubspotSyncFile').click()" id="btnHubspotSync" title="Importeer gepubliceerde LinkedIn-posts uit HubSpot (sync-hubspot.py output)">Sync uit HubSpot</button>
+      <input type="file" id="hubspotSyncFile" accept="application/json,.json" style="display:none" onchange="importHubSpotSync(event)">
     </div>
   </header>
 
@@ -3072,6 +3074,56 @@ function importJSON(event) {
         alert(t('importSuccess').replace('{n}', items.length));
       } else alert(t('importError'));
     } catch(err) { alert('Fout: ' + err.message); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+
+/* HUBSPOT SYNC — merge published LinkedIn posts from sync-hubspot.py output.
+   Matches on item.hubspotId so re-runs never create duplicates. Existing
+   manual items (no hubspotId) are left untouched. */
+function importHubSpotSync(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const incoming = Array.isArray(data) ? data : (data.items || []);
+      if (!Array.isArray(incoming) || incoming.length === 0) {
+        alert('Geen items gevonden in het sync-bestand.'); event.target.value = ''; return;
+      }
+      let updated = 0, added = 0;
+      incoming.forEach(src => {
+        if (!src.hubspotId) return; // skip anything without a stable HubSpot id
+        const existing = items.find(i => i.hubspotId === src.hubspotId);
+        if (existing) {
+          existing.status = 'Gepubliceerd';
+          existing.datum = src.datum || existing.datum;
+          if (src.content) existing.content = src.content;
+          if (src.linkedinUrl) existing.linkedinUrl = src.linkedinUrl;
+          if (src.omschrijving && !existing.omschrijving) existing.omschrijving = src.omschrijving;
+          updated++;
+        } else {
+          items.push({
+            id: nextId++,
+            datum: src.datum,
+            week: src.week || '',
+            thema: src.thema || 'LinkedIn',
+            type: src.type || 'LinkedIn post',
+            kanaal: src.kanaal || 'LinkedIn — Qvantum Nederland',
+            auteur: src.auteur || (src.kanaal && src.kanaal.includes('Viktor') ? 'Viktor de Haan' : 'Qvantum NL bedrijfspagina'),
+            status: 'Gepubliceerd',
+            omschrijving: src.omschrijving || '',
+            content: src.content || '',
+            linkedinUrl: src.linkedinUrl || '',
+            qg: !!src.qg, qe: !!src.qe, cab: !!src.cab,
+            hubspotId: src.hubspotId,
+          });
+          added++;
+        }
+      });
+      saveToStorage(); refreshThemaFilter(); renderCalendar();
+      alert(`HubSpot sync klaar:\n${updated} item(s) bijgewerkt naar Gepubliceerd\n${added} nieuw item(s) toegevoegd`);
+    } catch(err) { alert('Fout bij HubSpot sync: ' + err.message); }
   };
   reader.readAsText(file); event.target.value = '';
 }

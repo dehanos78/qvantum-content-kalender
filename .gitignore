@@ -3,3 +3,8 @@
 *.local.json
 webhook-settings*.json
 qvantum-kalender-settings-*.json
+.env
+__pycache__/
+*.pyc
+venv/
+.venv/
