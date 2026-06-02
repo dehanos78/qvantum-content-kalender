@@ -378,7 +378,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <button class="btn btn-small btn-ghost" onclick="exportJSON()" id="btnExport">Export JSON</button>
       <button class="btn btn-small btn-ghost" onclick="document.getElementById('importFile').click()" id="btnImport">Import JSON</button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-      <button class="btn btn-small btn-ghost" onclick="document.getElementById('hubspotSyncFile').click()" id="btnHubspotSync" title="Importeer gepubliceerde LinkedIn-posts uit HubSpot (sync-hubspot.py output)">Sync uit HubSpot</button>
+      <button class="btn btn-small btn-ghost" onclick="document.getElementById('hubspotSyncFile').click()" id="btnHubspotSync" title="Importeer gepubliceerde posts (sync-hubspot.py of sync-linkedin.py output)">Sync gepubliceerde posts</button>
       <input type="file" id="hubspotSyncFile" accept="application/json,.json" style="display:none" onchange="importHubSpotSync(event)">
     </div>
   </header>
