@@ -47,6 +47,27 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 .tab-btn { padding: 12px 24px; font-family: inherit; font-weight: 600; font-size: 0.75rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--q-brown); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
 .tab-btn:hover { color: var(--q-off-black); }
 .tab-btn.active { color: var(--q-off-black); border-bottom-color: var(--q-brown); }
+.tab-count { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 0.65rem; font-weight: 700; background: var(--q-beige); color: var(--q-brown); border-radius: 10px; vertical-align: middle; }
+.tab-btn.active .tab-count { background: var(--q-brown); color: var(--q-white); }
+
+/* POOL VIEW */
+.pool-theme-group { margin-bottom: 24px; }
+.pool-theme-header { display: flex; align-items: baseline; gap: 10px; margin: 16px 0 10px 0; padding-bottom: 6px; border-bottom: 1px solid var(--q-beige); }
+.pool-theme-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--q-off-black); }
+.pool-theme-header .pool-theme-count { font-size: 0.7rem; color: var(--q-brown); font-weight: 600; }
+.pool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.pool-card { background: var(--q-white); border-left: 4px solid var(--q-brown); border-radius: var(--radius); padding: 12px 14px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+.pool-card:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.pool-card .pc-type { display: inline-block; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--q-brown); margin-bottom: 6px; }
+.pool-card .pc-title { font-size: 0.85rem; font-weight: 600; color: var(--q-off-black); line-height: 1.35; margin-bottom: 8px; }
+.pool-card .pc-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.65rem; color: var(--q-brown); margin-bottom: 8px; }
+.pool-card .pc-meta .pc-tag { padding: 1px 7px; background: var(--q-off-white); border-radius: 8px; }
+.pool-card .pc-actions { display: flex; gap: 6px; margin-top: 4px; }
+.pool-card .pc-btn { font-size: 0.65rem; font-weight: 600; padding: 4px 10px; border-radius: var(--radius); border: 1px solid var(--q-beige); background: var(--q-white); color: var(--q-brown); cursor: pointer; }
+.pool-card .pc-btn:hover { background: var(--q-off-white); color: var(--q-off-black); }
+.pool-card .pc-btn.pc-btn-primary { background: var(--q-brown); color: var(--q-white); border-color: var(--q-brown); }
+.pool-card .pc-btn.pc-btn-primary:hover { background: var(--q-off-black); border-color: var(--q-off-black); }
+.pool-empty { padding: 40px; text-align: center; color: var(--q-brown); font-size: 0.85rem; }
 
 .main { flex: 1; overflow-y: auto; padding: 24px 32px; }
 .tab-content { display: none; }
@@ -385,6 +406,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 
   <nav class="tab-bar">
     <button class="tab-btn active" data-tab="calendar">Content Kalender</button>
+    <button class="tab-btn" data-tab="pool">Ideeën <span class="tab-count" id="poolCount">0</span></button>
     <button class="tab-btn" data-tab="platforms">Mediaplatformen</button>
     <button class="tab-btn" data-tab="events">Evenementen</button>
   </nav>
@@ -429,6 +451,19 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <button class="btn btn-small btn-ghost" id="btnBoardView" onclick="activateBoardView()" title="Board View: CAB + Engels + Kaarten">Board View</button>
       </div>
       <div id="calendarContainer"></div>
+    </div>
+
+    <!-- POOL TAB (Ideeën zonder datum) -->
+    <div id="tab-pool" class="tab-content">
+      <div class="section-header">
+        <h2>Ideeën-pool</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-small btn-ghost" id="btnMoveIdeasToPool" onclick="moveAllIdeasToPool()" title="Zet alle Idee-items met een datum terug naar de pool (datum wissen)">Verplaats gedateerde ideeën naar pool</button>
+          <button class="btn btn-small btn-primary" onclick="openModal()">+ Nieuw idee</button>
+        </div>
+      </div>
+      <div class="info-banner"><strong>Pool:</strong> ideeën zonder datum. Een idee in de pool is geen commitment — alleen iets om later op te pakken. Plan een idee in via "Plan in" of door een datum in te vullen; het verschijnt dan op de kalender als Gepland.</div>
+      <div id="poolContainer"></div>
     </div>
 
     <!-- PLATFORMS TAB -->
@@ -647,7 +682,7 @@ let lang = 'nl';
 const T = {
   nl: {
     subtitle: 'Content Kalender 2026 - 2027',
-    tabCalendar: 'Content Kalender', tabPlatforms: 'Mediaplatformen', tabEvents: 'Evenementen',
+    tabCalendar: 'Content Kalender', tabPool: 'Ideeën', tabPlatforms: 'Mediaplatformen', tabEvents: 'Evenementen',
     weekView: 'Weekweergave', cardView: 'Kaarten', newItem: '+ Nieuw item',
     allChannels: 'Alle kanalen', allAuthors: 'Alle auteurs', allThemes: "Alle thema's",
     allStatuses: 'Alle statussen', allTypes: 'Alle types',
@@ -670,7 +705,11 @@ const T = {
     btnDelete: 'Verwijderen', btnArchive: 'Archiveer', btnCancel: 'Annuleren', btnSave: 'Opslaan',
     focusOn: 'Focus: 2 weken', focusOff: 'Volledig overzicht',
     confirmDelete: 'Item verwijderen?', confirmReset: 'Alle wijzigingen resetten naar standaard data?',
-    validationMsg: 'Vul minimaal een datum en thema in.',
+    validationMsg: 'Vul minimaal een thema in (datum is optioneel — laat leeg om in de pool te bewaren).',
+    poolEmpty: 'Geen ideeën in de pool. Maak een nieuw idee aan, of wis de datum van een bestaand item om het hier te parkeren.',
+    poolPlanIn: 'Plan in',
+    poolEdit: 'Bewerk',
+    moveAllConfirm: '{n} idee(en) met een datum verplaatsen naar de pool (datum wordt gewist)?',
     importSuccess: 'Import succesvol: {n} items geladen.', importError: 'Ongeldig bestandsformaat.',
     // Platforms
     platformsTitle: 'Mediaplatformen',
@@ -706,7 +745,7 @@ const T = {
   },
   en: {
     subtitle: 'Content Calendar 2026 - 2027',
-    tabCalendar: 'Content Calendar', tabPlatforms: 'Media Platforms', tabEvents: 'Events',
+    tabCalendar: 'Content Calendar', tabPool: 'Ideas', tabPlatforms: 'Media Platforms', tabEvents: 'Events',
     weekView: 'Week view', cardView: 'Cards', newItem: '+ New item',
     allChannels: 'All channels', allAuthors: 'All authors', allThemes: 'All themes',
     allStatuses: 'All statuses', allTypes: 'All types',
@@ -729,7 +768,11 @@ const T = {
     btnDelete: 'Delete', btnArchive: 'Archive', btnCancel: 'Cancel', btnSave: 'Save',
     focusOn: 'Focus: 2 weeks', focusOff: 'Full overview',
     confirmDelete: 'Delete this item?', confirmReset: 'Reset all changes to default data?',
-    validationMsg: 'Please enter at least a date and theme.',
+    validationMsg: 'Please enter at least a theme (date is optional — leave empty to keep in the pool).',
+    poolEmpty: 'No ideas in the pool. Create a new idea, or clear the date on an existing item to park it here.',
+    poolPlanIn: 'Schedule',
+    poolEdit: 'Edit',
+    moveAllConfirm: 'Move {n} dated idea(s) to the pool (date will be cleared)?',
     importSuccess: 'Import successful: {n} items loaded.', importError: 'Invalid file format.',
     // Platforms
     platformsTitle: 'Media Platforms',
@@ -980,10 +1023,12 @@ function renderAllUI() {
   // Header
   document.querySelector('.header-subtitle').textContent = t('subtitle');
   // Tabs
-  const tabs = document.querySelectorAll('.tab-btn');
-  tabs[0].textContent = t('tabCalendar');
-  tabs[1].textContent = t('tabPlatforms');
-  tabs[2].textContent = t('tabEvents');
+  // Tabs: target via data-tab attribute (count-span in pool tab moet behouden blijven)
+  const tabByKey = (key) => document.querySelector(`.tab-btn[data-tab="${key}"]`);
+  if (tabByKey('calendar')) tabByKey('calendar').textContent = t('tabCalendar');
+  if (tabByKey('pool')) tabByKey('pool').innerHTML = `${t('tabPool')} <span class="tab-count" id="poolCount">${getPoolItems().length}</span>`;
+  if (tabByKey('platforms')) tabByKey('platforms').textContent = t('tabPlatforms');
+  if (tabByKey('events')) tabByKey('events').textContent = t('tabEvents');
   // View toggle
   document.querySelectorAll('.view-toggle-btn').forEach(b => {
     b.textContent = b.dataset.view === 'week' ? t('weekView') : t('cardView');
@@ -1596,6 +1641,8 @@ function getFilteredItems() {
   }
   const fmtD = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   return items.filter(item => {
+    // Pool items (no date) live in the Ideeën-pool tab, not on the calendar
+    if (!item.datum) return false;
     // Hide archived by default unless filter explicitly targets them
     if (item.status === 'Gearchiveerd' && fS !== 'Gearchiveerd') return false;
     if (focusMode === 'twoWeeks') {
@@ -1620,8 +1667,100 @@ function getFilteredItems() {
   }).sort((a, b) => a.datum.localeCompare(b.datum));
 }
 
+/* POOL VIEW — items zonder datum, status=Idee, gegroepeerd op thema */
+function getPoolItems() {
+  return items.filter(i => i.status === 'Idee' && !i.datum);
+}
+
+function renderPool() {
+  const pool = getPoolItems();
+  const poolCountEl = document.getElementById('poolCount');
+  if (poolCountEl) poolCountEl.textContent = pool.length;
+
+  const container = document.getElementById('poolContainer');
+  if (!container) return;
+
+  // Toon/verberg de bulk-knop
+  const bulkBtn = document.getElementById('btnMoveIdeasToPool');
+  if (bulkBtn) {
+    const datedIdeas = items.filter(i => i.status === 'Idee' && i.datum).length;
+    if (datedIdeas > 0) {
+      bulkBtn.style.display = 'inline-block';
+      bulkBtn.textContent = `Verplaats ${datedIdeas} gedateerd${datedIdeas === 1 ? '' : 'e'} idee${datedIdeas === 1 ? '' : 'en'} naar pool`;
+    } else {
+      bulkBtn.style.display = 'none';
+    }
+  }
+
+  if (pool.length === 0) {
+    container.innerHTML = `<div class="pool-empty">${t('poolEmpty')}</div>`;
+    return;
+  }
+
+  // Groepeer op thema
+  const groups = {};
+  pool.forEach(item => {
+    const key = item.thema || '(geen thema)';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  const sortedThemes = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
+
+  let html = '';
+  sortedThemes.forEach(thema => {
+    const arr = groups[thema];
+    html += `<div class="pool-theme-group">
+      <div class="pool-theme-header">
+        <h3>${esc(thema)}</h3>
+        <span class="pool-theme-count">${arr.length} idee${arr.length === 1 ? '' : 'en'}</span>
+      </div>
+      <div class="pool-grid">`;
+    arr.forEach(item => {
+      const tc = TYPE_COLORS[item.type] || '#91877A';
+      html += `<div class="pool-card" style="border-left-color:${tc}" onclick="openModal(${item.id})">
+        <div class="pc-type">${esc(item.type || '')}</div>
+        <div class="pc-title">${esc(item.omschrijving || item.thema)}</div>
+        <div class="pc-meta">
+          ${item.kanaal ? `<span class="pc-tag">${esc(item.kanaal)}</span>` : ''}
+          ${item.auteur ? `<span class="pc-tag">${esc(item.auteur)}</span>` : ''}
+          ${item.qg ? '<span class="pc-tag">QG</span>' : ''}
+          ${item.qe ? '<span class="pc-tag">QE</span>' : ''}
+          ${item.cab ? '<span class="pc-tag">CAB</span>' : ''}
+        </div>
+        <div class="pc-actions">
+          <button class="pc-btn pc-btn-primary" onclick="event.stopPropagation();planInPoolItem(${item.id})">${t('poolPlanIn')}</button>
+          <button class="pc-btn" onclick="event.stopPropagation();openModal(${item.id})">${t('poolEdit')}</button>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+function planInPoolItem(id) {
+  openModal(id);
+  // Geef de datum-input focus zodat user direct kan typen
+  setTimeout(() => {
+    const dateInput = document.getElementById('fieldDatum');
+    if (dateInput) { dateInput.focus(); }
+  }, 50);
+}
+
+function moveAllIdeasToPool() {
+  const dated = items.filter(i => i.status === 'Idee' && i.datum);
+  if (dated.length === 0) return;
+  const msg = t('moveAllConfirm').replace('{n}', dated.length);
+  if (!confirm(msg)) return;
+  dated.forEach(i => { i.datum = ''; i.week = ''; });
+  saveToStorage();
+  renderCalendar();
+  renderPool();
+}
+
 /* RENDER */
 function renderCalendar() {
+  renderPool();
   renderStats();
   const container = document.getElementById('calendarContainer');
   const filtered = getFilteredItems();
@@ -2205,18 +2344,35 @@ function saveItem() {
       hashtags: document.getElementById('csHashtags').value,
     };
   }
-  if (!data.datum || !data.thema) { alert(t('validationMsg')); return; }
-  // Track old status for auto-notify
+  if (!data.thema) { alert(t('validationMsg')); return; }
+  // Track old status + old datum for auto-notify and pool auto-flip
   let oldStatus = '';
+  let oldDatum = '';
   let itemId = editId ? parseInt(editId) : null;
   if (editId) {
     const idx = items.findIndex(i => i.id === parseInt(editId));
-    if (idx !== -1) { oldStatus = items[idx].status || ''; items[idx] = { ...items[idx], ...data }; }
+    if (idx !== -1) {
+      oldStatus = items[idx].status || '';
+      oldDatum = items[idx].datum || '';
+    }
+  }
+  // Auto-flip status on pool <-> calendar transition.
+  // Promote: was in pool (no datum) + Idee, now has datum -> Gepland
+  if (!oldDatum && data.datum && data.status === 'Idee') {
+    data.status = 'Gepland';
+  }
+  // Demote: was on calendar (datum) + Gepland, now no datum -> Idee (back to pool)
+  if (oldDatum && !data.datum && data.status === 'Gepland') {
+    data.status = 'Idee';
+  }
+  if (editId) {
+    const idx = items.findIndex(i => i.id === parseInt(editId));
+    if (idx !== -1) items[idx] = { ...items[idx], ...data };
   } else {
     itemId = nextId++;
     items.push({ id: itemId, ...data });
   }
-  saveToStorage(); closeModal(); refreshThemaFilter(); renderCalendar();
+  saveToStorage(); closeModal(); refreshThemaFilter(); renderCalendar(); renderPool();
   // Auto-notify Teams on status change (fire and forget)
   autoNotifyOnStatusChange(oldStatus, data, itemId);
 }
