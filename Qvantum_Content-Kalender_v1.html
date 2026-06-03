@@ -520,7 +520,6 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <input type="url" id="calendarPublicUrl" placeholder="https://dehanos78.github.io/qvantum-content-kalender/..." oninput="saveCalendarUrl(this.value)">
     </div>
     <div class="form-group" style="margin-bottom:8px;display:flex;gap:12px;align-items:center">
-      <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPlan" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepland'</span></label>
       <label class="modal-check"><input type="checkbox" id="chkAutoNotifyPublish" onchange="saveAutoNotifySettings()"> <span style="font-size:0.6rem">Auto-notify bij 'Gepubliceerd'</span></label>
     </div>
     <div style="border-top:1px solid var(--q-beige);padding-top:10px;margin-top:10px">
@@ -2660,13 +2659,14 @@ function getCalendarUrl() { return localStorage.getItem('qvantum-calendar-url') 
 function saveCalendarUrl(url) { localStorage.setItem('qvantum-calendar-url', url.trim()); }
 function saveAutoNotifySettings() {
   localStorage.setItem('qvantum-auto-notify', JSON.stringify({
-    plan: document.getElementById('chkAutoNotifyPlan').checked,
     publish: document.getElementById('chkAutoNotifyPublish').checked,
   }));
 }
 function getAutoNotifySettings() {
-  try { return JSON.parse(localStorage.getItem('qvantum-auto-notify')) || { plan: false, publish: false }; }
-  catch { return { plan: false, publish: false }; }
+  try {
+    const parsed = JSON.parse(localStorage.getItem('qvantum-auto-notify')) || {};
+    return { publish: !!parsed.publish };
+  } catch { return { publish: false }; }
 }
 
 function initWebhookSettings() {
@@ -2677,9 +2677,7 @@ function initWebhookSettings() {
   const cal = document.getElementById('calendarPublicUrl');
   if (cal) cal.value = getCalendarUrl();
   const settings = getAutoNotifySettings();
-  const chkPlan = document.getElementById('chkAutoNotifyPlan');
   const chkPub = document.getElementById('chkAutoNotifyPublish');
-  if (chkPlan) chkPlan.checked = settings.plan;
   if (chkPub) chkPub.checked = settings.publish;
   const dash = document.getElementById('dashboardUrl');
   if (dash) dash.value = getDashboardUrl();
@@ -2777,8 +2775,8 @@ function importSettings(event) {
       if (typeof data.webhookUrlCAB === 'string') saveCabWebhookUrl(data.webhookUrlCAB);
       if (typeof data.calendarUrl === 'string') saveCalendarUrl(data.calendarUrl);
       if (data.autoNotify && typeof data.autoNotify === 'object') {
+        // 'plan' is bewust gedropt — alleen publish wordt nog ondersteund
         localStorage.setItem('qvantum-auto-notify', JSON.stringify({
-          plan: !!data.autoNotify.plan,
           publish: !!data.autoNotify.publish,
         }));
       }
@@ -3016,11 +3014,9 @@ async function autoNotifyOnStatusChange(oldStatus, newItem, itemId) {
   const url = getWebhookUrl();
   if (!url) return;
 
-  // Status changed to Gepland
-  if (settings.plan && newItem.status === 'Gepland' && oldStatus !== 'Gepland') {
-    await sendTeamsNotification('planned', newItem);
-  }
-  // Status changed to Gepubliceerd
+  // Status changed to Gepubliceerd (Gepland-auto-notify is bewust verwijderd —
+  // niemand reageerde op die meldingen, en met de pool-feature zou auto-promotie
+  // een sluis aan ongewenste meldingen opleveren bij snoei-sessies)
   if (settings.publish && newItem.status === 'Gepubliceerd' && oldStatus !== 'Gepubliceerd') {
     const isLinkedin = (newItem.kanaal || '').toLowerCase().includes('linkedin');
     // Ask for LinkedIn URL if applicable and not yet filled
