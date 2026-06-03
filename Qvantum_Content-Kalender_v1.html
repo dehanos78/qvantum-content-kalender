@@ -499,11 +499,19 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
       <div class="form-group" style="margin:0">
         <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Teams Webhook — Content Updates</label>
         <input type="url" id="webhookUrl" placeholder="https://...powerplatform.com/.../invoke?..." oninput="saveWebhookUrl(this.value)">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <button type="button" class="btn btn-small btn-ghost" onclick="testWebhook('content')" style="font-size:0.6rem">Test deze webhook</button>
+          <span id="webhookTestResult" style="font-size:0.6rem"></span>
+        </div>
         <div class="wh-hint" style="margin-top:4px">Gepland / Gepubliceerd meldingen voor het team</div>
       </div>
       <div class="form-group" style="margin:0">
         <label style="font-size:0.6rem;font-weight:600;color:var(--q-brown)">Teams Webhook — CAB (apart kanaal)</label>
         <input type="url" id="webhookUrlCAB" placeholder="https://...powerplatform.com/.../invoke?..." oninput="saveCabWebhookUrl(this.value)">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <button type="button" class="btn btn-small btn-ghost" onclick="testWebhook('cab')" style="font-size:0.6rem">Test deze webhook</button>
+          <span id="webhookTestResultCAB" style="font-size:0.6rem"></span>
+        </div>
         <div class="wh-hint" style="margin-top:4px">CAB-notificaties naar je collega in Zweden</div>
       </div>
     </div>
@@ -2874,6 +2882,62 @@ function buildTeamsCard(notifType, itemData) {
       }
     }]
   };
+}
+
+// Diagnostic: test a webhook URL by sending a small Adaptive Card and showing the response.
+async function testWebhook(kind) {
+  const isCab = kind === 'cab';
+  const url = isCab ? getCabWebhookUrl() : getWebhookUrl();
+  const resultEl = document.getElementById(isCab ? 'webhookTestResultCAB' : 'webhookTestResult');
+  if (!resultEl) return;
+  if (!url) {
+    resultEl.textContent = 'Geen URL ingevuld';
+    resultEl.style.color = '#C41230';
+    return;
+  }
+  resultEl.textContent = 'Verzenden...';
+  resultEl.style.color = 'var(--q-brown)';
+  const ts = new Date().toLocaleString('nl-NL');
+  const testPayload = {
+    type: 'message',
+    attachments: [{
+      contentType: 'application/vnd.microsoft.card.adaptive',
+      content: {
+        '$schema': 'http://adaptivecards.io/schemas/adaptive-card.json',
+        type: 'AdaptiveCard',
+        version: '1.4',
+        body: [
+          { type: 'TextBlock', size: 'Medium', weight: 'Bolder',
+            text: isCab ? '🧪 Test — CAB webhook' : '🧪 Test — Content Updates webhook' },
+          { type: 'TextBlock', wrap: true,
+            text: 'Dit is een test-melding vanuit de Qvantum Content Kalender. Als je dit ziet werkt de webhook.' },
+          { type: 'TextBlock', size: 'Small', color: 'Accent', text: `Verstuurd: ${ts}` }
+        ],
+      }
+    }]
+  };
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testPayload),
+    });
+    const ms = Math.round(performance.now() - t0);
+    if (resp.ok || resp.status === 202) {
+      resultEl.textContent = `✓ OK (HTTP ${resp.status}, ${ms} ms) — kijk in Teams`;
+      resultEl.style.color = '#5A9E6F';
+    } else {
+      const body = await resp.text().catch(() => '');
+      resultEl.textContent = `✗ HTTP ${resp.status} — ${(body || resp.statusText).slice(0, 120)}`;
+      resultEl.style.color = '#C41230';
+      console.error('Webhook test failed:', resp.status, body);
+    }
+  } catch (err) {
+    resultEl.textContent = `✗ Netwerkfout: ${err.message}`;
+    resultEl.style.color = '#C41230';
+    console.error('Webhook test error:', err);
+  }
 }
 
 // Send notification to Teams — returns { ok, status, error }
