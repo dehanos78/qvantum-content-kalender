@@ -1129,14 +1129,15 @@ function renderAllUI() {
   renderEvents();
 }
 
-/* Build a rolling 12-month window starting at the first month of the current quarter,
-   so the navigation always shows today's month plus the next ~3 quarters. */
+/* Build a rolling 18-month window: 2 quarters (6 months) BEFORE the current
+   quarter start, plus the current quarter and 3 quarters ahead. So today plus
+   history for browsing what wasn't executed, and the near future for planning. */
 function buildMonths() {
   const now = new Date();
   const qStartMonth = Math.floor(now.getMonth() / 3) * 3;
   const labels = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
   const arr = [];
-  for (let i = 0; i < 12; i++) {
+  for (let i = -6; i < 12; i++) {
     const d = new Date(now.getFullYear(), qStartMonth + i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     arr.push({ key, label: `${labels[d.getMonth()]} ${d.getFullYear()}` });
@@ -1158,7 +1159,8 @@ let focusMode = null;  // null = month/quarter view, 'twoWeeks' = today + next I
 
 function buildQuarters(months) {
   const arr = [];
-  for (let i = 0; i < 4; i++) {
+  const nQuarters = Math.floor(months.length / 3);
+  for (let i = 0; i < nQuarters; i++) {
     const chunk = months.slice(i * 3, (i + 1) * 3);
     const [year, monthNum] = chunk[0].key.split('-').map(Number);
     const qNum = Math.floor((monthNum - 1) / 3) + 1;
