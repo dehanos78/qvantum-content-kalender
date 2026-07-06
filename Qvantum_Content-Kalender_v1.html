@@ -3416,13 +3416,14 @@ setTimeout(() => {
 </script>
 
 <!-- Firebase: real-time sync layer. Password-gated, EU region, anonymous auth. -->
+<!-- Set the module-loaded flag from a plain script so the fallback timer only fires when the module truly failed to fetch. -->
+<script>window.__firebaseModuleLoaded = true;</script>
 <script type="module">
-window.__firebaseModuleLoaded = true;
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDocs, setDoc, onSnapshot, writeBatch }
-  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const [{ initializeApp }, { getAuth, signInAnonymously }, { getFirestore, collection, doc, getDocs, setDoc, onSnapshot, writeBatch }] = await Promise.all([
+  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
+  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"),
+  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"),
+]);
 
 const firebaseConfig = {
   apiKey: "AIzaSyCkhdkRFej1DqyiWF7PXR2zSJ4bHyeEmq4",
