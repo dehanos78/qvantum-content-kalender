@@ -383,6 +383,17 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
 </style>
 </head>
 <body>
+<!-- Password gate — hidden by Firebase module once auth is stored, shown otherwise -->
+<div id="authGate" style="display:flex;position:fixed;inset:0;background:#F4F4F4;z-index:9999;align-items:center;justify-content:center;padding:20px;font-family:'Host Grotesk',Arial,sans-serif;">
+  <div style="max-width:420px;width:100%;background:#FFF;padding:40px 32px;border-radius:12px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+    <div style="font-weight:600;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#91877A;margin-bottom:8px;">Qvantum Content Kalender</div>
+    <h2 style="font-weight:400;font-size:22px;color:#232222;margin:0 0 24px;">Team toegang</h2>
+    <input type="password" id="gatePassword" placeholder="Wachtwoord" style="width:100%;padding:12px 14px;border:1px solid #E5E6DF;border-radius:8px;font-family:inherit;font-size:15px;margin-bottom:10px;box-sizing:border-box;" autocomplete="current-password">
+    <div id="gateError" style="color:#C41230;font-size:12px;min-height:16px;margin-bottom:12px;line-height:1.4;"></div>
+    <button id="gateBtn" style="width:100%;padding:12px;background:#002656;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">Verder</button>
+    <div id="gateStatus" style="margin-top:20px;font-size:11px;color:#91877A;line-height:1.5;">Vraag het wachtwoord aan Viktor. Op deze browser onthouden we het na de eerste keer.</div>
+  </div>
+</div>
 <div class="app">
   <header class="header">
     <div class="header-left">
@@ -1160,6 +1171,12 @@ const QUARTERS = buildQuarters(MONTHS);
 let items = [];
 let nextId = 1;
 
+/* Bridges so the Firebase module (separate script scope) can read/write our state */
+window.__getMainItems = () => items;
+window.__setMainItems = (arr) => { items = arr; };
+window.__getMainNextId = () => nextId;
+window.__setMainNextId = (n) => { nextId = n; };
+
 /* SEED DATA */
 function getSeedData() {
   return [
@@ -1363,10 +1380,15 @@ const EVENTS = [
 
 /* INIT */
 function init() {
-  const stored = localStorage.getItem('qvantum-content-kalender-v2');
-  if (stored) {
-    try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
-  } else { seedItems(); }
+  if (window.__firebaseData) {
+    items = window.__firebaseData.items || [];
+    nextId = window.__firebaseData.nextId || 1;
+  } else {
+    const stored = localStorage.getItem('qvantum-content-kalender-v2');
+    if (stored) {
+      try { const d = JSON.parse(stored); items = d.items || []; nextId = d.nextId || 1; } catch(e) { seedItems(); }
+    } else { seedItems(); }
+  }
   migrateSeedMatrixLabels();
   migrateAddMissingSeedItems();
   loadPlatformOverrides(); buildMonthNav(); buildFilterOptions(); renderCalendar(); renderPlatforms(); renderEvents(); setupTabs(); initWebhookSettings();
@@ -1467,7 +1489,14 @@ function resetData() {
     seedItems(); refreshThemaFilter(); renderCalendar();
   }
 }
-function saveToStorage() { localStorage.setItem('qvantum-content-kalender-v2', JSON.stringify({ items, nextId })); }
+let __firestoreDebounce = null;
+function saveToStorage() {
+  localStorage.setItem('qvantum-content-kalender-v2', JSON.stringify({ items, nextId }));
+  if (window.__qvantumFirestoreSync) {
+    clearTimeout(__firestoreDebounce);
+    __firestoreDebounce = setTimeout(() => window.__qvantumFirestoreSync(items, nextId), 400);
+  }
+}
 
 /* Dedupe helper: removes items that share the same datum + omschrijving + kanaal.
    Keeps the most recently edited version (highest id) — assumed to carry the user's
@@ -3373,7 +3402,161 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openModal();
 });
 
-init();
+/* Firebase module bootstraps init() after auth. Fallback: if Firebase module
+   never loads (blocked / offline / CDN down), start in local-only mode after 3s. */
+window.__initApp = () => { if (!window.__initAppCalled) { window.__initAppCalled = true; init(); document.getElementById('authGate').style.display = 'none'; } };
+setTimeout(() => {
+  if (!window.__initAppCalled && !window.__firebaseModuleLoaded) {
+    console.warn('Firebase module niet geladen — start in lokale modus');
+    const err = document.getElementById('gateError');
+    if (err) err.textContent = 'Kan geen verbinding maken. Start in lokale modus...';
+    window.__initApp();
+  }
+}, 3000);
 </script>
+
+<!-- Firebase: real-time sync layer. Password-gated, EU region, anonymous auth. -->
+<script type="module">
+window.__firebaseModuleLoaded = true;
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, setDoc, onSnapshot, writeBatch }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCkhdkRFej1DqyiWF7PXR2zSJ4bHyeEmq4",
+  authDomain: "qvantum-content-kalender.firebaseapp.com",
+  projectId: "qvantum-content-kalender",
+  storageBucket: "qvantum-content-kalender.firebasestorage.app",
+  messagingSenderId: "371342786814",
+  appId: "1:371342786814:web:4f35722b9333647132e5af"
+};
+
+const TEAM_PASSWORD = 'qvantum-content-2026';
+const AUTH_FLAG_KEY = 'qvantum-firebase-auth-ok';
+const ITEMS_COLLECTION = 'content_items';
+const META_DOC = ['meta', 'counter'];
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let remoteIds = new Set();
+
+const gate = document.getElementById('authGate');
+const gateInput = document.getElementById('gatePassword');
+const gateBtn = document.getElementById('gateBtn');
+const gateError = document.getElementById('gateError');
+const gateStatus = document.getElementById('gateStatus');
+
+function showError(msg) { if (gateError) gateError.textContent = msg; }
+function setStatus(msg) { if (gateStatus) gateStatus.textContent = msg; }
+
+async function loadInitial() {
+  setStatus('Verbinding maken met Firestore…');
+  await signInAnonymously(auth);
+  setStatus('Kalender laden…');
+  const snap = await getDocs(collection(db, ITEMS_COLLECTION));
+  const loadedItems = [];
+  snap.forEach(d => { loadedItems.push(d.data()); remoteIds.add(d.id); });
+  let firebaseNextId = 1;
+  try {
+    const counterSnap = await getDocs(collection(db, 'meta'));
+    counterSnap.forEach(d => { if (d.id === 'counter' && typeof d.data().value === 'number') firebaseNextId = d.data().value; });
+  } catch (e) { /* first-run, no counter yet */ }
+
+  // First-run migration: if Firestore is empty but localStorage has items, seed Firestore
+  if (loadedItems.length === 0) {
+    const stored = localStorage.getItem('qvantum-content-kalender-v2');
+    if (stored) {
+      try {
+        const d = JSON.parse(stored);
+        if (Array.isArray(d.items) && d.items.length > 0) {
+          setStatus('Eenmalige migratie van lokale data naar Firestore…');
+          const batch = writeBatch(db);
+          d.items.forEach(item => { batch.set(doc(db, ITEMS_COLLECTION, String(item.id)), item); remoteIds.add(String(item.id)); });
+          batch.set(doc(db, ...META_DOC), { value: d.nextId || 1 });
+          await batch.commit();
+          loadedItems.push(...d.items);
+          firebaseNextId = d.nextId || 1;
+        }
+      } catch (e) { console.warn('Migratie faalde, ga verder met lege state', e); }
+    }
+  }
+
+  window.__firebaseData = { items: loadedItems, nextId: Math.max(firebaseNextId, ...loadedItems.map(i => (i.id || 0) + 1), 1) };
+
+  // Real-time listener: on remote changes, rebuild items and re-render (skip if modal open to protect in-flight edits)
+  onSnapshot(collection(db, ITEMS_COLLECTION), (snap) => {
+    if (snap.metadata.hasPendingWrites) return;
+    if (!window.__initAppCalled) return; // wait until main script is ready
+    const modalOpen = document.getElementById('modalOverlay')?.classList.contains('active');
+    if (modalOpen) return;
+    const fresh = [];
+    remoteIds.clear();
+    snap.forEach(d => { fresh.push(d.data()); remoteIds.add(d.id); });
+    const current = window.__getMainItems ? window.__getMainItems() : [];
+    if (JSON.stringify(current) === JSON.stringify(fresh)) return;
+    window.__setMainItems(fresh);
+    if (typeof window.renderCalendar === 'function') window.renderCalendar();
+    if (typeof window.renderPool === 'function') window.renderPool();
+  });
+
+  window.__initApp();
+  setStatus('');
+}
+
+// Expose sync for main-script saveToStorage
+window.__qvantumFirestoreSync = async (items, nextId) => {
+  try {
+    const currentIds = new Set(items.map(i => String(i.id)));
+    const toDelete = [...remoteIds].filter(id => !currentIds.has(id));
+    const batch = writeBatch(db);
+    items.forEach(item => batch.set(doc(db, ITEMS_COLLECTION, String(item.id)), item));
+    toDelete.forEach(id => batch.delete(doc(db, ITEMS_COLLECTION, id)));
+    batch.set(doc(db, ...META_DOC), { value: nextId });
+    await batch.commit();
+    toDelete.forEach(id => remoteIds.delete(id));
+    currentIds.forEach(id => remoteIds.add(id));
+  } catch (e) {
+    console.error('Firestore sync mislukt:', e);
+  }
+};
+
+async function tryAuth() {
+  try { await loadInitial(); }
+  catch (e) {
+    console.error('Firebase load failed:', e);
+    showError('Verbindingsprobleem: ' + (e.message || e));
+    setStatus('Klik "Verder" om lokaal door te gaan (wijzigingen worden alleen op deze browser bewaard).');
+    gateBtn.textContent = 'Lokaal doorgaan';
+    gateBtn.onclick = () => { gate.style.display = 'none'; window.__initApp(); };
+  }
+}
+
+// Password gate flow
+gateBtn.addEventListener('click', () => {
+  if (localStorage.getItem(AUTH_FLAG_KEY) === '1') { tryAuth(); return; }
+  const entered = (gateInput.value || '').trim();
+  if (entered === TEAM_PASSWORD) {
+    localStorage.setItem(AUTH_FLAG_KEY, '1');
+    showError('');
+    tryAuth();
+  } else {
+    showError('Wachtwoord onjuist');
+    gateInput.select();
+  }
+});
+gateInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') gateBtn.click(); });
+
+// If we've already authed on this browser, skip the prompt
+if (localStorage.getItem(AUTH_FLAG_KEY) === '1') {
+  tryAuth();
+} else {
+  gateInput.focus();
+}
+</script>
+
 </body>
 </html>
