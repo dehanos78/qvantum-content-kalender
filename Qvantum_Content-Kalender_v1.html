@@ -434,7 +434,7 @@ body { font-family: 'Host Grotesk', Arial, Helvetica, sans-serif; font-weight: 4
         <select class="filter-select" id="filterThema" onchange="renderCalendar()"><option value="">Alle thema's</option></select>
         <select class="filter-select" id="filterMatrix" onchange="renderCalendar()"><option value="">Alle matrix-cellen</option></select>
         <select class="filter-select" id="filterStatus" onchange="renderCalendar()">
-          <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option><option value="Gearchiveerd">Gearchiveerd</option>
+          <option value="">Alle statussen</option><option value="Idee">Idee</option><option value="Gepland">Gepland</option><option value="In productie">In productie</option><option value="Gepubliceerd">Gepubliceerd</option><option value="Gearchiveerd">Gearchiveerd</option><option value="__past_due__">Niet uitgevoerd (verleden)</option>
         </select>
         <select class="filter-select" id="filterType" onchange="renderCalendar()">
           <option value="">Alle types</option><option value="LinkedIn post">LinkedIn post</option><option value="Case study">Case study</option><option value="Rondetafel">Rondetafel</option><option value="Artikel">Artikel</option><option value="Nieuwsbrief">Nieuwsbrief</option><option value="Beurs / event">Beurs / event</option><option value="Webinar">Webinar</option><option value="Vakpublicatie">Vakpublicatie</option><option value="Website">Website</option>
@@ -1057,7 +1057,12 @@ function renderAllUI() {
   // Status options in filter
   const fStat = document.getElementById('filterStatus');
   for (let i = 1; i < fStat.options.length; i++) {
-    fStat.options[i].text = tStatus(fStat.options[i].value);
+    const v = fStat.options[i].value;
+    if (v === '__past_due__') {
+      fStat.options[i].text = lang === 'en' ? 'Not done (past)' : 'Niet uitgevoerd (verleden)';
+    } else {
+      fStat.options[i].text = tStatus(v);
+    }
   }
   // Platforms
   document.querySelector('#tab-platforms .section-header h2').textContent = t('platformsTitle');
@@ -1647,12 +1652,18 @@ function getFilteredItems() {
     focusEnd = new Date(focusStart); focusEnd.setDate(focusStart.getDate() + 13);
   }
   const fmtD = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  // "Niet uitgevoerd": past-due items still open. Overrides month/quarter/focus scope.
+  const pastDueMode = fS === '__past_due__';
+  const todayStr = pastDueMode ? fmtD(new Date()) : null;
   return items.filter(item => {
     // Pool items (no date) live in the Ideeën-pool tab, not on the calendar
     if (!item.datum) return false;
     // Hide archived by default unless filter explicitly targets them
     if (item.status === 'Gearchiveerd' && fS !== 'Gearchiveerd') return false;
-    if (focusMode === 'twoWeeks') {
+    if (pastDueMode) {
+      if (item.datum >= todayStr) return false;
+      if (item.status === 'Gepubliceerd' || item.status === 'Gearchiveerd') return false;
+    } else if (focusMode === 'twoWeeks') {
       if (item.datum < fmtD(focusStart) || item.datum > fmtD(focusEnd)) return false;
     } else {
       const monthMatch = quarterMode
@@ -1663,7 +1674,7 @@ function getFilteredItems() {
     if (fK && item.kanaal !== fK) return false;
     if (fA && item.auteur !== fA) return false;
     if (fT && item.thema !== fT) return false;
-    if (fS && item.status !== fS) return false;
+    if (fS && !pastDueMode && item.status !== fS) return false;
     if (fTy && item.type !== fTy) return false;
     if (fProduct === 'qg' && !item.qg) return false;
     if (fProduct === 'qe' && !item.qe) return false;
@@ -1771,6 +1782,17 @@ function renderCalendar() {
   renderStats();
   const container = document.getElementById('calendarContainer');
   const filtered = getFilteredItems();
+  // Past-due mode spans multiple months, so force a chronological card list
+  // grouped per month regardless of the active week/card toggle.
+  const pastDueMode = document.getElementById('filterStatus').value === '__past_due__';
+  if (pastDueMode) {
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty-state"><h3>${lang === 'en' ? 'Nothing left undone' : 'Niets openstaands'}</h3><p>${lang === 'en' ? 'All past items are published or archived.' : 'Alle items uit het verleden zijn gepubliceerd of gearchiveerd.'}</p></div>`;
+    } else {
+      renderCardView(container, filtered.slice().sort((a, b) => (a.datum || '').localeCompare(b.datum || '')), { groupByMonth: true });
+    }
+    return;
+  }
   if (currentView === 'week') {
     renderWeekView(container, filtered);
   } else if (filtered.length === 0) {
@@ -1909,9 +1931,10 @@ function renderWeekBlocks(weeks, itemsByDate) {
 }
 
 /* CARD VIEW */
-function renderCardView(container, filtered) {
+function renderCardView(container, filtered, opts) {
   let html = '';
-  if (quarterMode) {
+  const groupByMonth = (opts && opts.groupByMonth) || !!quarterMode;
+  if (groupByMonth) {
     // Group by month with headers
     const grouped = {};
     filtered.forEach(item => {
